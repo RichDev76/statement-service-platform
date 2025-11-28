@@ -1,0 +1,140 @@
+{
+  "realm": "statement-service",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "Search",
+        "description": "Role allowing search of statements"
+      },
+      {
+        "name": "Upload",
+        "description": "Role allowing uploads of statements"
+      },
+      {
+        "name": "GenerateSignedLink",
+        "description": "Role allowing creation of signed download links"
+      },
+      {
+        "name": "Download",
+        "description": "Role allowing statement downloads"
+      },
+      {
+        "name": "AuditLogsSearch",
+        "description": "Role allowing audit log searching"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "Admin",
+      "path": "/Admin",
+      "realmRoles": [
+        "Search",
+        "Upload",
+        "GenerateSignedLink",
+        "Download",
+        "AuditLogsSearch"
+      ]
+    },
+    {
+      "name": "StatementConsumer",
+      "path": "/StatementConsumer",
+      "realmRoles": [
+        "Search",
+        "GenerateSignedLink",
+        "Download"
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "statement-service-admin-client",
+      "name": "Statement Service Admin Client",
+      "description": "Machine-to-machine administrative client using only client_credentials",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "bearerOnly": false,
+      "authorizationServicesEnabled": false,
+      "oauth2DeviceAuthorizationGrantEnabled": false,
+      "secret": "CHANGE_ME_ADMIN_CLIENT_SECRET",
+      "protocolMappers": [
+        {
+          "name": "realm-role-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ],
+      "attributes": {
+        "client_credentials.use_refresh_token": "false"
+      }
+    },
+    {
+      "clientId": "statement-service-consumer-client",
+      "name": "Statement Service Consumer Client",
+      "description": "Machine-to-machine client using only client_credentials (StatementConsumer role set)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "bearerOnly": false,
+      "authorizationServicesEnabled": false,
+      "oauth2DeviceAuthorizationGrantEnabled": false,
+      "secret": "CHANGE_ME_CONSUMER_CLIENT_SECRET",
+      "protocolMappers": [
+        {
+          "name": "realm-role-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ],
+      "attributes": {
+        "client_credentials.use_refresh_token": "false"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-statement-service-admin-client",
+      "enabled": true,
+      "serviceAccountClientId": "statement-service-admin-client",
+      "groups": [
+        "/Admin"
+      ]
+    },
+    {
+      "username": "service-account-statement-service-consumer-client",
+      "enabled": true,
+      "serviceAccountClientId": "statement-service-consumer-client",
+      "groups": [
+        "/StatementConsumer"
+      ]
+    }
+  ]
+}

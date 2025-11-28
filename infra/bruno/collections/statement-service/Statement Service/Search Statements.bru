@@ -1,0 +1,13 @@
+meta {
+  name: Search Statements
+  type: http
+}
+
+request {
+  url: {{STATEMENT_SERVICE_URL}}/api/v1/statements/search?accountNumber=123456
+  method: GET
+
+  headers: {
+    Authorization: Bearer {{CONSUMER_ACCESS_TOKEN}}
+  }
+}

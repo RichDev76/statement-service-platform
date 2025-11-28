@@ -1,0 +1,107 @@
+package com.example.statementservice.service;
+
+import com.example.statementservice.model.entity.SignedLink;
+import com.example.statementservice.repository.SignedLinkRepository;
+import com.example.statementservice.util.LinkValidationResult;
+import com.example.statementservice.util.SignatureUtil;
+import java.net.URI;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+@Service
+@RequiredArgsConstructor
+public class SignedLinkService {
+
+    public static final String EXPIRES_PATH_VARIABLE = "?expires=";
+    public static final String SIGNATURE_PATH_VARIABLE = "&signature=";
+
+    private final SignedLinkRepository signedLinkRepository;
+    private final SignatureUtil signatureUtil;
+
+    @Value("${statement.files.link-expiry-seconds:900}")
+    private long defaultExpirySeconds;
+
+    @Value("${statement.api.download-path:/api/v1/statements/download/}")
+    private String downloadPath;
+
+    @Transactional
+    public SignedLink createSignedLink(UUID statementId, boolean singleUse, String createdBy, String basePath) {
+        var expires = OffsetDateTime.now().plusSeconds(defaultExpirySeconds);
+        SignedLink link = buildSignedLink(statementId, singleUse, createdBy, basePath, expires);
+        signedLinkRepository.save(link);
+        return link;
+    }
+
+    private SignedLink buildSignedLink(
+            UUID statementId, boolean singleUse, String createdBy, String basePath, OffsetDateTime expires) {
+        SignedLink link = new SignedLink();
+        link.setId(UUID.randomUUID());
+        link.setStatementId(statementId);
+        link.setToken(this.signatureUtil.signWithMethod(basePath, expires.toEpochSecond(), HttpMethod.GET.toString()));
+        link.setExpiresAt(expires);
+        link.setSingleUse(singleUse);
+        link.setUsed(false);
+        link.setCreatedAt(OffsetDateTime.now());
+        link.setCreatedBy(createdBy);
+        return link;
+    }
+
+    @Transactional
+    public URI buildSignedLink(String fileName, UUID statementId) {
+        var filesBaseUrl = getFilesBaseUrl(fileName);
+        var signedLink = createSignedLink(statementId, true, "system", filesBaseUrl);
+        long expires = signedLink.getExpiresAt().toEpochSecond();
+        try {
+            var signature = signedLink.getToken();
+            var url = filesBaseUrl + EXPIRES_PATH_VARIABLE + expires + SIGNATURE_PATH_VARIABLE + signature;
+            return URI.create(url);
+        } catch (Exception e) {
+            return URI.create(filesBaseUrl);
+        }
+    }
+
+    @Transactional
+    public LinkValidationResult validateAndConsume(String token) {
+        var optionalSignedLink = signedLinkRepository.findByTokenForUpdate(token);
+
+        if (optionalSignedLink.isEmpty()) {
+            return LinkValidationResult.notFound();
+        }
+
+        var link = optionalSignedLink.get();
+
+        // Check if already used
+        if (link.isUsed()) {
+            return LinkValidationResult.used(link);
+        }
+
+        // Check if expired
+        if (link.getExpiresAt().isBefore(OffsetDateTime.now())) {
+            return LinkValidationResult.expired(link);
+        }
+
+        // Valid - mark as used if single-use
+        if (link.isSingleUse()) {
+            link.setUsed(true);
+            signedLinkRepository.save(link);
+        }
+
+        return LinkValidationResult.valid(link);
+    }
+
+    private String getServerBaseUrl() {
+        return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+    }
+
+    private String getFilesBaseUrl(String fileName) {
+        var filesBaseUrl = getServerBaseUrl();
+        var base = filesBaseUrl.endsWith("/") ? filesBaseUrl.substring(0, filesBaseUrl.length() - 1) : filesBaseUrl;
+        return URI.create(base + downloadPath + fileName).toString();
+    }
+}

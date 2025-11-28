@@ -1,0 +1,26 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: composite
+  cloud:
+    config:
+      server:
+        composite:
+          - type: git
+            uri: ../statement-config-repo
+            search-paths:
+              - shared
+              - statement-service
+            clone-on-start: true
+          - type: vault
+            host: vault
+            port: 8200
+            scheme: http
+            backend: secret
+            defaultKey: application
+            kv-version: 2
+            token: ${VAULT_TOKEN:00000000-0000-0000-0000-000000000000}

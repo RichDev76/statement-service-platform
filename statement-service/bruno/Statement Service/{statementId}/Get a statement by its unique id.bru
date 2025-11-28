@@ -1,0 +1,33 @@
+meta {
+  name: Get a statement by its unique id
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/:statementId/link
+  body: none
+  auth: basic
+}
+
+params:path {
+  statementId: fe3db3f4-64ef-4b7c-81ff-0deb644be68e
+}
+
+headers {
+  Accept: application/json
+}
+
+auth:basic {
+  username: {{basicAuthUsername}}
+  password: {{basicAuthPassword}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Retrieve statement metadata (does not return binary PDF). Use the `statementId` returned at upload time.
+}

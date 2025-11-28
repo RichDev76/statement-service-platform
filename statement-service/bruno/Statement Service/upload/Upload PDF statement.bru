@@ -1,0 +1,37 @@
+meta {
+  name: Upload PDF statement
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/upload
+  body: multipartForm
+  auth: basic
+}
+
+headers {
+  X-Message-Digest: 408d40ed18872f2f4b77800392c3e1d3f1fa5a2ddbcdc56341598f4530f46e05
+  Content-Type: multipart/form-data
+  Accept: application/json
+}
+
+auth:basic {
+  username: {{basicAuthUsername}}
+  password: {{basicAuthPassword}}
+}
+
+body:multipart-form {
+  file: @file(/Users/devonrichards/Documents/Documents - Devon’s MacBook Pro/SE3 Project/Statement-1.pdf)
+  accountNumber: 123456789
+  date: 2025-11-06
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Upload a PDF file with metadata. The SHA-256 message digest must be supplied in the `X-Message-Digest` header.
+}

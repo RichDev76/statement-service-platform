@@ -1,0 +1,37 @@
+meta {
+  name: Retrieve audit logs
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/audit/logs?accountNumber=123456789&startDate=2025-11-01&endDate=2025-11-30&page=0&size=50
+  body: none
+  auth: basic
+}
+
+params:query {
+  accountNumber: 123456789
+  startDate: 2025-11-01
+  endDate: 2025-11-30
+  page: 0
+  size: 50
+}
+
+headers {
+  Accept: application/json
+}
+
+auth:basic {
+  username: {{basicAuthUsername}}
+  password: {{basicAuthPassword}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Get audit logs for statement operations. Can be filtered by account number and date range. Requires authentication.
+}

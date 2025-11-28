@@ -1,0 +1,25 @@
+meta {
+  name: Get Admin Token
+  type: http
+}
+
+request {
+  url: {{KEYCLOAK_URL}}/realms/{{REALM}}/protocol/openid-connect/token
+  method: POST
+
+  headers: {
+    Content-Type: application/x-www-form-urlencoded
+  }
+
+  body: urlencoded {
+    grant_type: client_credentials
+    client_id: statement-service-admin-client
+    client_secret: {{ADMIN_CLIENT_SECRET}}
+  }
+}
+
+script {
+  after: |
+    const data = JSON.parse(response.body);
+    bru.setEnvVar('ADMIN_ACCESS_TOKEN', data.access_token);
+}
