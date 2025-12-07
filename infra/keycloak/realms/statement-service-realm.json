@@ -1,6 +1,11 @@
 {
   "realm": "statement-service",
   "enabled": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 3600,
+  "accessTokenLifespanForImplicitFlow": 3600,
+  "ssoSessionIdleTimeout": 4200,
+  "ssoSessionMaxLifespan": 4200,
   "roles": {
     "realm": [
       {
@@ -61,8 +66,9 @@
       "implicitFlowEnabled": false,
       "bearerOnly": false,
       "authorizationServicesEnabled": false,
-      "oauth2DeviceAuthorizationGrantEnabled": false,
       "secret": "CHANGE_ME_ADMIN_CLIENT_SECRET",
+      "redirectUris": ["http://localhost:8081/*"],
+      "webOrigins": ["http://localhost:8081"],
       "protocolMappers": [
         {
           "name": "realm-role-mapper",
@@ -80,7 +86,8 @@
         }
       ],
       "attributes": {
-        "client_credentials.use_refresh_token": "false"
+        "client_credentials.use_refresh_token": "false",
+        "access.token.lifespan": "3600"
       }
     },
     {
@@ -96,7 +103,6 @@
       "implicitFlowEnabled": false,
       "bearerOnly": false,
       "authorizationServicesEnabled": false,
-      "oauth2DeviceAuthorizationGrantEnabled": false,
       "secret": "CHANGE_ME_CONSUMER_CLIENT_SECRET",
       "protocolMappers": [
         {
@@ -115,7 +121,8 @@
         }
       ],
       "attributes": {
-        "client_credentials.use_refresh_token": "false"
+        "client_credentials.use_refresh_token": "false",
+        "access.token.lifespan": "3600"
       }
     }
   ],

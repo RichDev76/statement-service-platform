@@ -4,8 +4,8 @@ Multi-module project containing:
 
 - `statement-service`: Spring Boot service for storing and serving statements
 - `config-server`: Spring Cloud Config Server with Git + Vault backends
-- `infra`: Docker Compose, Keycloak realm, scripts, Bruno collections
-- `statement-config-repo`: Git-style config repo for Config Server
+- `infra`: Docker Compose, Keycloak realm, scripts, Bruno collections, `config-repo`
+- `infra/config-repo`: Git-style config repo for Config Server
 
 ## Quick start
 
@@ -13,10 +13,14 @@ Multi-module project containing:
 # Build all Java modules
 mvn clean install
 
-# Start full stack (from infra/)
+# Start infrastructure only (from infra/)
 cd infra
 docker compose up --build
 ```
+Then, in a separate terminal:
+
+# From project root
+mvn -pl statement-service spring-boot:run
 
 Then:
 
