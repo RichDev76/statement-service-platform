@@ -17,7 +17,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8081/realms/statement-service
+          issuer-uri: http://0.0.0.0:8081/realms/statement-service
   config:
     activate:
       on-profile: develop

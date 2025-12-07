@@ -66,7 +66,7 @@
       "implicitFlowEnabled": false,
       "bearerOnly": false,
       "authorizationServicesEnabled": false,
-      "secret": "CHANGE_ME_ADMIN_CLIENT_SECRET",
+      "secret": "*",
       "redirectUris": ["http://localhost:8081/*"],
       "webOrigins": ["http://localhost:8081"],
       "protocolMappers": [
@@ -103,7 +103,7 @@
       "implicitFlowEnabled": false,
       "bearerOnly": false,
       "authorizationServicesEnabled": false,
-      "secret": "CHANGE_ME_CONSUMER_CLIENT_SECRET",
+      "secret": "*",
       "protocolMappers": [
         {
           "name": "realm-role-mapper",

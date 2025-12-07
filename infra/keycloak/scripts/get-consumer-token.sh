@@ -4,7 +4,7 @@ set -euo pipefail
 KEYCLOAK_URL=${KEYCLOAK_URL:-http://localhost:8081}
 REALM=${REALM:-statement-service}
 CLIENT_ID=${CLIENT_ID:-statement-service-consumer-client}
-CLIENT_SECRET=${CLIENT_SECRET:-CHANGE_ME_CONSUMER_CLIENT_SECRET}
+CLIENT_SECRET=${CLIENT_SECRET}
 
 echo "Requesting token for client: $CLIENT_ID (realm: $REALM) from $KEYCLOAK_URL"
 
