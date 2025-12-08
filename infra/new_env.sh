@@ -28,7 +28,9 @@ if ! command -v docker >/dev/null 2>&1; then
   die "docker CLI required on host."
 fi
 
-# ensure init dir exists
+# ensure init dir exists (host side). Note: this directory is bind-mounted
+# into the vault container at /vault/init. We later ensure vault user
+# ownership inside the container after it starts.
 mkdir -p ./vault/init
 chmod 700 ./vault/init
 
@@ -66,6 +68,15 @@ fi
 # Start vault
 info "Starting vault container (docker compose up -d vault)"
 docker compose up -d vault
+
+# Ensure the "vault" user inside the container owns /vault/init.
+# This is important because the host bind-mount (./vault/init) can
+# override ownership and cause permission issues for Vault and any
+# consumers of the init artifacts.
+info "Ensuring vault user owns /vault/init inside the vault container"
+if ! docker exec -i vault sh -c 'chown -R vault:vault /vault/init 2>/dev/null || chown -R vault /vault/init 2>/dev/null || true'; then
+  info "Warning: could not adjust ownership of /vault/init inside vault container; continuing."
+fi
 
 # Wait for HTTP health endpoint inside container
 info "Waiting for Vault HTTP endpoint inside container. Accepting 200/429/501/503 as 'up'."

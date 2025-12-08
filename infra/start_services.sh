@@ -33,6 +33,3 @@ info "Vault ready."
 info "Starting db, keycloak, config-server..."
 docker compose up -d db keycloak config-server
 
-info "Tailing config-server logs via docker compose (this follows the correct container regardless of project prefix)..."
-docker compose logs -f --tail 200 config-server
-

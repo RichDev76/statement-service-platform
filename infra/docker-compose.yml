@@ -105,9 +105,6 @@
         timeout: 5s
         retries: 6
         start_period: 30s
-
-
-
   volumes:
     db-data:
     vault-data:

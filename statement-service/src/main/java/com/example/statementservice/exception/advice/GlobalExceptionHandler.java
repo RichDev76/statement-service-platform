@@ -66,7 +66,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleStatementNotFound(StatementNotFoundException ex, HttpServletRequest request) {
 
         return createProblemDetail(
-                HttpStatus.BAD_REQUEST,
+                HttpStatus.NOT_FOUND,
                 buildProblemDetailTypeURI(request, TYPE_STATEMENT),
                 "Not Found",
                 ex.getMessage(),
