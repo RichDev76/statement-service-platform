@@ -49,6 +49,14 @@ statement:
     base-dir: ${STATEMENT_STORAGE_DIR}
   api:
     download-path: /api/v1/statements/download/
+  signed-link:
+    cleanup:
+      enabled: true
+      cron: "0 0/30 * * * *"          # every 5 minutes
+      retention-period: "PT0S"       # ISO-8601 duration; extra grace period after expiry
+      batch-size: 500                 # max rows to delete per run
+      lock-at-most-for: "PT5M"       # ShedLock max lock time
+      lock-at-least-for: "PT10S"     # ShedLock min lock time
 
 security:
   endpoints:

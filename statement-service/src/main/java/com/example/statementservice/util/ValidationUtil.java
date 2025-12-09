@@ -49,11 +49,12 @@ public class ValidationUtil {
     private final EncryptionService encryptionService;
 
     public void validateFileUploadInputs(MultipartFile file, String xMessageDigest, String accountNumber, String date) {
+        validateFileName(file);
         validatePdfMagicNumber(file);
-        validateMessageDigest(file, xMessageDigest);
-        validateFileNotEmpty(file);
         validateCorrectContentType(file);
         validateAccountNumber(accountNumber);
+        validateMessageDigest(file, xMessageDigest);
+        validateFileNotEmpty(file);
         validateDate(date);
     }
 
@@ -79,6 +80,21 @@ public class ValidationUtil {
         if (!MediaType.APPLICATION_PDF_VALUE.equals(contentType)) {
             throw new UnsupportedContentTypeException(UNSUPPORTED_CONTENT_TYPE_MSG);
         }
+    }
+
+    public void validateFileName(MultipartFile file) {
+        var originalFileName = getOriginalFileName(file);
+        if (originalFileName.contains("..")) {
+            throw new PdfValidationException("Invalid filename: path traversal is not allowed");
+        }
+    }
+
+    private String getOriginalFileName(MultipartFile file) {
+        String originalFileName = file.getOriginalFilename();
+        if (org.apache.commons.lang3.StringUtils.isEmpty(originalFileName)) {
+            throw new PdfValidationException("Filename must not be empty");
+        }
+        return originalFileName;
     }
 
     public void validateAccountNumber(String accountNumber) {

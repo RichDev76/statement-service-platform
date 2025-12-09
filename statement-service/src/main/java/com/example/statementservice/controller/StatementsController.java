@@ -31,8 +31,9 @@ public class StatementsController implements StatementsApi {
     private final DownloadResponseFactory downloadResponseFactory;
 
     @Override
-    public ResponseEntity<Resource> downloadStatementByFileName(String fileName, Long expires, String signature) {
-        log.info("downloadStatementByFileName - fileName: {}, signature: {}", fileName, signature);
+    public ResponseEntity<Resource> downloadStatementByFileName(
+            String fileName, Long expires, String signature, String xCorrelationId) {
+        log.info("downloadStatementByFileName - fileName: {}", fileName);
         var requestInfo = requestInfoProvider.get();
         var result = downloadService.validateAndStreamDetailed(
                 signature, requestInfo.getClientIp(), requestInfo.getUserAgent(), requestInfo.getPerformedBy());
@@ -40,7 +41,7 @@ public class StatementsController implements StatementsApi {
     }
 
     @Override
-    public ResponseEntity<StatementSummary> getStatementById(UUID statementId) {
+    public ResponseEntity<StatementSummary> getStatementById(UUID statementId, String xCorrelationId) {
         return statementQueryService
                 .getSummaryById(statementId)
                 .map(ResponseEntity::ok)
@@ -50,7 +51,7 @@ public class StatementsController implements StatementsApi {
 
     @Override
     public ResponseEntity<StatementSummaryPage> searchStatements(
-            String accountNumber, String date, Integer page, Integer size, String sort) {
+            String xCorrelationId, String accountNumber, String date, Integer page, Integer size, String sort) {
         var hasAccount = accountNumber != null && !accountNumber.isBlank();
         var hasDate = date != null && !date.isBlank();
         if (!hasAccount && !hasDate) {

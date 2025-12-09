@@ -1,0 +1,37 @@
+meta {
+  name: Download statement PDF using signed URL
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/download/:fileName?expires=1765286974&signature=z_6UW9iB1Per19FCX1rdAHKxlweBhifgWzolqG7cIMo
+  body: none
+  auth: bearer
+}
+
+params:query {
+  expires: 1765286974
+  signature: z_6UW9iB1Per19FCX1rdAHKxlweBhifgWzolqG7cIMo
+}
+
+params:path {
+  fileName: statement1.pdf
+}
+
+headers {
+  Accept: application/octet-stream
+}
+
+auth:bearer {
+  token: {{CONSUMER_ACCESS_TOKEN}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Download the encrypted statement PDF file using a filename-based signed URL with expires and signature parameters.
+}

@@ -56,7 +56,7 @@ class AuditControllerTest {
 
         // When
         ResponseEntity<AuditLogPage> response =
-                auditController.getFilteredAuditLogs(accountNumber, startDate, endDate, page, size);
+                auditController.getFilteredAuditLogs(null, accountNumber, startDate, endDate, page, size);
 
         // Then
         assertThat(response).isNotNull();
@@ -81,7 +81,7 @@ class AuditControllerTest {
                 .thenReturn(testAuditLogPage);
 
         // When
-        auditController.getFilteredAuditLogs(accountNumber, startDate, endDate, page, size);
+        auditController.getFilteredAuditLogs(null, accountNumber, startDate, endDate, page, size);
 
         // Then
         verify(auditQueryService)
@@ -97,7 +97,7 @@ class AuditControllerTest {
 
         // When
         ResponseEntity<AuditLogPage> response =
-                auditController.getFilteredAuditLogs(null, "2024-01-01", "2024-01-31", 0, 50);
+                auditController.getFilteredAuditLogs(null, null, "2024-01-01", "2024-01-31", 0, 50);
 
         // Then
         assertThat(response).isNotNull();
@@ -114,7 +114,8 @@ class AuditControllerTest {
                 .thenReturn(testAuditLogPage);
 
         // When
-        ResponseEntity<AuditLogPage> response = auditController.getFilteredAuditLogs(accountNumber, null, null, 0, 50);
+        ResponseEntity<AuditLogPage> response =
+                auditController.getFilteredAuditLogs(null, accountNumber, null, null, 0, 50);
 
         // Then
         assertThat(response).isNotNull();
@@ -132,7 +133,7 @@ class AuditControllerTest {
 
         // When
         ResponseEntity<AuditLogPage> response =
-                auditController.getFilteredAuditLogs(accountNumber, "2024-01-01", "2024-01-31", null, null);
+                auditController.getFilteredAuditLogs(null, accountNumber, "2024-01-01", "2024-01-31", null, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -148,7 +149,8 @@ class AuditControllerTest {
                 .thenReturn(testAuditLogPage);
 
         // When
-        ResponseEntity<AuditLogPage> response = auditController.getFilteredAuditLogs(null, null, null, null, null);
+        ResponseEntity<AuditLogPage> response =
+                auditController.getFilteredAuditLogs(null, null, null, null, null, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -164,7 +166,8 @@ class AuditControllerTest {
                 .thenThrow(new RuntimeException("Service error"));
 
         // When/Then
-        assertThatThrownBy(() -> auditController.getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 0, 50))
+        assertThatThrownBy(() ->
+                        auditController.getFilteredAuditLogs("corr", "123456789", "2024-01-01", "2024-01-31", 0, 50))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
 
@@ -180,7 +183,8 @@ class AuditControllerTest {
                 .thenThrow(new InvalidDateException("Invalid date format"));
 
         // When/Then
-        assertThatThrownBy(() -> auditController.getFilteredAuditLogs("123456789", invalidDate, "2024-01-31", 0, 50))
+        assertThatThrownBy(() ->
+                        auditController.getFilteredAuditLogs("corr", "123456789", invalidDate, "2024-01-31", 0, 50))
                 .isInstanceOf(InvalidDateException.class)
                 .hasMessageContaining("Invalid date format");
     }
@@ -193,9 +197,9 @@ class AuditControllerTest {
                 .thenReturn(testAuditLogPage);
 
         // When
-        auditController.getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 0, 10);
-        auditController.getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 0, 25);
-        auditController.getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 0, 100);
+        auditController.getFilteredAuditLogs(null, "123456789", "2024-01-01", "2024-01-31", 0, 10);
+        auditController.getFilteredAuditLogs(null, "123456789", "2024-01-01", "2024-01-31", 0, 25);
+        auditController.getFilteredAuditLogs(null, "123456789", "2024-01-01", "2024-01-31", 0, 100);
 
         // Then
         verify(auditQueryService).getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 0, 10);
@@ -211,9 +215,9 @@ class AuditControllerTest {
                 .thenReturn(testAuditLogPage);
 
         // When
-        auditController.getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 0, 50);
-        auditController.getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 1, 50);
-        auditController.getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 5, 50);
+        auditController.getFilteredAuditLogs(null, "123456789", "2024-01-01", "2024-01-31", 0, 50);
+        auditController.getFilteredAuditLogs(null, "123456789", "2024-01-01", "2024-01-31", 1, 50);
+        auditController.getFilteredAuditLogs(null, "123456789", "2024-01-01", "2024-01-31", 5, 50);
 
         // Then
         verify(auditQueryService).getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 0, 50);
@@ -237,7 +241,7 @@ class AuditControllerTest {
 
         // When
         ResponseEntity<AuditLogPage> response =
-                auditController.getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 0, 50);
+                auditController.getFilteredAuditLogs(null, "123456789", "2024-01-01", "2024-01-31", 0, 50);
 
         // Then
         assertThat(response).isNotNull();
@@ -255,7 +259,7 @@ class AuditControllerTest {
 
         // When
         ResponseEntity<AuditLogPage> response =
-                auditController.getFilteredAuditLogs("", "2024-01-01", "2024-01-31", 0, 50);
+                auditController.getFilteredAuditLogs(null, "", "2024-01-01", "2024-01-31", 0, 50);
 
         // Then
         assertThat(response).isNotNull();
@@ -275,7 +279,7 @@ class AuditControllerTest {
 
         // When
         ResponseEntity<AuditLogPage> response =
-                auditController.getFilteredAuditLogs("123456789", startDate, endDate, 0, 50);
+                auditController.getFilteredAuditLogs(null, "123456789", startDate, endDate, 0, 50);
 
         // Then
         assertThat(response).isNotNull();
@@ -292,10 +296,11 @@ class AuditControllerTest {
 
         // When
         ResponseEntity<AuditLogPage> response1 =
-                auditController.getFilteredAuditLogs("123456789", "2024-01-01", "2024-01-31", 0, 50);
-        ResponseEntity<AuditLogPage> response2 = auditController.getFilteredAuditLogs(null, null, null, null, null);
+                auditController.getFilteredAuditLogs(null, "123456789", "2024-01-01", "2024-01-31", 0, 50);
+        ResponseEntity<AuditLogPage> response2 =
+                auditController.getFilteredAuditLogs(null, null, null, null, null, null);
         ResponseEntity<AuditLogPage> response3 =
-                auditController.getFilteredAuditLogs("987654321", "2024-02-01", "2024-02-28", 1, 100);
+                auditController.getFilteredAuditLogs(null, "987654321", "2024-02-01", "2024-02-28", 1, 100);
 
         // Then
         assertThat(response1.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -312,7 +317,7 @@ class AuditControllerTest {
 
         // When
         ResponseEntity<AuditLogPage> response =
-                auditController.getFilteredAuditLogs("123456789", "2024-01-01", null, 0, 50);
+                auditController.getFilteredAuditLogs(null, "123456789", "2024-01-01", null, 0, 50);
 
         // Then
         assertThat(response).isNotNull();
@@ -329,7 +334,7 @@ class AuditControllerTest {
 
         // When
         ResponseEntity<AuditLogPage> response =
-                auditController.getFilteredAuditLogs("123456789", null, "2024-01-31", 0, 50);
+                auditController.getFilteredAuditLogs(null, "123456789", null, "2024-01-31", 0, 50);
 
         // Then
         assertThat(response).isNotNull();

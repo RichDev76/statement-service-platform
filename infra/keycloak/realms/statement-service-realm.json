@@ -86,7 +86,7 @@
         }
       ],
       "attributes": {
-        "client_credentials.use_refresh_token": "false",
+        "client_credentials.use_refresh_token": "true",
         "access.token.lifespan": "3600"
       }
     },
@@ -121,7 +121,7 @@
         }
       ],
       "attributes": {
-        "client_credentials.use_refresh_token": "false",
+        "client_credentials.use_refresh_token": "true",
         "access.token.lifespan": "3600"
       }
     }

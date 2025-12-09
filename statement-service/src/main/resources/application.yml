@@ -14,7 +14,9 @@ server:
 logging:
   level:
     root: INFO
-    com.example.statementservice: DEBUG
+    com.example.statementservice: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [correlationId=%X{correlationId}] %logger{36} - %msg%n"
 
 management:
   endpoints:

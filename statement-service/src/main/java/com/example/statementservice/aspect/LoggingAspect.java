@@ -27,37 +27,72 @@ public class LoggingAspect {
     @Pointcut("within(com.example.statementservice.service..*)")
     public void servicePackage() {}
 
-    @Around("controllerPackage() || servicePackage()")
-    public Object logAround(ProceedingJoinPoint pjp) throws Throwable {
+    // --- Controller methods: log at INFO ---
+    @Around("controllerPackage()")
+    public Object logController(ProceedingJoinPoint pjp) throws Throwable {
         String className = pjp.getSignature().getDeclaringTypeName();
         String methodName = pjp.getSignature().getName();
-        Object[] args = pjp.getArgs();
+        long start = System.nanoTime();
 
         if (log.isInfoEnabled()) {
-            log.info("Entering {}.{}({})", className, methodName, formatArgs(args));
+            logInfoEntry(className, methodName);
         }
 
-        long start = System.nanoTime();
         try {
             Object result = pjp.proceed();
-            long tookMs = (System.nanoTime() - start) / 1_000_000;
+            long tookMs = getTimeTaken(start);
+
             if (log.isInfoEnabled()) {
-                log.info("Exiting  {}.{} -> {} ({} ms)", className, methodName, summarizeResult(result), tookMs);
+                logInfoExit(className, methodName, tookMs);
             }
+
+            if (log.isDebugEnabled()) {
+                logDebugExit(className, methodName, result, tookMs);
+            }
+
             return result;
         } catch (Throwable ex) {
-            long tookMs = (System.nanoTime() - start) / 1_000_000;
-            log.warn("Exception in {}.{} after {} ms: {}", className, methodName, tookMs, ex.toString());
+
+            logExceptionWarn(className, methodName, start, ex);
             throw ex;
         }
+    }
+
+    @Around("servicePackage()")
+    public Object logService(ProceedingJoinPoint pjp) throws Throwable {
+        String className = pjp.getSignature().getDeclaringTypeName();
+        String methodName = pjp.getSignature().getName();
+        long start = System.nanoTime();
+
+        if (log.isDebugEnabled()) {
+            logDebugEntry(pjp, className, methodName);
+        }
+
+        try {
+            Object result = pjp.proceed();
+            long tookMs = getTimeTaken(start);
+
+            if (log.isDebugEnabled()) {
+                logDebugExit(className, methodName, result, tookMs);
+            }
+
+            return result;
+        } catch (Throwable ex) {
+            logExceptionWarn(className, methodName, start, ex);
+            throw ex;
+        }
+    }
+
+    private long getTimeTaken(long start) {
+        return (System.nanoTime() - start) / 1_000_000;
     }
 
     private String formatArgs(Object[] args) {
         if (args == null || args.length == 0) return "";
         return Arrays.stream(args)
-                .map(this::safeToString)
-                .reduce((a, b) -> a + ", " + b)
-                .orElse("");
+            .map(this::safeToString)
+            .reduce((a, b) -> a + ", " + b)
+            .orElse("");
     }
 
     private String safeToString(Object arg) {
@@ -69,8 +104,7 @@ public class LoggingAspect {
             long size = -1L;
             try {
                 size = file.getSize();
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
             return "MultipartFile[name=" + originalName + ", contentType=" + contentType + ", size=" + size + "]";
         }
 
@@ -98,17 +132,14 @@ public class LoggingAspect {
             return arg.getClass().getComponentType().getSimpleName() + "[]";
         }
 
-        // Avoid verbose toString on entities; print class and key fields if present
         String simple = ClassUtils.getShortName(arg.getClass());
         try {
             var idField = arg.getClass().getDeclaredField("id");
             idField.setAccessible(true);
             Object id = idField.get(arg);
             return simple + "{id=" + Objects.toString(id) + "}";
-        } catch (NoSuchFieldException | IllegalAccessException ignored) {
-        }
+        } catch (NoSuchFieldException | IllegalAccessException ignored) {}
 
-        // Fallback toString but guard size
         String s = String.valueOf(arg);
         if (s.length() > 300) {
             return simple + "{" + s.substring(0, 300) + "…}";
@@ -117,20 +148,50 @@ public class LoggingAspect {
     }
 
     private String summarizeResult(Object result) {
-        if (result == null) return "null";
-        if (result instanceof ResponseEntity<?> resp) {
-            int status = resp.getStatusCode().value();
-            Object body = resp.getBody();
-            String bodyType = body == null ? "null" : ClassUtils.getShortName(body.getClass());
-            return "ResponseEntity(status=" + status + ", body=" + bodyType + ")";
-        }
-        if (result instanceof Resource) {
-            return "Resource[" + ClassUtils.getShortName(result.getClass()) + "]";
+        switch (result) {
+            case null -> {
+                return "null";
+            }
+            case ResponseEntity<?> resp -> {
+                int status = resp.getStatusCode().value();
+                Object body = resp.getBody();
+                String bodyType = body == null ? "null" : ClassUtils.getShortName(body.getClass());
+                return "ResponseEntity(status=" + status + ", body=" + bodyType + ")";
+            }
+            case Resource resource -> {
+                return "Resource[" + ClassUtils.getShortName(result.getClass()) + "]";
+            }
+            default -> {
+            }
         }
         String s = String.valueOf(result);
         if (s.length() > 200) {
             return ClassUtils.getShortName(result.getClass()) + "{" + s.substring(0, 200) + "…}";
         }
         return s;
+    }
+    private void logInfoEntry(String className, String methodName) {
+        log.info("Entering {}.{}", className, methodName);
+    }
+
+    private void logInfoExit(String className, String methodName, long tookMs) {
+        log.info("Exiting  {}.{} [OK] ({} ms)", className, methodName, tookMs);
+    }
+
+    private void logDebugEntry(ProceedingJoinPoint pjp, String className, String methodName) {
+        log.debug("Entering {}.{}({})", className, methodName, formatArgs(pjp.getArgs()));
+    }
+
+    private void logDebugExit(String className, String methodName, Object result, long tookMs) {
+        log.debug(
+            "Exiting  {}.{} -> {} ({} ms)",
+            className,
+            methodName,
+            summarizeResult(result),
+            tookMs);
+    }
+
+    private void logExceptionWarn(String className, String methodName, long start, Throwable ex) {
+        log.warn("Exception in {}.{} after {} ms: {}", className, methodName, getTimeTaken(start), ex.toString());
     }
 }

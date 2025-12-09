@@ -38,11 +38,21 @@ statement:
     download-path: /api/v1/statements/download/
   storage:
     base-dir: ${STATEMENT_STORAGE_DIR}
+  signed-link:
+    cleanup:
+      enabled: true
+      cron: "0 0/5 * * * *"          # every 5 minutes
+      retention-period: "PT0S"       # ISO-8601 duration; extra grace period after expiry
+      batch-size: 500                 # max rows to delete per run
+      lock-at-most-for: "PT5M"       # ShedLock max lock time
+      lock-at-least-for: "PT10S"     # ShedLock min lock time
 
 logging:
   level:
     root: INFO
-    com.example.statementservice: DEBUG
+    com.example.statementservice: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{correlationId}] %logger{36} - %msg%n"
 
 management:
   endpoints:

@@ -2,6 +2,8 @@ package com.example.statementservice.repository;
 
 import com.example.statementservice.model.entity.SignedLink;
 import jakarta.persistence.LockModeType;
+import jakarta.transaction.Transactional;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +21,17 @@ public interface SignedLinkRepository extends JpaRepository<SignedLink, UUID> {
     @Modifying
     @Query("UPDATE SignedLink s SET s.used = true WHERE s.token = :token AND s.singleUse = true AND s.used = false")
     int consumeSingleUse(@Param("token") String token);
+
+    @Modifying
+    @Transactional
+    @Query(
+            value = "WITH rows_to_delete AS (" + "    SELECT id FROM signed_links "
+                    + "    WHERE (expires_at < :cutoff OR used = TRUE) "
+                    + "    ORDER BY expires_at ASC "
+                    + "    LIMIT :batchSize"
+                    + ") "
+                    + "DELETE FROM signed_links "
+                    + "WHERE id IN (SELECT id FROM rows_to_delete)",
+            nativeQuery = true)
+    int deleteExpiredOrUsed(@Param("cutoff") OffsetDateTime cutoff, @Param("batchSize") int batchSize);
 }

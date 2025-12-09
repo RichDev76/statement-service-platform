@@ -373,7 +373,7 @@ path \"secret/metadata/*\" {
 POL
 vault policy write config-server /tmp/config-server-policy.hcl || true
 vault auth enable -path=approle approle || true
-vault write -f auth/approle/role/config-server token_policies=config-server token_ttl=1h token_max_ttl=24h || true
+vault write -f auth/approle/role/config-server token_policies=config-server token_ttl=12h token_max_ttl=24h || true
 "
 
 # Fetch role_id

@@ -11,6 +11,7 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class StatementService {
 
+    public static final String FILE_NAME_SANITIZATION_REGEX = "[^a-zA-Z0-9._-]";
     private final StatementRepository statementRepository;
     private final SignedLinkService signedLinkService;
     private final FileStorageService fileStorageService;
@@ -116,7 +118,7 @@ public class StatementService {
         stmt.setId(id);
         stmt.setAccountNumber(accountNumber);
         stmt.setStatementDate(statementDate);
-        stmt.setUploadFileName(file.getOriginalFilename());
+        stmt.setUploadFileName(sanitizeFileName(Objects.requireNonNull(file.getOriginalFilename())));
         stmt.setFilePath(out.getAbsolutePath());
         stmt.setFileIv(iv);
         stmt.setContentHash(contentHash);
@@ -134,5 +136,9 @@ public class StatementService {
                 .fileSize(file.getSize())
                 .fileName(file.getOriginalFilename())
                 .build();
+    }
+
+    private String sanitizeFileName(String fileName) {
+        return fileName.replaceAll(FILE_NAME_SANITIZATION_REGEX, "_");
     }
 }

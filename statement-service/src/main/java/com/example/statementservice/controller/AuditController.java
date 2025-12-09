@@ -19,7 +19,7 @@ public class AuditController implements AuditApi {
 
     @Override
     public ResponseEntity<AuditLogPage> getFilteredAuditLogs(
-            String accountNumber, String startDate, String endDate, Integer page, Integer size) {
+            String xCorrelationId, String accountNumber, String startDate, String endDate, Integer page, Integer size) {
         var apiPage = auditQueryService.getFilteredAuditLogs(accountNumber, startDate, endDate, page, size);
         return ResponseEntity.ok(apiPage);
     }

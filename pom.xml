@@ -24,6 +24,10 @@
     <spotless.version>3.0.0</spotless.version>
     <openapi-generator.version>7.0.1</openapi-generator.version>
     <build-helper-maven-plugin.version>3.4.0</build-helper-maven-plugin.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
   </properties>
 
   <dependencyManagement>

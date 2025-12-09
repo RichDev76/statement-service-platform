@@ -2,6 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0   http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>com.example</groupId>
         <artifactId>statement-platform</artifactId>
@@ -9,6 +10,10 @@
     </parent>
 
     <artifactId>statement-service</artifactId>
+
+    <properties>
+        <shedlock.version>5.16.0</shedlock.version>
+    </properties>
 
     <dependencies>
         <!-- Service functionality -->
@@ -86,6 +91,18 @@
             <artifactId>jackson-databind-nullable</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <version>${shedlock.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-jdbc-template</artifactId>
+            <version>${shedlock.version}</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.mockito</groupId>
@@ -98,7 +115,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -107,8 +123,8 @@
                 <configuration>
                     <excludes>
                         <exclude>
-                            <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <groupId>org.projectlombok</groupId>
                         </exclude>
                     </excludes>
                 </configuration>
@@ -123,13 +139,14 @@
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
                 <configuration>
                     <java>
-                        <trimTrailingWhitespace/>
                         <endWithNewline/>
-                        <removeUnusedImports/>
                         <importOrder/>
                         <palantirJavaFormat/>
+                        <removeUnusedImports/>
+                        <trimTrailingWhitespace/>
                     </java>
                     <pom>
                         <sortPom>
@@ -154,13 +171,13 @@
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
-                            <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <groupId>org.projectlombok</groupId>
                             <version>${lombok.version}</version>
                         </path>
                         <path>
-                            <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
+                            <groupId>org.mapstruct</groupId>
                             <version>${mapstruct.version}</version>
                         </path>
                     </annotationProcessorPaths>
@@ -176,18 +193,18 @@
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/openapi/statement-service-v1-openapi.yaml</inputSpec>
-                            <generatorName>spring</generatorName>
                             <apiPackage>com.example.statementservice.api</apiPackage>
-                            <modelPackage>com.example.statementservice.model.api</modelPackage>
                             <configOptions>
-                                <interfaceOnly>true</interfaceOnly>
-                                <useTags>true</useTags>
                                 <apiNameSuffix>Api</apiNameSuffix>
+                                <interfaceOnly>true</interfaceOnly>
+                                <serializableModel>true</serializableModel>
                                 <skipDefaultInterface>true</skipDefaultInterface>
                                 <useSpringBoot3>true</useSpringBoot3>
-                                <serializableModel>true</serializableModel>
+                                <useTags>true</useTags>
                             </configOptions>
+                            <generatorName>spring</generatorName>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/statement-service-v1-openapi.yaml</inputSpec>
+                            <modelPackage>com.example.statementservice.model.api</modelPackage>
                         </configuration>
                     </execution>
                 </executions>

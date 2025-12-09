@@ -8,15 +8,12 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mapstruct.factory.Mappers;
 
-@SpringBootTest
 @DisplayName("UploadResponseApiMapper Tests")
 class UploadResponseApiMapperTest {
 
-    @Autowired
-    private UploadResponseApiMapper uploadResponseApiMapper;
+    private final UploadResponseApiMapper uploadResponseApiMapper = Mappers.getMapper(UploadResponseApiMapper.class);
 
     @Test
     @DisplayName("toApi - should map all fields from DTO to API model")

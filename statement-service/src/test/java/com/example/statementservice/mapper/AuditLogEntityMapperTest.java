@@ -8,15 +8,12 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mapstruct.factory.Mappers;
 
-@SpringBootTest
 @DisplayName("AuditLogEntityMapper Tests")
 class AuditLogEntityMapperTest {
 
-    @Autowired
-    private AuditLogEntityMapper auditLogEntityMapper;
+    private final AuditLogEntityMapper auditLogEntityMapper = Mappers.getMapper(AuditLogEntityMapper.class);
 
     @Test
     @DisplayName("toDto - should map all fields from entity to DTO")
