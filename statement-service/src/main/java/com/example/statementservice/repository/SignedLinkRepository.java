@@ -26,7 +26,7 @@ public interface SignedLinkRepository extends JpaRepository<SignedLink, UUID> {
     @Transactional
     @Query(
             value = "WITH rows_to_delete AS (" + "    SELECT id FROM signed_links "
-                    + "    WHERE (expires_at < :cutoff OR used = TRUE) "
+                    + "    WHERE (expires_at < :cutoff) "
                     + "    ORDER BY expires_at ASC "
                     + "    LIMIT :batchSize"
                     + ") "
