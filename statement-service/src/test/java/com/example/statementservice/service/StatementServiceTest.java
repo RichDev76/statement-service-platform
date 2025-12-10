@@ -287,10 +287,10 @@ class StatementServiceTest {
     }
 
     @Test
-    @DisplayName("toDto - should convert statement to DTO with link")
+    @DisplayName("toDto - should convert statement to DTO")
     void toDto_Success() {
         // Given
-        when(statementEntityMapper.toDto(testStatement, signedLinkService)).thenReturn(testStatementDto);
+        when(statementEntityMapper.toDto(testStatement)).thenReturn(testStatementDto);
 
         // When
         StatementDto result = statementService.toDto(testStatement);
@@ -298,23 +298,7 @@ class StatementServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getStatementId()).isEqualTo(testId);
-        verify(statementEntityMapper).toDto(testStatement, signedLinkService);
-    }
-
-    @Test
-    @DisplayName("toDtoWithoutLink - should convert statement to DTO without link")
-    void toDtoWithoutLink_Success() {
-        // Given
-        when(statementEntityMapper.toDtoWithoutLink(testStatement, signedLinkService))
-                .thenReturn(testStatementDto);
-
-        // When
-        StatementDto result = statementService.toDtoWithoutLink(testStatement);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getStatementId()).isEqualTo(testId);
-        verify(statementEntityMapper).toDtoWithoutLink(testStatement, signedLinkService);
+        verify(statementEntityMapper).toDto(testStatement);
     }
 
     @Test
@@ -322,7 +306,7 @@ class StatementServiceTest {
     void getStatementDtoById_Success() {
         // Given
         when(statementRepository.findStatementById(testId)).thenReturn(Optional.of(testStatement));
-        when(statementEntityMapper.toDto(testStatement, signedLinkService)).thenReturn(testStatementDto);
+        when(statementEntityMapper.toDto(testStatement)).thenReturn(testStatementDto);
 
         // When
         StatementDto result = statementService.getStatementDtoById(testId);
@@ -331,7 +315,7 @@ class StatementServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getStatementId()).isEqualTo(testId);
         verify(statementRepository).findStatementById(testId);
-        verify(statementEntityMapper).toDto(testStatement, signedLinkService);
+        verify(statementEntityMapper).toDto(testStatement);
     }
 
     @Test
@@ -342,7 +326,7 @@ class StatementServiceTest {
         List<StatementDto> dtos = Arrays.asList(testStatementDto);
 
         when(statementRepository.findAllByAccountNumber(testAccountNumber)).thenReturn(Optional.of(statements));
-        when(statementEntityMapper.toDtos(statements, signedLinkService)).thenReturn(dtos);
+        when(statementEntityMapper.toDtos(statements)).thenReturn(dtos);
 
         // When
         List<StatementDto> result = statementService.getStatementsDtoByAccountNumber(testAccountNumber);
@@ -352,7 +336,7 @@ class StatementServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getStatementId()).isEqualTo(testId);
         verify(statementRepository).findAllByAccountNumber(testAccountNumber);
-        verify(statementEntityMapper).toDtos(statements, signedLinkService);
+        verify(statementEntityMapper).toDtos(statements);
     }
 
     @Test
@@ -361,7 +345,7 @@ class StatementServiceTest {
         // Given
         when(statementRepository.findByAccountNumberAndStatementDate(testAccountNumber, testStatementDate))
                 .thenReturn(Optional.of(testStatement));
-        when(statementEntityMapper.toDto(testStatement, signedLinkService)).thenReturn(testStatementDto);
+        when(statementEntityMapper.toDto(testStatement)).thenReturn(testStatementDto);
 
         // When
         Optional<StatementDto> result =
@@ -371,7 +355,7 @@ class StatementServiceTest {
         assertThat(result).isPresent();
         assertThat(result.get().getStatementId()).isEqualTo(testId);
         verify(statementRepository).findByAccountNumberAndStatementDate(testAccountNumber, testStatementDate);
-        verify(statementEntityMapper).toDto(testStatement, signedLinkService);
+        verify(statementEntityMapper).toDto(testStatement);
     }
 
     @Test
@@ -388,6 +372,6 @@ class StatementServiceTest {
         // Then
         assertThat(result).isEmpty();
         verify(statementRepository).findByAccountNumberAndStatementDate(testAccountNumber, testStatementDate);
-        verify(statementEntityMapper, never()).toDto(any(), any());
+        verify(statementEntityMapper, never()).toDto(any());
     }
 }

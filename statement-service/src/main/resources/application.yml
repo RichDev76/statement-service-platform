@@ -1,13 +1,7 @@
 spring:
   application:
     name: statement-service
-  config:
-    activate:
-      on-profile: develop
-    import: optional:configserver:http://localhost:8888
-  cloud:
-    config:
-      enabled: true
+
 server:
   port: 8080
 
@@ -16,7 +10,7 @@ logging:
     root: INFO
     com.example.statementservice: INFO
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [correlationId=%X{correlationId}] %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{correlationId}] %logger{36} - %msg%n"
 
 management:
   endpoints:

@@ -4,6 +4,13 @@ server:
     grace-period: 30s
 
 spring:
+  config:
+    activate:
+      on-profile: develop
+      import: optional:configserver:http://localhost:8888
+      cloud:
+        config:
+          enabled: true
   jpa:
     hibernate:
       ddl-auto: none
@@ -18,9 +25,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://0.0.0.0:8081/realms/statement-service
-  config:
-    activate:
-      on-profile: develop
   datasource:
     url: jdbc:postgresql://localhost:5432/statementdb
     username: ${APP_DB_USER}
@@ -82,20 +86,12 @@ security:
     statement:
       - /api/v1/statements/search
       - /api/v1/statements/link/**
-      - /api/v1/statements/download/**
     csrfIgnored:
       - /api/v1/statements/**
     whitelist:
+      - /api/v1/statements/download/**
       - /api/v1/statements/actuator/health/**
       - /api/v1/statements/actuator/info
       - /api/v1/statements/v3/api-docs/**
       - /api/v1/statements/swagger-ui/**
       - /api/v1/statements/swagger-ui.html
-
-springdoc:
-  api-docs:
-    path: /api/v1/statements/v3/api-docs
-    enabled: true
-  swagger-ui:
-    path: /api/v1/statements/swagger-ui/index.html
-    enabled: true

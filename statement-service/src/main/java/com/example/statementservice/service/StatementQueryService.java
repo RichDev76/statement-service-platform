@@ -6,30 +6,73 @@ import com.example.statementservice.model.api.StatementSummary;
 import com.example.statementservice.model.api.StatementSummaryPage;
 import com.example.statementservice.model.dto.StatementDto;
 import com.example.statementservice.model.entity.Statement;
+import com.example.statementservice.util.AuditHelper;
+import com.example.statementservice.util.RequestInfoProvider;
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StatementQueryService {
 
     private final StatementService statementService;
     private final StatementApiMapper statementApiMapper;
+    private final SignedLinkService signedLinkService;
+    private final AuditHelper auditHelper;
+    private final RequestInfoProvider requestInfoProvider;
 
-    public Optional<StatementSummary> getSummaryById(UUID statementId) {
+    public Optional<StatementSummary> getStatementSummaryWithSignedDownloadLinkById(UUID statementId) {
+        String performedBy = getPerformedBy();
+
         try {
             StatementDto dto = this.statementService.getStatementDtoById(statementId);
+            String accountNumber = dto.getAccountNumber();
+
+            // Generate download link with audit logging
+            try {
+                URI downloadLink = signedLinkService.buildSignedLink(dto.getFileName(), statementId);
+                dto.setDownloadLink(downloadLink);
+
+                // Audit success - signedLinkId is null unless SignedLinkService is modified to return it
+                auditHelper.recordLinkGenerated(statementId, accountNumber, null, performedBy);
+
+            } catch (Exception linkException) {
+                // Audit failure for link generation error
+                auditHelper.recordLinkGenerationFailed(statementId, accountNumber, performedBy, linkException);
+                // Continue without download link (graceful degradation)
+            }
+
             return Optional.of(statementApiMapper.toApi(dto));
+
         } catch (StatementNotFoundException e) {
+            // Audit failure for statement not found
+            auditHelper.recordStatementNotFound(statementId, performedBy);
             return Optional.empty();
+
+        } catch (Exception e) {
+            // Audit failure for unexpected errors
+            auditHelper.recordUnexpectedError(statementId, null, performedBy, e);
+            throw e; // Re-throw unexpected exceptions
+        }
+    }
+
+    private String getPerformedBy() {
+        try {
+            return requestInfoProvider.get().getPerformedBy();
+        } catch (Exception e) {
+            log.warn("Failed to get performedBy from request context", e);
+            return "system";
         }
     }
 
@@ -96,9 +139,8 @@ public class StatementQueryService {
         if (hasAccount) {
             Page<Statement> statements = this.statementService.getStatementsByAccountNumber(
                     accountNumber, PageRequest.of(pageNum, pageSize, defaultSort));
-            var content = statements
-                    .map(stmt -> toBase(statementService.toDtoWithoutLink(stmt)))
-                    .getContent();
+            var content =
+                    statements.map(stmt -> toBase(statementService.toDto(stmt))).getContent();
             result.setContent(content);
             result.totalElements(statements.getTotalElements());
             result.totalPages(statements.getTotalPages());

@@ -29,7 +29,6 @@ public class StatementService {
 
     public static final String FILE_NAME_SANITIZATION_REGEX = "[^a-zA-Z0-9._-]";
     private final StatementRepository statementRepository;
-    private final SignedLinkService signedLinkService;
     private final FileStorageService fileStorageService;
     private final EncryptionService encryptionService;
     private final StatementEntityMapper statementEntityMapper;
@@ -84,11 +83,7 @@ public class StatementService {
     }
 
     public StatementDto toDto(Statement s) {
-        return statementEntityMapper.toDto(s, signedLinkService);
-    }
-
-    public StatementDto toDtoWithoutLink(Statement s) {
-        return statementEntityMapper.toDtoWithoutLink(s, signedLinkService);
+        return statementEntityMapper.toDto(s);
     }
 
     public StatementDto getStatementDtoById(UUID id) {
@@ -96,7 +91,7 @@ public class StatementService {
     }
 
     public List<StatementDto> getStatementsDtoByAccountNumber(String accountNumber) {
-        return statementEntityMapper.toDtos(getStatementsByAccountNumber(accountNumber), signedLinkService);
+        return statementEntityMapper.toDtos(getStatementsByAccountNumber(accountNumber));
     }
 
     public Optional<StatementDto> getStatementDtoByAccountNumberAndStatementDate(

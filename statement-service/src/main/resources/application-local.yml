@@ -1,11 +1,9 @@
 spring:
   config:
-    activate:
-      on-profile: develop
-    import: optional:configserver:http://localhost:8888
+    import: "optional:"
   cloud:
     config:
-      enabled: true
+      enabled: false
   jpa:
     hibernate:
       ddl-auto: none
@@ -67,10 +65,10 @@ security:
     statement:
       - /api/v1/statements/search
       - /api/v1/statements/link/**
-      - /api/v1/statements/download/**
     csrfIgnored:
       - /api/v1/statements/**
     whitelist:
+      - /api/v1/statements/download/**
       - /api/v1/statements/actuator/health/**
       - /api/v1/statements/actuator/info
       - /api/v1/statements/v3/api-docs/**
