@@ -24,7 +24,7 @@ public class AdminController implements AdminApi {
 
     @Override
     public ResponseEntity<UploadResponse> uploadStatement(
-            String xMessageDigest, MultipartFile file, String accountNumber, String date) {
+            String xMessageDigest, MultipartFile file, String accountNumber, String date, String xCorrelationId) {
         UploadResponseDto dto = this.statementUploadService.upload(xMessageDigest, file, accountNumber, date);
         UploadResponse api = uploadResponseApiMapper.toApi(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(api);

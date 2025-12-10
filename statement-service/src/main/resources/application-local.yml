@@ -1,0 +1,78 @@
+spring:
+  config:
+    activate:
+      on-profile: develop
+    import: optional:configserver:http://localhost:8888
+  cloud:
+    config:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  mvc:
+    problemdetails:
+      enabled: true
+  datasource:
+    # Defaults to localhost for local dev
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Localhost for Keycloak
+          issuer-uri: http://localhost:8081/realms/statement-service
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.example.statementservice: DEBUG
+
+statement:
+  encryption:
+    algorithm: AES/GCM/NoPadding
+    signature:
+      secret: ${STATEMENT_SIGNATURE_SECRET}
+    files:
+      link-expiry-seconds: 900
+    # Relative path for local dev convenience
+    master-key-file: ${STATEMENT_MASTER_KEY_FILE}
+  storage:
+    # Relative path for local dev convenience
+    base-dir: ${STATEMENT_STORAGE_DIR}
+  api:
+    download-path: /api/v1/statements/download/
+  signed-link:
+    cleanup:
+      enabled: true
+      cron: "0 0/30 * * * *"          # every 5 minutes
+      retention-period: "PT0S"       # ISO-8601 duration; extra grace period after expiry
+      batch-size: 500                 # max rows to delete per run
+      lock-at-most-for: "PT5M"       # ShedLock max lock time
+      lock-at-least-for: "PT10S"     # ShedLock min lock time
+
+security:
+  endpoints:
+    admin:
+      - /api/v1/statements/upload
+    audit:
+      - /api/v1/statements/audit/logs
+    statement:
+      - /api/v1/statements/search
+      - /api/v1/statements/link/**
+      - /api/v1/statements/download/**
+    csrfIgnored:
+      - /api/v1/statements/**
+    whitelist:
+      - /api/v1/statements/actuator/health/**
+      - /api/v1/statements/actuator/info
+      - /api/v1/statements/v3/api-docs/**
+      - /api/v1/statements/swagger-ui/**
+      - /api/v1/statements/swagger-ui.html

@@ -1,43 +1,22 @@
 spring:
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/statementdb}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
-  jpa:
-    hibernate:
-      ddl-auto: none
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-  mvc:
-    problemdetails:
+  application:
+    name: statement-service
+  config:
+    activate:
+      on-profile: develop
+    import: optional:configserver:http://localhost:8888
+  cloud:
+    config:
       enabled: true
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://keycloak:8081/realms/statement-service
-statement:
-  storage:
-    base-dir: ${STATEMENT_STORAGE_DIR:/Users/devonrichards/data/files}
-  encryption:
-    master-key-file: ${STATEMENT_MASTER_KEY_FILE:/Users/devonrichards/run/secrets/master-key}
-    algorithm: AES/GCM/NoPadding
-    signature:
-      secret: ${STATEMENT_SIGNATURE_SECRET:changeme}
-    files:
-      link-expiry-seconds: 900
-  api:
-    # Base path for the public download endpoint used when generating signed links
-    download-path: /api/v1/statements/download/
-
 server:
   port: 8080
 
 logging:
   level:
     root: INFO
-    com.example.statementservice: DEBUG
+    com.example.statementservice: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [correlationId=%X{correlationId}] %logger{36} - %msg%n"
 
 management:
   endpoints:
@@ -66,25 +45,3 @@ springdoc:
     path: /api/v1/statements/swagger-ui/index.html
     enabled: true
 
-# Centralized security endpoint patterns bound via SecurityEndpointsProperties
-security:
-  endpoints:
-    # These are permitted without authentication
-    # Endpoints requiring authentication (grouped by domain for clarity)
-    admin:
-      - /api/v1/statements/upload
-    audit:
-      - /api/v1/statements/audit/logs
-    statement:
-      - /api/v1/statements/search
-      - /api/v1/statements/link/**
-      - /api/v1/statements/download/**
-    # CSRF should be disabled/ignored for these API paths (stateless APIs)
-    csrfIgnored:
-      - /api/v1/statements/**
-    whitelist:
-      - /api/v1/statements/actuator/health/**
-      - /api/v1/statements/actuator/info
-      - /api/v1/statements/v3/api-docs/**
-      - /api/v1/statements/swagger-ui/**
-      - /api/v1/statements/swagger-ui.html

@@ -76,7 +76,7 @@ class AdminControllerTest {
 
         // When
         ResponseEntity<UploadResponse> response =
-                adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate);
+                adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -99,7 +99,7 @@ class AdminControllerTest {
         when(uploadResponseApiMapper.toApi(any())).thenReturn(testApiResponse);
 
         // When
-        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate);
+        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate, null);
 
         // Then
         verify(statementUploadService).upload(eq(testMessageDigest), eq(testFile), eq(testAccountNumber), eq(testDate));
@@ -113,8 +113,8 @@ class AdminControllerTest {
                 .thenThrow(new RuntimeException("Service error"));
 
         // When/Then
-        assertThatThrownBy(
-                        () -> adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate))
+        assertThatThrownBy(() ->
+                        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
 
@@ -146,7 +146,7 @@ class AdminControllerTest {
 
         // When
         ResponseEntity<UploadResponse> response =
-                adminController.uploadStatement(testMessageDigest, largeFile, testAccountNumber, testDate);
+                adminController.uploadStatement(testMessageDigest, largeFile, testAccountNumber, testDate, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -167,8 +167,8 @@ class AdminControllerTest {
         when(uploadResponseApiMapper.toApi(any())).thenReturn(testApiResponse);
 
         // When
-        adminController.uploadStatement(testMessageDigest, testFile, minAccountNumber, testDate);
-        adminController.uploadStatement(testMessageDigest, testFile, maxAccountNumber, testDate);
+        adminController.uploadStatement(testMessageDigest, testFile, minAccountNumber, testDate, null);
+        adminController.uploadStatement(testMessageDigest, testFile, maxAccountNumber, testDate, null);
 
         // Then
         verify(statementUploadService).upload(testMessageDigest, testFile, minAccountNumber, testDate);
@@ -187,8 +187,8 @@ class AdminControllerTest {
         when(uploadResponseApiMapper.toApi(any())).thenReturn(testApiResponse);
 
         // When
-        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, pastDate);
-        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, futureDate);
+        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, pastDate, null);
+        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, futureDate, null);
 
         // Then
         verify(statementUploadService).upload(testMessageDigest, testFile, testAccountNumber, pastDate);
@@ -204,7 +204,7 @@ class AdminControllerTest {
         when(uploadResponseApiMapper.toApi(testDto)).thenReturn(testApiResponse);
 
         // When
-        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate);
+        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate, null);
 
         // Then
         verify(uploadResponseApiMapper).toApi(eq(testDto));
@@ -238,7 +238,7 @@ class AdminControllerTest {
 
         // When
         ResponseEntity<UploadResponse> response =
-                adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate);
+                adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate, null);
 
         // Then
         assertThat(response.getBody()).isNotNull();
@@ -257,8 +257,8 @@ class AdminControllerTest {
         when(uploadResponseApiMapper.toApi(any())).thenThrow(new RuntimeException("Mapper error"));
 
         // When/Then
-        assertThatThrownBy(
-                        () -> adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate))
+        assertThatThrownBy(() ->
+                        adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Mapper error");
 
@@ -278,7 +278,7 @@ class AdminControllerTest {
 
         // When
         ResponseEntity<UploadResponse> response =
-                adminController.uploadStatement(testMessageDigest, fileWithoutName, testAccountNumber, testDate);
+                adminController.uploadStatement(testMessageDigest, fileWithoutName, testAccountNumber, testDate, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -296,9 +296,9 @@ class AdminControllerTest {
 
         // When
         ResponseEntity<UploadResponse> response1 =
-                adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate);
+                adminController.uploadStatement(testMessageDigest, testFile, testAccountNumber, testDate, null);
         ResponseEntity<UploadResponse> response2 =
-                adminController.uploadStatement(testMessageDigest, testFile, "987654321", "2024-02-15");
+                adminController.uploadStatement(testMessageDigest, testFile, "987654321", "2024-02-15", null);
 
         // Then
         assertThat(response1.getStatusCode()).isEqualTo(HttpStatus.CREATED);

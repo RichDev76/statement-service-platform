@@ -6,6 +6,7 @@ import com.example.statementservice.security.KeycloakRoleConverter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableConfigurationProperties(SecurityEndpointsProperties.class)
@@ -80,6 +82,9 @@ public class SecurityConfig {
     @Bean
     public AuthenticationEntryPoint problemDetailAuthEntryPoint(ObjectMapper objectMapper) {
         return (request, response, authException) -> {
+            // Minimal, safe logging of unauthenticated access
+            log.warn("Unauthenticated access - path={}, method={}", request.getRequestURI(), request.getMethod());
+
             ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
             pd.setType(buildProblemDetailTypeURI(request, "/errors/authentication"));
             pd.setTitle("Unauthenticated");
@@ -98,6 +103,9 @@ public class SecurityConfig {
     @Bean
     public AccessDeniedHandler problemDetailAccessDeniedHandler(ObjectMapper objectMapper) {
         return (request, response, accessDeniedException) -> {
+            // Minimal, safe logging of forbidden access
+            log.warn("Access denied - path={}, method={}", request.getRequestURI(), request.getMethod());
+
             ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
             pd.setType(buildProblemDetailTypeURI(request, "/errors/authorization"));
             pd.setTitle("Forbidden");

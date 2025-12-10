@@ -7,6 +7,7 @@ info:
     Also provides search endpoints to retrieve statements by statementId,
     and to search by account number and/or date using paginated results.
     Includes audit log retrieval capabilities.
+    All endpoints require JWT bearer authentication and support the x-correlation-id header for request tracing.
 
 servers:
   - url: https://api.example.com/api/v1/statements
@@ -16,11 +17,14 @@ servers:
 
 tags:
   - name: Admin
-    description: Administrative operations for statement management (requires authentication)
+    description: Administrative operations for statement management (requires JWT authentication)
   - name: Statements
     description: Statement search and retrieval operations
   - name: Audit
-    description: Audit log operations (requires authentication)
+    description: Audit log operations (requires JWT authentication)
+
+security:
+  - bearerAuth: []
 
 paths:
   /upload:
@@ -31,8 +35,9 @@ paths:
       description: Upload a PDF file with metadata. The SHA-256 message digest must be supplied in the `X-Message-Digest` header.
       operationId: uploadStatement
       security:
-        - basicAuth: []
+        - bearerAuth: []
       parameters:
+        - $ref: '#/components/parameters/correlationIdHeader'
         - name: X-Message-Digest
           in: header
           required: true
@@ -115,6 +120,7 @@ paths:
         Use the `statementId` returned at upload time.
       operationId: getStatementById
       parameters:
+        - $ref: '#/components/parameters/correlationIdHeader'
         - name: statementId
           in: path
           required: true
@@ -155,6 +161,7 @@ paths:
         The list does not include download links.
       operationId: searchStatements
       parameters:
+        - $ref: '#/components/parameters/correlationIdHeader'
         - $ref: '#/components/parameters/accountNumberSearchParam'
         - $ref: '#/components/parameters/dateSearchParam'
         - $ref: '#/components/parameters/pageParam'
@@ -206,6 +213,7 @@ paths:
       description: Download the encrypted statement PDF file using a filename-based signed URL with expires and signature parameters.
       operationId: downloadStatementByFileName
       parameters:
+        - $ref: '#/components/parameters/correlationIdHeader'
         - name: fileName
           in: path
           required: true
@@ -266,6 +274,7 @@ paths:
         uploads, downloads, and link generations.
       operationId: getFilteredAuditLogs
       parameters:
+        - $ref: '#/components/parameters/correlationIdHeader'
         - name: accountNumber
           in: query
           required: false
@@ -331,12 +340,24 @@ paths:
 
 components:
   securitySchemes:
-    basicAuth:
+    bearerAuth:
       type: http
-      scheme: basic
-      description: HTTP Basic Authentication
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token obtained from the identity provider.
 
   parameters:
+    correlationIdHeader:
+      name: x-correlation-id
+      in: header
+      required: false
+      description: >
+        Optional correlation ID for tracing requests across services. If not provided, the server will
+        generate one and return it in the response header. The same value is also used for log correlation.
+      schema:
+        type: string
+        example: "9f1b2c3d-4e5f-6789-aaaa-bbbbccccdddd"
+
     accountNumberParam:
       name: accountNumber
       in: query

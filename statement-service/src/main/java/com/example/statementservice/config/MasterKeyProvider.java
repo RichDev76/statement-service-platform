@@ -11,16 +11,22 @@ public class MasterKeyProvider {
 
     private final byte[] key;
 
-    public MasterKeyProvider(@Value("${statement.encryption.master-key-file:/run/secrets/master-key}") String keyFile) {
+    public MasterKeyProvider(
+            @Value("${statement.encryption.master-key:}") String keyContent,
+            @Value("${statement.encryption.master-key-file:/run/secrets/master-key}") String keyFile) {
         try {
-            Path p = Path.of(keyFile);
-            if (!Files.exists(p)) {
-                throw new IllegalStateException("Master key file not found at: " + keyFile
-                        + ". This is required for production. Set STATEMENT_MASTER_KEY_FILE environment variable.");
+            if (keyContent != null && !keyContent.trim().isEmpty()) {
+                this.key = java.util.Base64.getDecoder().decode(keyContent.trim());
+            } else {
+                Path p = Path.of(keyFile);
+                if (!Files.exists(p)) {
+                    throw new IllegalStateException("Master key file not found at: " + keyFile
+                            + ". This is required if statement.encryption.master-key is not set.");
+                }
+                byte[] content = Files.readAllBytes(p);
+                String s = new String(content).trim();
+                this.key = java.util.Base64.getDecoder().decode(s);
             }
-            byte[] content = Files.readAllBytes(p);
-            String s = new String(content).trim();
-            this.key = java.util.Base64.getDecoder().decode(s);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load master key", e);
         }

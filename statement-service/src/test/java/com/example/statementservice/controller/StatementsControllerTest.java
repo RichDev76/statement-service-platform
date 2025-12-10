@@ -97,7 +97,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<Resource> response =
-                statementsController.downloadStatementByFileName(fileName, expires, signature);
+                statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -129,7 +129,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<Resource> response =
-                statementsController.downloadStatementByFileName(fileName, expires, signature);
+                statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -157,7 +157,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<Resource> response =
-                statementsController.downloadStatementByFileName(fileName, expires, signature);
+                statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -183,7 +183,7 @@ class StatementsControllerTest {
                 .thenReturn(ResponseEntity.ok().build());
 
         // When
-        statementsController.downloadStatementByFileName(fileName, expires, signature);
+        statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         // Then
         verify(downloadService).validateAndStreamDetailed(signature, "10.0.0.1", "Custom-Agent", "customUser");
@@ -207,7 +207,7 @@ class StatementsControllerTest {
                 .thenReturn(ResponseEntity.ok().build());
 
         // When
-        statementsController.downloadStatementByFileName(fileName, expires, signature);
+        statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         // Then
         verify(downloadService).validateAndStreamDetailed(eq(signature), anyString(), anyString(), anyString());
@@ -233,7 +233,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<Resource> response =
-                statementsController.downloadStatementByFileName(fileName, expires, signature);
+                statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -249,7 +249,7 @@ class StatementsControllerTest {
         when(statementQueryService.getSummaryById(testStatementId)).thenReturn(Optional.of(testStatementSummary));
 
         // When
-        ResponseEntity<StatementSummary> response = statementsController.getStatementById(testStatementId);
+        ResponseEntity<StatementSummary> response = statementsController.getStatementById(testStatementId, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -268,7 +268,7 @@ class StatementsControllerTest {
         when(statementQueryService.getSummaryById(testStatementId)).thenReturn(Optional.empty());
 
         // When/Then
-        assertThatThrownBy(() -> statementsController.getStatementById(testStatementId))
+        assertThatThrownBy(() -> statementsController.getStatementById(testStatementId, null))
                 .isInstanceOf(StatementNotFoundException.class)
                 .hasMessageContaining("Statement(s) not found for Id: " + testStatementId);
 
@@ -286,7 +286,7 @@ class StatementsControllerTest {
         when(statementQueryService.getSummaryById(specificId)).thenReturn(Optional.of(summary));
 
         // When
-        ResponseEntity<StatementSummary> response = statementsController.getStatementById(specificId);
+        ResponseEntity<StatementSummary> response = statementsController.getStatementById(specificId, null);
 
         // Then
         assertThat(response.getBody()).isNotNull();
@@ -301,7 +301,7 @@ class StatementsControllerTest {
         when(statementQueryService.getSummaryById(any())).thenThrow(new RuntimeException("Service error"));
 
         // When/Then
-        assertThatThrownBy(() -> statementsController.getStatementById(testStatementId))
+        assertThatThrownBy(() -> statementsController.getStatementById(testStatementId, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
 
@@ -320,7 +320,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(accountNumber, null, null, null, null);
+                statementsController.searchStatements(null, accountNumber, null, null, null, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -340,7 +340,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(null, date, null, null, null);
+                statementsController.searchStatements(null, null, date, null, null, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -359,7 +359,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(accountNumber, date, null, null, null);
+                statementsController.searchStatements(null, accountNumber, date, null, null, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -371,7 +371,7 @@ class StatementsControllerTest {
     @DisplayName("searchStatements - should throw InvalidInputException when neither account nor date provided")
     void searchStatements_NeitherAccountNorDate() {
         // When/Then
-        assertThatThrownBy(() -> statementsController.searchStatements(null, null, null, null, null))
+        assertThatThrownBy(() -> statementsController.searchStatements(null, null, null, null, null, null))
                 .isInstanceOf(InvalidInputException.class)
                 .hasMessageContaining("At least one of accountNumber or date must be provided");
 
@@ -382,7 +382,7 @@ class StatementsControllerTest {
     @DisplayName("searchStatements - should throw InvalidInputException when both are blank strings")
     void searchStatements_BothBlankStrings() {
         // When/Then
-        assertThatThrownBy(() -> statementsController.searchStatements("", "   ", null, null, null))
+        assertThatThrownBy(() -> statementsController.searchStatements(null, "", "   ", null, null, null))
                 .isInstanceOf(InvalidInputException.class)
                 .hasMessageContaining("At least one of accountNumber or date must be provided");
 
@@ -399,7 +399,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements("", date, null, null, null);
+                statementsController.searchStatements(null, "", date, null, null, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -416,7 +416,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(accountNumber, "   ", null, null, null);
+                statementsController.searchStatements(null, accountNumber, "   ", null, null, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -434,7 +434,7 @@ class StatementsControllerTest {
                 .thenReturn(testStatementSummaryPage);
 
         // When
-        statementsController.searchStatements(accountNumber, null, page, size, null);
+        statementsController.searchStatements(null, accountNumber, null, page, size, null);
 
         // Then
         verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), eq(page), eq(size), isNull());
@@ -450,7 +450,7 @@ class StatementsControllerTest {
                 .thenReturn(testStatementSummaryPage);
 
         // When
-        statementsController.searchStatements(accountNumber, null, null, null, sort);
+        statementsController.searchStatements(null, accountNumber, null, null, null, sort);
 
         // Then
         verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), isNull(), isNull(), eq(sort));
@@ -470,7 +470,7 @@ class StatementsControllerTest {
                 .thenReturn(testStatementSummaryPage);
 
         // When
-        statementsController.searchStatements(accountNumber, date, page, size, sort);
+        statementsController.searchStatements(null, accountNumber, date, page, size, sort);
 
         // Then
         verify(statementQueryService).searchPaged(eq(accountNumber), eq(date), eq(page), eq(size), eq(sort));
@@ -485,7 +485,7 @@ class StatementsControllerTest {
                 .thenThrow(new RuntimeException("Service error"));
 
         // When/Then
-        assertThatThrownBy(() -> statementsController.searchStatements(accountNumber, null, null, null, null))
+        assertThatThrownBy(() -> statementsController.searchStatements(null, accountNumber, null, null, null, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
 
@@ -506,7 +506,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(accountNumber, null, null, null, null);
+                statementsController.searchStatements(null, accountNumber, null, null, null, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -531,7 +531,7 @@ class StatementsControllerTest {
 
         // When
         ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(accountNumber, null, null, null, null);
+                statementsController.searchStatements(null, accountNumber, null, null, null, null);
 
         // Then
         assertThat(response).isNotNull();
