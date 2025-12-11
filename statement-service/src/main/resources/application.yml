@@ -1,7 +1,11 @@
 spring:
   application:
     name: statement-service
-
+  config:
+    import: optional:configserver:http://localhost:8888
+  cloud:
+    config:
+      enabled: true
 server:
   port: 8080
 

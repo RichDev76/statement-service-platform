@@ -13,7 +13,7 @@
   <description>Multi-module project for Statement Service, Config Server and infra</description>
 
   <properties>
-    <java.version>21</java.version>
+    <java.version>25</java.version>
     <spring.boot.version>3.5.7</spring.boot.version>
     <spring-cloud.version>2025.0.0</spring-cloud.version>
     <mapstruct.version>1.5.5.Final</mapstruct.version>
@@ -26,8 +26,8 @@
     <build-helper-maven-plugin.version>3.4.0</build-helper-maven-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
+    <maven.compiler.source>25</maven.compiler.source>
+    <maven.compiler.target>25</maven.compiler.target>
   </properties>
 
   <dependencyManagement>
@@ -93,7 +93,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.11.0</version>
+          <version>3.14.0</version>
           <configuration>
             <release>${java.version}</release>
           </configuration>

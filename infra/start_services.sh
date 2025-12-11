@@ -30,6 +30,6 @@ fi
 info "Vault ready."
 
 # Start remaining services (db/keycloak/config-server)
-info "Starting db, keycloak, config-server..."
-docker compose up -d db keycloak config-server
+info "Starting db, keycloak, config-server, statement-service..."
+docker compose up -d db keycloak config-server statement-service
 

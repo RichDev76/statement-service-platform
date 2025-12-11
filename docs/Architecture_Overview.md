@@ -194,7 +194,7 @@ The `statement-service` module follows a traditional **layered architecture**:
 - `GET /api/v1/statements/audit/logs` → `ROLE_AuditLogsSearch`
 - `GET /api/v1/statements/search` → `ROLE_Search`
 - `GET /api/v1/statements/*/link` → `ROLE_GenerateSignedLink`
-- `GET /api/v1/statements/download/**` → `ROLE_Download` (configurable; may be relaxed to `permitAll()` if desired)
+- `GET /api/v1/statements/download/**` → No authentication enabled
 
 Unauthorized and forbidden errors are returned as **RFC 7807 ProblemDetail** JSON.
 

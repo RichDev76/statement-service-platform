@@ -24,9 +24,9 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://0.0.0.0:8081/realms/statement-service
+          issuer-uri: http://keycloak:8080/realms/statement-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/statementdb
+    url: jdbc:postgresql://db:5432/statementdb
     username: ${APP_DB_USER}
     password: ${APP_DB_PASSWORD}
 
