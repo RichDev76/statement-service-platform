@@ -1,9 +1,9 @@
 package com.example.statementservice.util;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import com.example.statementservice.enums.DownloadOutcome;
+import com.example.statementservice.exception.DecryptionFailedException;
 import com.example.statementservice.service.DownloadService;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -123,7 +123,7 @@ class DownloadResponseFactoryTest {
 
         // Act & Assert
         assertThrows(
-                com.example.statementservice.DecryptionFailedException.class,
+                DecryptionFailedException.class,
                 () -> downloadResponseFactory.build(fileName, result));
     }
 

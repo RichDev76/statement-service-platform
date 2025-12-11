@@ -2,7 +2,7 @@ package com.example.statementservice.exception.advice;
 
 import static com.example.statementservice.util.CommonUtil.buildProblemDetailTypeURI;
 
-import com.example.statementservice.DecryptionFailedException;
+import com.example.statementservice.exception.DecryptionFailedException;
 import com.example.statementservice.exception.DigestComputationException;
 import com.example.statementservice.exception.DigestMismatchException;
 import com.example.statementservice.exception.DownloadFileMissingException;

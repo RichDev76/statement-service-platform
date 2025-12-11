@@ -1,6 +1,6 @@
 package com.example.statementservice.util;
 
-import com.example.statementservice.DecryptionFailedException;
+import com.example.statementservice.exception.DecryptionFailedException;
 import com.example.statementservice.exception.DownloadFileMissingException;
 import com.example.statementservice.exception.DownloadInvalidSignatureException;
 import com.example.statementservice.exception.DownloadLinkExpiredException;
