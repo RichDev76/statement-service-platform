@@ -1,0 +1,33 @@
+meta {
+  name: Search statements by account number and date
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/search?accountNumber=123456789&date=2025-11-06
+  body: none
+  auth: bearer
+}
+
+params:query {
+  accountNumber: 123456789
+  date: 2025-11-06
+}
+
+headers {
+  Accept: application/json
+}
+
+auth:bearer {
+  token: {{ADMIN_ACCESS_TOKEN}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
+docs {
+  Return statements for a given account number and statement date (YYYY-MM-DD). Useful to find the statement for a specific month/date.
+}
