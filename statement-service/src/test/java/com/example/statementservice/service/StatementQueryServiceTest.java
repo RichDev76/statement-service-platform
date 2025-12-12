@@ -12,6 +12,9 @@ import com.example.statementservice.model.api.StatementSummary;
 import com.example.statementservice.model.api.StatementSummaryPage;
 import com.example.statementservice.model.dto.StatementDto;
 import com.example.statementservice.model.entity.Statement;
+import com.example.statementservice.util.AuditHelper;
+import com.example.statementservice.util.RequestInfo;
+import com.example.statementservice.util.RequestInfoProvider;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
@@ -37,6 +40,15 @@ class StatementQueryServiceTest {
     @Mock
     private StatementApiMapper statementApiMapper;
 
+    @Mock
+    private SignedLinkService signedLinkService;
+
+    @Mock
+    private AuditHelper auditHelper;
+
+    @Mock
+    private RequestInfoProvider requestInfoProvider;
+
     @InjectMocks
     private StatementQueryService statementQueryService;
 
@@ -46,6 +58,7 @@ class StatementQueryServiceTest {
     private StatementDto testStatementDto;
     private StatementSummary testStatementSummary;
     private Statement testStatement;
+    private RequestInfo testRequestInfo;
 
     @BeforeEach
     void setUp() {
@@ -70,41 +83,51 @@ class StatementQueryServiceTest {
         testStatement.setAccountNumber(testAccountNumber);
         testStatement.setStatementDate(testDate);
         testStatement.setUploadedAt(OffsetDateTime.now());
+
+        testRequestInfo = new RequestInfo("127.0.0.1", "JUnit", "test-user");
     }
 
-    // ==================== getSummaryById Tests ====================
+    // ==================== getStatementSummaryWithSignedDownloadLinkById Tests ====================
 
     @Test
-    @DisplayName("getSummaryById - should return summary when statement exists")
-    void getSummaryById_Found() {
+    @DisplayName("getStatementSummaryWithSignedDownloadLinkById - should return summary when statement exists")
+    void getStatementSummaryWithSignedDownloadLinkById_Found() {
         // Given
+        when(requestInfoProvider.get()).thenReturn(testRequestInfo);
         when(statementService.getStatementDtoById(testStatementId)).thenReturn(testStatementDto);
         when(statementApiMapper.toApi(testStatementDto)).thenReturn(testStatementSummary);
+        when(signedLinkService.buildSignedLink(testStatementDto.getFileName(), testStatementId))
+                .thenReturn(java.net.URI.create("http://localhost/download/statement.pdf"));
 
         // When
-        Optional<StatementSummary> result = statementQueryService.getSummaryById(testStatementId);
+        Optional<StatementSummary> result =
+                statementQueryService.getStatementSummaryWithSignedDownloadLinkById(testStatementId);
 
         // Then
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(testStatementSummary);
         verify(statementService).getStatementDtoById(testStatementId);
         verify(statementApiMapper).toApi(testStatementDto);
+        verify(auditHelper).recordLinkGenerated(eq(testStatementId), eq(testAccountNumber), isNull(), eq("test-user"));
     }
 
     @Test
-    @DisplayName("getSummaryById - should return empty when statement not found")
-    void getSummaryById_NotFound() {
+    @DisplayName("getStatementSummaryWithSignedDownloadLinkById - should return empty when statement not found")
+    void getStatementSummaryWithSignedDownloadLinkById_NotFound() {
         // Given
+        when(requestInfoProvider.get()).thenReturn(testRequestInfo);
         when(statementService.getStatementDtoById(testStatementId))
                 .thenThrow(new StatementNotFoundException("Not found"));
 
         // When
-        Optional<StatementSummary> result = statementQueryService.getSummaryById(testStatementId);
+        Optional<StatementSummary> result =
+                statementQueryService.getStatementSummaryWithSignedDownloadLinkById(testStatementId);
 
         // Then
         assertThat(result).isEmpty();
         verify(statementService).getStatementDtoById(testStatementId);
         verify(statementApiMapper, never()).toApi(any());
+        verify(auditHelper).recordStatementNotFound(eq(testStatementId), eq("test-user"));
     }
 
     // ==================== searchByAccount Tests ====================
@@ -291,7 +314,7 @@ class StatementQueryServiceTest {
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
-        when(statementService.toDtoWithoutLink(any())).thenReturn(testStatementDto);
+        when(statementService.toDto(any())).thenReturn(testStatementDto);
 
         // When
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, 0, 50, null);
@@ -350,7 +373,7 @@ class StatementQueryServiceTest {
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
-        when(statementService.toDtoWithoutLink(any())).thenReturn(testStatementDto);
+        when(statementService.toDto(any())).thenReturn(testStatementDto);
 
         // When
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, null, null, null);
@@ -367,7 +390,7 @@ class StatementQueryServiceTest {
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
-        when(statementService.toDtoWithoutLink(any())).thenReturn(testStatementDto);
+        when(statementService.toDto(any())).thenReturn(testStatementDto);
 
         // When
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, -5, 50, null);
@@ -383,7 +406,7 @@ class StatementQueryServiceTest {
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
-        when(statementService.toDtoWithoutLink(any())).thenReturn(testStatementDto);
+        when(statementService.toDto(any())).thenReturn(testStatementDto);
 
         // When
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, 0, 200, null);
@@ -399,7 +422,7 @@ class StatementQueryServiceTest {
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
-        when(statementService.toDtoWithoutLink(any())).thenReturn(testStatementDto);
+        when(statementService.toDto(any())).thenReturn(testStatementDto);
 
         // When
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, 0, 0, null);
@@ -424,7 +447,7 @@ class StatementQueryServiceTest {
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
-        when(statementService.toDtoWithoutLink(any())).thenReturn(testStatementDto);
+        when(statementService.toDto(any())).thenReturn(testStatementDto);
 
         // When
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, "   ", 0, 50, null);

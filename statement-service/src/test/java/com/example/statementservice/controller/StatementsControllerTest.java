@@ -240,16 +240,18 @@ class StatementsControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
-    // ==================== getStatementById Tests ====================
+    // ==================== getDownloadSignedLinkById (getStatementById legacy tests) ====================
 
     @Test
-    @DisplayName("getStatementById - should return OK with statement summary when found")
-    void getStatementById_Found() {
+    @DisplayName("getDownloadSignedLinkById - should return OK with statement summary when found")
+    void getDownloadSignedLinkById_Found() {
         // Given
-        when(statementQueryService.getSummaryById(testStatementId)).thenReturn(Optional.of(testStatementSummary));
+        when(statementQueryService.getStatementSummaryWithSignedDownloadLinkById(testStatementId))
+                .thenReturn(Optional.of(testStatementSummary));
 
         // When
-        ResponseEntity<StatementSummary> response = statementsController.getStatementById(testStatementId, null);
+        ResponseEntity<StatementSummary> response =
+                statementsController.getDownloadSignedLinkById(testStatementId, null);
 
         // Then
         assertThat(response).isNotNull();
@@ -258,54 +260,57 @@ class StatementsControllerTest {
         assertThat(response.getBody().getStatementId()).isEqualTo(testStatementId);
         assertThat(response.getBody().getAccountNumber()).isEqualTo("123456789");
 
-        verify(statementQueryService).getSummaryById(testStatementId);
+        verify(statementQueryService).getStatementSummaryWithSignedDownloadLinkById(testStatementId);
     }
 
     @Test
-    @DisplayName("getStatementById - should throw StatementNotFoundException when not found")
-    void getStatementById_NotFound() {
+    @DisplayName("getDownloadSignedLinkById - should throw StatementNotFoundException when not found")
+    void getDownloadSignedLinkById_NotFound() {
         // Given
-        when(statementQueryService.getSummaryById(testStatementId)).thenReturn(Optional.empty());
+        when(statementQueryService.getStatementSummaryWithSignedDownloadLinkById(testStatementId))
+                .thenReturn(Optional.empty());
 
         // When/Then
-        assertThatThrownBy(() -> statementsController.getStatementById(testStatementId, null))
+        assertThatThrownBy(() -> statementsController.getDownloadSignedLinkById(testStatementId, null))
                 .isInstanceOf(StatementNotFoundException.class)
                 .hasMessageContaining("Statement(s) not found for Id: " + testStatementId);
 
-        verify(statementQueryService).getSummaryById(testStatementId);
+        verify(statementQueryService).getStatementSummaryWithSignedDownloadLinkById(testStatementId);
     }
 
     @Test
-    @DisplayName("getStatementById - should pass correct statement ID to service")
-    void getStatementById_PassesCorrectId() {
+    @DisplayName("getDownloadSignedLinkById - should pass correct statement ID to service")
+    void getDownloadSignedLinkById_PassesCorrectId() {
         // Given
         UUID specificId = UUID.randomUUID();
         StatementSummary summary = new StatementSummary();
         summary.setStatementId(specificId);
 
-        when(statementQueryService.getSummaryById(specificId)).thenReturn(Optional.of(summary));
+        when(statementQueryService.getStatementSummaryWithSignedDownloadLinkById(specificId))
+                .thenReturn(Optional.of(summary));
 
         // When
-        ResponseEntity<StatementSummary> response = statementsController.getStatementById(specificId, null);
+        ResponseEntity<StatementSummary> response = statementsController.getDownloadSignedLinkById(specificId, null);
 
         // Then
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getStatementId()).isEqualTo(specificId);
-        verify(statementQueryService).getSummaryById(eq(specificId));
+        verify(statementQueryService).getStatementSummaryWithSignedDownloadLinkById(eq(specificId));
     }
 
     @Test
-    @DisplayName("getStatementById - should propagate service exceptions")
-    void getStatementById_ServiceException() {
+    @DisplayName("getDownloadSignedLinkById - should propagate service exceptions")
+    void getDownloadSignedLinkById_ServiceException() {
         // Given
-        when(statementQueryService.getSummaryById(any())).thenThrow(new RuntimeException("Service error"));
+        when(statementQueryService.getStatementSummaryWithSignedDownloadLinkById(any()))
+                .thenThrow(new RuntimeException("Service error"));
 
         // When/Then
-        assertThatThrownBy(() -> statementsController.getStatementById(testStatementId, null))
+        assertThatThrownBy(() -> statementsController.getDownloadSignedLinkById(testStatementId, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
 
-        verify(statementQueryService).getSummaryById(testStatementId);
+        verify(statementQueryService).getStatementSummaryWithSignedDownloadLinkById(testStatementId);
     }
 
     // ==================== searchStatements Tests ====================

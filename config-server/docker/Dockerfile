@@ -1,13 +1,5 @@
-# ../config-server/docker/Dockerfile
-##
-## Multi-stage build (repo-root context)
-## - Build stage uses Maven with Eclipse Temurin 21 JDK so release 21 compiles
-## - Builds only the config-server module
-## - Runtime stage uses Temurin 21 JRE with curl/jq for entrypoint
-##
-
-# ---- Build stage (JDK 21) ----
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+# ---- Build stage (JDK 25) ----
+FROM maven:3.9.6-eclipse-temurin-25 AS build
 WORKDIR /workspace
 
 # Copy entire repository so Maven can resolve parent POMs and sibling modules
@@ -16,8 +8,8 @@ COPY . /workspace
 # Build only the config-server module (and its dependencies)
 RUN mvn -f pom.xml -pl config-server -am -B -DskipTests package
 
-# ---- Runtime stage (JRE 21) ----
-FROM eclipse-temurin:21-jre
+# ---- Runtime stage (JRE 25) ----
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 
 # Copy the built jar produced by the build stage

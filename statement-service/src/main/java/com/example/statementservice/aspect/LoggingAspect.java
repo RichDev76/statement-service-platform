@@ -90,9 +90,9 @@ public class LoggingAspect {
     private String formatArgs(Object[] args) {
         if (args == null || args.length == 0) return "";
         return Arrays.stream(args)
-            .map(this::safeToString)
-            .reduce((a, b) -> a + ", " + b)
-            .orElse("");
+                .map(this::safeToString)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
     }
 
     private String safeToString(Object arg) {
@@ -104,7 +104,8 @@ public class LoggingAspect {
             long size = -1L;
             try {
                 size = file.getSize();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             return "MultipartFile[name=" + originalName + ", contentType=" + contentType + ", size=" + size + "]";
         }
 
@@ -138,7 +139,8 @@ public class LoggingAspect {
             idField.setAccessible(true);
             Object id = idField.get(arg);
             return simple + "{id=" + Objects.toString(id) + "}";
-        } catch (NoSuchFieldException | IllegalAccessException ignored) {}
+        } catch (NoSuchFieldException | IllegalAccessException ignored) {
+        }
 
         String s = String.valueOf(arg);
         if (s.length() > 300) {
@@ -161,8 +163,7 @@ public class LoggingAspect {
             case Resource resource -> {
                 return "Resource[" + ClassUtils.getShortName(result.getClass()) + "]";
             }
-            default -> {
-            }
+            default -> {}
         }
         String s = String.valueOf(result);
         if (s.length() > 200) {
@@ -170,6 +171,7 @@ public class LoggingAspect {
         }
         return s;
     }
+
     private void logInfoEntry(String className, String methodName) {
         log.info("Entering {}.{}", className, methodName);
     }
@@ -183,12 +185,7 @@ public class LoggingAspect {
     }
 
     private void logDebugExit(String className, String methodName, Object result, long tookMs) {
-        log.debug(
-            "Exiting  {}.{} -> {} ({} ms)",
-            className,
-            methodName,
-            summarizeResult(result),
-            tookMs);
+        log.debug("Exiting  {}.{} -> {} ({} ms)", className, methodName, summarizeResult(result), tookMs);
     }
 
     private void logExceptionWarn(String className, String methodName, long start, Throwable ex) {

@@ -118,7 +118,7 @@ paths:
       description: >
         Retrieve statement metadata and download link (does not return binary PDF).
         Use the `statementId` returned at upload time.
-      operationId: getStatementById
+      operationId: getDownloadSignedLinkById
       parameters:
         - $ref: '#/components/parameters/correlationIdHeader'
         - name: statementId

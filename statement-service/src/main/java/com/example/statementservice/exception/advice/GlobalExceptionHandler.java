@@ -2,8 +2,12 @@ package com.example.statementservice.exception.advice;
 
 import static com.example.statementservice.util.CommonUtil.buildProblemDetailTypeURI;
 
+import com.example.statementservice.exception.DecryptionFailedException;
 import com.example.statementservice.exception.DigestComputationException;
 import com.example.statementservice.exception.DigestMismatchException;
+import com.example.statementservice.exception.DownloadFileMissingException;
+import com.example.statementservice.exception.DownloadInvalidSignatureException;
+import com.example.statementservice.exception.DownloadLinkExpiredException;
 import com.example.statementservice.exception.InvalidAccountNumberException;
 import com.example.statementservice.exception.InvalidDateException;
 import com.example.statementservice.exception.InvalidMessageDigestException;
@@ -40,6 +44,10 @@ public class GlobalExceptionHandler {
     private static final String ERROR_CODE_UNSUPPORTED_MEDIA = "UNSUPPORTED_MEDIA_TYPE";
     private static final String ERROR_CODE_INTERNAL_ERROR = "INTERNAL_ERROR";
     private static final String ERROR_CODE_STATEMENT_NOT_FOUND = "STATEMENT_NOT_FOUND";
+    private static final String ERROR_CODE_INVALID_SIGNATURE = "INVALID_SIGNATURE";
+    private static final String ERROR_CODE_LINK_EXPIRED = "LINK_EXPIRED_OR_USED";
+    private static final String ERROR_CODE_FILE_MISSING = "FILE_MISSING";
+    private static final String ERROR_CODE_DECRYPTION_FAILED = "DECRYPTION_FAILED";
 
     // Error Type URIs
     private static final String TYPE_PREFIX = "/errors/";
@@ -48,6 +56,7 @@ public class GlobalExceptionHandler {
     private static final String TYPE_MEDIA_TYPE = TYPE_PREFIX + "media-type";
     private static final String TYPE_INTERNAL = TYPE_PREFIX + "internal";
     private static final String TYPE_STATEMENT = TYPE_PREFIX + "statement";
+    private static final String TYPE_DOWNLOAD = TYPE_PREFIX + "download";
 
     // Default Messages
     private static final String DEFAULT_BAD_REQUEST_MSG = "Bad request";
@@ -157,6 +166,46 @@ public class GlobalExceptionHandler {
                 "Statement Upload Failed",
                 ex.getMessage(),
                 ERROR_CODE_UPLOAD_FAILED);
+    }
+
+    @ExceptionHandler(DownloadInvalidSignatureException.class)
+    public ProblemDetail handleInvalidSignature(DownloadInvalidSignatureException ex, HttpServletRequest request) {
+        return createProblemDetail(
+                HttpStatus.FORBIDDEN,
+                buildProblemDetailTypeURI(request, TYPE_DOWNLOAD),
+                "Invalid Signature",
+                ex.getMessage(),
+                ERROR_CODE_INVALID_SIGNATURE);
+    }
+
+    @ExceptionHandler(DownloadLinkExpiredException.class)
+    public ProblemDetail handleLinkExpired(DownloadLinkExpiredException ex, HttpServletRequest request) {
+        return createProblemDetail(
+                HttpStatus.NOT_FOUND,
+                buildProblemDetailTypeURI(request, TYPE_DOWNLOAD),
+                "Link Expired or Used",
+                ex.getMessage(),
+                ERROR_CODE_LINK_EXPIRED);
+    }
+
+    @ExceptionHandler(DownloadFileMissingException.class)
+    public ProblemDetail handleFileMissing(DownloadFileMissingException ex, HttpServletRequest request) {
+        return createProblemDetail(
+                HttpStatus.NOT_FOUND,
+                buildProblemDetailTypeURI(request, TYPE_DOWNLOAD),
+                "File Missing",
+                ex.getMessage(),
+                ERROR_CODE_FILE_MISSING);
+    }
+
+    @ExceptionHandler(DecryptionFailedException.class)
+    public ProblemDetail handleDecryptionFailed(DecryptionFailedException ex, HttpServletRequest request) {
+        return createProblemDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                buildProblemDetailTypeURI(request, TYPE_DOWNLOAD),
+                "Decryption Failed",
+                ex.getMessage(),
+                ERROR_CODE_DECRYPTION_FAILED);
     }
 
     @ExceptionHandler({UnsupportedContentTypeException.class, HttpMediaTypeNotSupportedException.class})

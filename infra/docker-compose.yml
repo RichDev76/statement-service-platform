@@ -34,8 +34,6 @@
       cap_add:
         - IPC_LOCK
       environment:
-        # VAULT_ADDR is used by the vault CLI inside the container. 0.0.0.0 is not a routable client address.
-        # Use 127.0.0.1 so healthchecks and docker exec CLI calls can talk to the local daemon.
         VAULT_ADDR: "http://127.0.0.1:8200"
         VAULT_LOG_LEVEL: ${VAULT_LOG_LEVEL:-info}
       volumes:
@@ -46,7 +44,6 @@
       ports:
         - "8200:8200"
       healthcheck:
-        # Explicitly set VAULT_ADDR for the CLI in healthcheck to avoid relying on container env
         test: ["CMD-SHELL", "VAULT_ADDR=http://127.0.0.1:8200 vault status -format=json >/dev/null 2>&1"]
         interval: 5s
         timeout: 5s
@@ -61,13 +58,11 @@
       restart: unless-stopped
       environment:
         KC_HTTP_ENABLED: "true"
-        KC_HOSTNAME: "0.0.0.0"
-        KC_HOSTNAME_STRICT: "false"
-        KC_HOSTNAME_STRICT_HTTPS: "false"
-        KC_PROXY: "edge"
+        KC_HOSTNAME: "http://keycloak:8080"
+        KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+        KC_HEALTH_ENABLED: "true"
         KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
         KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-#        KEYCLOAK_IMPORT: /opt/keycloak/data/import/statement-service-realm.json
       command: ["start-dev", "--import-realm"]
       volumes:
         - keycloak-data:/opt/keycloak/data
@@ -75,7 +70,7 @@
       ports:
         - "8081:8080"
       healthcheck:
-        test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+        test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /realms/statement-service HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q 'statement-service'"]
         interval: 10s
         timeout: 5s
         retries: 6
@@ -92,7 +87,6 @@
         - APPROLE_SECRET_ID_FILE=/vault/init/approle-secret-id
       volumes:
         - ./vault/init:/vault/init:ro
-        # Mount the local config repository so the Config Server's native backend can read files
         - ./config-repo:/config-repo:ro
       depends_on:
         vault:
@@ -105,7 +99,42 @@
         timeout: 5s
         retries: 6
         start_period: 30s
+
+    statement-service:
+      build:
+        context: ..
+        dockerfile: statement-service/docker/Dockerfile
+      image: statement-service:latest
+      container_name: statement-service
+      restart: unless-stopped
+      environment:
+        - SPRING_PROFILES_ACTIVE=develop
+        - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+        - CONFIG_URL=http://config-server:8888/actuator/health
+        - APP_DB_USER=${APP_DB_USER}
+        - APP_DB_PASSWORD=${APP_DB_PASSWORD}
+        - STATEMENT_STORAGE_DIR=/app/data/files
+        - STATEMENT_MASTER_KEY=${STATEMENT_MASTER_KEY}
+        - STATEMENT_SIGNATURE_SECRET=${STATEMENT_SIGNATURE_SECRET}
+      volumes:
+        - statement-data:/app/data/files
+      depends_on:
+        config-server:
+          condition: service_healthy
+        db:
+          condition: service_healthy
+        keycloak:
+          condition: service_healthy
+      ports:
+        - "8080:8080"
+      healthcheck:
+        test: ["CMD-SHELL", "curl -fsS http://localhost:8080/api/v1/statements/actuator/health || exit 1"]
+        interval: 10s
+        timeout: 5s
+        retries: 6
+        start_period: 60s
   volumes:
     db-data:
     vault-data:
     keycloak-data:
+    statement-data:

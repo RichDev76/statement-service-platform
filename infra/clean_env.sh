@@ -2,7 +2,6 @@
 set -euo pipefail
 
 # clean_env.sh - remove compose services, named volumes, and local vault init artifacts
-# Run from infra/ (directory containing docker-compose.yml)
 
 if [ ! -f docker-compose.yml ]; then
   echo "ERROR: docker-compose.yml not found. Run this from infra/."

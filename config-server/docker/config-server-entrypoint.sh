@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 set -eu
-# Enable pipefail only when running under bash to avoid errors with /bin/sh (dash/busybox)
+
 if [ -n "${BASH_VERSION:-}" ]; then
   set -o pipefail
 fi
@@ -29,7 +29,6 @@ login_with_approle() {
 if [ -f "$ROLE_ID_FILE" ] && [ -f "$SECRET_ID_FILE" ]; then
   if login_with_approle; then
     echo "AppRole login successful."
-    # Expose the token to Spring Cloud Config Server's Vault backend and (optionally) client autoconfig
     export SPRING_CLOUD_CONFIG_SERVER_VAULT_TOKEN="$VAULT_TOKEN"
     export SPRING_CLOUD_VAULT_TOKEN="$VAULT_TOKEN"
   else
@@ -39,11 +38,9 @@ fi
 
 if [ -z "${VAULT_TOKEN:-}" ] && [ -f "$TOKEN_FILE" ]; then
   export VAULT_TOKEN=$(cat "$TOKEN_FILE")
-  # Expose the token to Spring property binding as well
   export SPRING_CLOUD_CONFIG_SERVER_VAULT_TOKEN="$VAULT_TOKEN"
   export SPRING_CLOUD_VAULT_TOKEN="$VAULT_TOKEN"
   echo "Using fallback token file at $TOKEN_FILE"
 fi
 
-# exec the app
 exec "$@"

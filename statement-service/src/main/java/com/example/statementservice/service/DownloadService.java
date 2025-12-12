@@ -3,7 +3,6 @@ package com.example.statementservice.service;
 import com.example.statementservice.enums.AuditAction;
 import com.example.statementservice.enums.DownloadFailureReason;
 import com.example.statementservice.enums.DownloadOutcome;
-import com.example.statementservice.enums.ValidationFailureReason;
 import com.example.statementservice.model.entity.SignedLink;
 import com.example.statementservice.model.entity.Statement;
 import com.example.statementservice.repository.StatementRepository;
@@ -45,103 +44,56 @@ public class DownloadService {
         log.debug("Download request (detailed) - token: {}, ip: {}, user: {}", maskToken(token), clientIp, performedBy);
 
         // Step 1: Validate link
-        LinkValidationResult result = signedLinkService.validateAndConsume(token);
+        var result = signedLinkService.validateAndConsume(token);
         if (!result.isValid()) {
-            String reason = getReason(result);
-            UUID statementId = result.getLink() != null ? result.getLink().getStatementId() : null;
-            UUID linkId = result.getLink() != null ? result.getLink().getId() : null;
-            String accountNumber = fetchAccountNumber(statementId);
-            auditService.record(
-                    AuditAction.DOWNLOAD_FAILED.getValue(),
-                    statementId,
-                    accountNumber,
-                    linkId,
-                    performedBy,
-                    getUserAuditDetails(token, clientIp, userAgent, reason));
-
-            DownloadOutcome outcome = (result.getFailureReason() == ValidationFailureReason.USED
-                            || result.getFailureReason() == ValidationFailureReason.EXPIRED)
-                    ? DownloadOutcome.LINK_EXPIRED_OR_USED
-                    : DownloadOutcome
-                            .INVALID_SIGNATURE; // NOT_FOUND maps to invalid signature per spec 403 vs 404 distinction
-            // downstream
-            if (result.getFailureReason() == ValidationFailureReason.NOT_FOUND) {
-                // Treat as 404 (not found) in controller
-                outcome = DownloadOutcome.STATEMENT_NOT_FOUND;
-            }
+            handleInvalidLink(result, token, clientIp, userAgent, performedBy);
+            var outcome = getDownloadOutcome(result);
             return new DownloadStreamResult(outcome, Optional.empty());
         }
 
         // Step 2: Fetch statement
-        SignedLink link = result.getLink();
+        var link = result.getLink();
         Optional<Statement> statementOpt = statementRepository.findById(link.getStatementId());
         if (statementOpt.isEmpty()) {
-            auditService.record(
-                    AuditAction.DOWNLOAD_FAILED.getValue(),
-                    link.getStatementId(),
-                    null,
-                    link.getId(),
-                    performedBy,
-                    getUserAuditDetails(
-                            token, clientIp, userAgent, DownloadFailureReason.STATEMENT_NOT_FOUND.getValue()));
+            handleMissingStatement(link, token, clientIp, userAgent, performedBy);
             return new DownloadStreamResult(DownloadOutcome.STATEMENT_NOT_FOUND, Optional.empty());
         }
 
         // Step 3: Verify file exists
-        Statement statement = statementOpt.get();
-        File storedFile = new File(statement.getFilePath());
+        var statement = statementOpt.get();
+        var storedFile = new File(statement.getFilePath());
         if (!storedFile.exists()) {
-            auditService.record(
-                    AuditAction.DOWNLOAD_FAILED.getValue(),
-                    statement.getId(),
-                    statement.getAccountNumber(),
-                    link.getId(),
-                    performedBy,
-                    getUserAuditDetails(token, clientIp, userAgent, DownloadFailureReason.FILE_MISSING.getValue()));
+            handleMissingFile(statement, link, token, clientIp, userAgent, performedBy);
             return new DownloadStreamResult(DownloadOutcome.FILE_MISSING, Optional.empty());
         }
 
         // Step 4: Decrypt and stream
-        try {
-            InputStream decrypted = encryptionService.decryptFileToStream(storedFile);
-            try {
-                auditService.record(
-                        AuditAction.DOWNLOAD_SUCCESS.getValue(),
-                        statement.getId(),
-                        statement.getAccountNumber(),
-                        link.getId(),
-                        performedBy,
-                        getUserAuditDetails(token, clientIp, userAgent, null));
-            } catch (Exception auditEx) {
-                log.warn("Failed to record download audit", auditEx);
-            }
-            return new DownloadStreamResult(DownloadOutcome.OK, Optional.of(decrypted));
-        } catch (Exception e) {
-            log.error("Decryption failed - statementId: {}, error: {}", statement.getId(), e.getMessage(), e);
-            var errorAuditDetails = new HashMap<>(getUserAuditDetails(
-                    token, clientIp, userAgent, DownloadFailureReason.DECRYPTION_FAILED.getValue()));
-            errorAuditDetails.put(AUDIT_KEY_ERROR, e.getMessage());
-            auditService.record(
-                    AuditAction.DOWNLOAD_FAILED.getValue(),
-                    statement.getId(),
-                    statement.getAccountNumber(),
-                    link.getId(),
-                    performedBy,
-                    errorAuditDetails);
+        Optional<InputStream> streamResult =
+                decryptAndStream(statement, link, storedFile, token, clientIp, userAgent, performedBy);
+        if (streamResult.isPresent()) {
+            return new DownloadStreamResult(DownloadOutcome.OK, streamResult);
+        } else {
             return new DownloadStreamResult(DownloadOutcome.DECRYPTION_FAILED, Optional.empty());
         }
+    }
+
+    private DownloadOutcome getDownloadOutcome(LinkValidationResult result) {
+        return switch (result.getFailureReason()) {
+            case USED, EXPIRED -> DownloadOutcome.LINK_EXPIRED_OR_USED;
+            case NOT_FOUND -> DownloadOutcome.STATEMENT_NOT_FOUND;
+            default -> DownloadOutcome.INVALID_SIGNATURE;
+        };
     }
 
     public record DownloadStreamResult(DownloadOutcome outcome, Optional<InputStream> stream) {}
 
     private String getReason(LinkValidationResult result) {
-        String reason;
-        switch (result.getFailureReason()) {
-            case ValidationFailureReason.USED -> reason = DownloadFailureReason.USED.getValue();
-            case ValidationFailureReason.EXPIRED -> reason = DownloadFailureReason.EXPIRED.getValue();
-            default -> reason = DownloadFailureReason.INVALID.getValue();
-        }
-        return reason;
+        return switch (result.getFailureReason()) {
+            case USED -> DownloadFailureReason.USED.getValue();
+            case EXPIRED -> DownloadFailureReason.EXPIRED.getValue();
+            case NOT_FOUND -> DownloadFailureReason.STATEMENT_NOT_FOUND.getValue();
+            default -> DownloadFailureReason.INVALID.getValue();
+        };
     }
 
     private Map<String, Object> getUserAuditDetails(String token, String clientIp, String userAgent, String reason) {
@@ -160,14 +112,13 @@ public class DownloadService {
         return token.substring(0, 4) + "..." + token.substring(token.length() - 4);
     }
 
-    private Optional<InputStream> handleInvalidLink(
+    private void handleInvalidLink(
             LinkValidationResult result, String token, String clientIp, String userAgent, String performedBy) {
         String reason = getReason(result);
-        UUID statementId = result.getLink() != null ? result.getLink().getStatementId() : null;
-        UUID linkId = result.getLink() != null ? result.getLink().getId() : null;
+        var statementId = result.getLink() != null ? result.getLink().getStatementId() : null;
+        var linkId = result.getLink() != null ? result.getLink().getId() : null;
 
-        // Optionally fetch account number for better audit context
-        String accountNumber = fetchAccountNumber(statementId);
+        var accountNumber = fetchAccountNumber(statementId);
 
         log.warn("Link validation failed - reason: {}, statementId: {}", reason, statementId);
         auditService.record(
@@ -177,11 +128,9 @@ public class DownloadService {
                 linkId,
                 performedBy,
                 getUserAuditDetails(token, clientIp, userAgent, reason));
-
-        return Optional.empty();
     }
 
-    private Optional<InputStream> handleMissingStatement(
+    private void handleMissingStatement(
             SignedLink link, String token, String clientIp, String userAgent, String performedBy) {
         log.error("Statement not found for link - statementId: {}", link.getStatementId());
         auditService.record(
@@ -191,11 +140,9 @@ public class DownloadService {
                 link.getId(),
                 performedBy,
                 getUserAuditDetails(token, clientIp, userAgent, DownloadFailureReason.STATEMENT_NOT_FOUND.getValue()));
-
-        return Optional.empty();
     }
 
-    private Optional<InputStream> handleMissingFile(
+    private void handleMissingFile(
             Statement statement, SignedLink link, String token, String clientIp, String userAgent, String performedBy) {
         log.error("File not found - path: {}, statementId: {}", statement.getFilePath(), statement.getId());
         auditService.record(
@@ -205,8 +152,6 @@ public class DownloadService {
                 link.getId(),
                 performedBy,
                 getUserAuditDetails(token, clientIp, userAgent, DownloadFailureReason.FILE_MISSING.getValue()));
-
-        return Optional.empty();
     }
 
     private Optional<InputStream> decryptAndStream(
@@ -218,7 +163,7 @@ public class DownloadService {
             String userAgent,
             String performedBy) {
         try {
-            InputStream decrypted = encryptionService.decryptFileToStream(storedFile);
+            var decrypted = encryptionService.decryptFileToStream(storedFile);
 
             log.info(
                     "Download successful - statementId: {}, account: {}",

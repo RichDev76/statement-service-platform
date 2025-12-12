@@ -21,10 +21,6 @@
         "description": "Role allowing creation of signed download links"
       },
       {
-        "name": "Download",
-        "description": "Role allowing statement downloads"
-      },
-      {
         "name": "AuditLogsSearch",
         "description": "Role allowing audit log searching"
       }
@@ -38,7 +34,6 @@
         "Search",
         "Upload",
         "GenerateSignedLink",
-        "Download",
         "AuditLogsSearch"
       ]
     },
@@ -47,8 +42,7 @@
       "path": "/StatementConsumer",
       "realmRoles": [
         "Search",
-        "GenerateSignedLink",
-        "Download"
+        "GenerateSignedLink"
       ]
     }
   ],

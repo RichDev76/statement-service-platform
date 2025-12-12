@@ -1,9 +1,9 @@
 package com.example.statementservice.util;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import com.example.statementservice.enums.DownloadOutcome;
+import com.example.statementservice.exception.DecryptionFailedException;
 import com.example.statementservice.service.DownloadService;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -63,83 +63,68 @@ class DownloadResponseFactoryTest {
     }
 
     @Test
-    @DisplayName("Should build FORBIDDEN response for INVALID_SIGNATURE outcome")
+    @DisplayName("Should throw DownloadInvalidSignatureException for INVALID_SIGNATURE outcome")
     void testBuild_InvalidSignatureOutcome() {
         // Arrange
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.INVALID_SIGNATURE, Optional.empty());
 
-        // Act
-        ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertNull(response.getBody());
+        // Act & Assert
+        assertThrows(
+                com.example.statementservice.exception.DownloadInvalidSignatureException.class,
+                () -> downloadResponseFactory.build(fileName, result));
     }
 
     @Test
-    @DisplayName("Should build NOT_FOUND response for LINK_EXPIRED_OR_USED outcome")
+    @DisplayName("Should throw DownloadLinkExpiredException for LINK_EXPIRED_OR_USED outcome")
     void testBuild_LinkExpiredOrUsedOutcome() {
         // Arrange
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.LINK_EXPIRED_OR_USED, Optional.empty());
 
-        // Act
-        ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
+        // Act & Assert
+        assertThrows(
+                com.example.statementservice.exception.DownloadLinkExpiredException.class,
+                () -> downloadResponseFactory.build(fileName, result));
     }
 
     @Test
-    @DisplayName("Should build NOT_FOUND response for STATEMENT_NOT_FOUND outcome")
+    @DisplayName("Should throw StatementNotFoundException for STATEMENT_NOT_FOUND outcome")
     void testBuild_StatementNotFoundOutcome() {
         // Arrange
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.STATEMENT_NOT_FOUND, Optional.empty());
 
-        // Act
-        ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
+        // Act & Assert
+        assertThrows(
+                com.example.statementservice.exception.StatementNotFoundException.class,
+                () -> downloadResponseFactory.build(fileName, result));
     }
 
     @Test
-    @DisplayName("Should build NOT_FOUND response for FILE_MISSING outcome")
+    @DisplayName("Should throw DownloadFileMissingException for FILE_MISSING outcome")
     void testBuild_FileMissingOutcome() {
         // Arrange
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.FILE_MISSING, Optional.empty());
 
-        // Act
-        ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
+        // Act & Assert
+        assertThrows(
+                com.example.statementservice.exception.DownloadFileMissingException.class,
+                () -> downloadResponseFactory.build(fileName, result));
     }
 
     @Test
-    @DisplayName("Should build NOT_FOUND response for DECRYPTION_FAILED outcome")
+    @DisplayName("Should throw DecryptionFailedException for DECRYPTION_FAILED outcome")
     void testBuild_DecryptionFailedOutcome() {
         // Arrange
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.DECRYPTION_FAILED, Optional.empty());
 
-        // Act
-        ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
+        // Act & Assert
+        assertThrows(
+                DecryptionFailedException.class,
+                () -> downloadResponseFactory.build(fileName, result));
     }
 
     @Test

@@ -1,43 +1,33 @@
-# =====================================================================
-# BUILD STAGE (optional but recommended for clean Docker builds)
-# =====================================================================
-FROM maven:3.9-eclipse-temurin-21 AS build
-
+# stage 1: build with Maven
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /app
 
-# Copy root POM and module POMs first to leverage Docker layer cache
+# Copy the parent POM
 COPY pom.xml ./
-COPY config-server/pom.xml ./config-server/pom.xml
-COPY statement-service/pom.xml ./statement-service/pom.xml
 
-# Pre-fetch dependencies using Maven (cache local Maven repo between builds)
-RUN --mount=type=cache,target=/root/.m2 mvn -q -DskipTests dependency:go-offline
+# Copy all module POMs (for dependency resolution)
+COPY statement-service/pom.xml ./statement-service/
+COPY config-server/pom.xml ./config-server/
 
-# Copy module sources
-COPY config-server/src ./config-server/src
+# Copy only statement-service source
 COPY statement-service/src ./statement-service/src
 
-# Build only the statement-service module (and any required dependencies)
-RUN --mount=type=cache,target=/root/.m2 mvn -q -DskipTests -pl statement-service -am clean package
+# Build statement-service
+RUN mvn -DskipTests clean package -pl statement-service -am
 
-# =====================================================================
-# RUNTIME STAGE
-# =====================================================================
-FROM eclipse-temurin:21-jre
-
+# stage 2: runtime
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 
-# Copy the built JAR from the build stage
+# Install curl for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/statement-service/target/*.jar /app/app.jar
 
-# Copy wait + entrypoint scripts
+# copy scripts and entrypoint (paths relative to build context: statement-service-platform/)
 COPY statement-service/docker/wait-for-config.sh /app/wait-for-config.sh
 COPY statement-service/docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/wait-for-config.sh /app/entrypoint.sh
 
-RUN chmod +x /app/wait-for-config.sh \
-    && chmod +x /app/entrypoint.sh
-
-# Expose app port
-EXPOSE 8080
-
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT [ "/app/entrypoint.sh" ]

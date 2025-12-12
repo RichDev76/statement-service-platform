@@ -41,9 +41,9 @@ public class StatementsController implements StatementsApi {
     }
 
     @Override
-    public ResponseEntity<StatementSummary> getStatementById(UUID statementId, String xCorrelationId) {
+    public ResponseEntity<StatementSummary> getDownloadSignedLinkById(UUID statementId, String xCorrelationId) {
         return statementQueryService
-                .getSummaryById(statementId)
+                .getStatementSummaryWithSignedDownloadLinkById(statementId)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new StatementNotFoundException(
                         String.format("Statement(s) not found for Id: %s", statementId)));

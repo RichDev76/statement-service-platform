@@ -24,9 +24,9 @@ public class SignedLinkCleanupService {
 
     @Scheduled(cron = "${statement.signed-link.cleanup.cron}")
     @SchedulerLock(
-        name = "statement.signed-link.cleanup.job",
-        lockAtMostFor = "#{@signedLinkCleanupProperties.lockAtMostFor}",
-        lockAtLeastFor = "#{@signedLinkCleanupProperties.lockAtLeastFor}")
+            name = "statement.signed-link.cleanup.job",
+            lockAtMostFor = "#{@signedLinkCleanupProperties.lockAtMostFor}",
+            lockAtLeastFor = "#{@signedLinkCleanupProperties.lockAtLeastFor}")
     @Transactional
     public void cleanup() {
         String correlationId = UUID.randomUUID().toString();
@@ -51,10 +51,10 @@ public class SignedLinkCleanupService {
 
             if (totalDeleted > 0) {
                 log.info(
-                    "SignedLink cleanup removed {} rows (cutoff={}, batchSize={})",
-                    totalDeleted,
-                    cutoff,
-                    properties.getBatchSize());
+                        "SignedLink cleanup removed {} rows (cutoff={}, batchSize={})",
+                        totalDeleted,
+                        cutoff,
+                        properties.getBatchSize());
             } else {
                 log.info("SignedLink cleanup completed, no rows removed");
             }

@@ -57,7 +57,6 @@ public class SecurityConfig {
                     auth.requestMatchers("/api/v1/statements/audit/logs").hasRole("AuditLogsSearch");
                     auth.requestMatchers("/api/v1/statements/search").hasRole("Search");
                     auth.requestMatchers("/api/v1/statements/*/link").hasRole("GenerateSignedLink");
-                    auth.requestMatchers("/api/v1/statements/download/**").hasRole("Download");
 
                     // Everything else must be authenticated
                     auth.anyRequest().authenticated();

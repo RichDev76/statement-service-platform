@@ -3,8 +3,7 @@ set -euo pipefail
 
 # new_env.sh - robust, idempotent bootstrap for Vault + AppRole
 # Usage: run from infra/ directory (where docker-compose.yml lives)
-#
-# Requirements on host: docker, docker-compose, jq, curl
+
 
 RETRY=80       # number of attempts for waits
 SLEEP=3        # sleep seconds between attempts
