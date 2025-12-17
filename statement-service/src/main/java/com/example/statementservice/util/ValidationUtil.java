@@ -1,5 +1,6 @@
 package com.example.statementservice.util;
 
+import com.example.statementservice.exception.DigestMismatchException;
 import com.example.statementservice.exception.InvalidAccountNumberException;
 import com.example.statementservice.exception.InvalidDateException;
 import com.example.statementservice.exception.InvalidMessageDigestException;
@@ -52,9 +53,9 @@ public class ValidationUtil {
         validateFileName(file);
         validatePdfMagicNumber(file);
         validateCorrectContentType(file);
-        validateAccountNumber(accountNumber);
         validateMessageDigest(file, xMessageDigest);
         validateFileNotEmpty(file);
+        validateAccountNumber(accountNumber);
         validateDate(date);
     }
 
@@ -65,7 +66,7 @@ public class ValidationUtil {
 
         var computedDigest = this.encryptionService.computeSha256Hex(file);
         if (!computedDigest.equalsIgnoreCase(xMessageDigest)) {
-            throw new InvalidMessageDigestException(DIGEST_MISMATCH_MSG);
+            throw new DigestMismatchException(DIGEST_MISMATCH_MSG);
         }
     }
 
@@ -90,7 +91,7 @@ public class ValidationUtil {
     }
 
     private String getOriginalFileName(MultipartFile file) {
-        String originalFileName = file.getOriginalFilename();
+        var originalFileName = file.getOriginalFilename();
         if (org.apache.commons.lang3.StringUtils.isEmpty(originalFileName)) {
             throw new PdfValidationException("Filename must not be empty");
         }
@@ -116,7 +117,7 @@ public class ValidationUtil {
 
     public void validatePdfMagicNumber(MultipartFile file) {
         try (InputStream inputStream = file.getInputStream()) {
-            byte[] magicBytes = new byte[PDF_MAGIC_NUMBER_SIZE];
+            var magicBytes = new byte[PDF_MAGIC_NUMBER_SIZE];
             int bytesRead = inputStream.read(magicBytes);
 
             if (bytesRead < PDF_MAGIC_NUMBER_SIZE) {

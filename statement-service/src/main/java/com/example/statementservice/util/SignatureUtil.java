@@ -17,10 +17,10 @@ public class SignatureUtil {
 
     public String signWithMethod(String path, long expires, String method) {
         try {
-            String data = method + "|" + path + "|" + expires;
-            Mac mac = Mac.getInstance(HMAC);
+            var data = method + "|" + path + "|" + expires;
+            var mac = Mac.getInstance(HMAC);
             mac.init(new SecretKeySpec(secret, HMAC));
-            byte[] raw = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            var raw = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
         } catch (Exception e) {
             throw new SignatureException("Failed to sign path", e);

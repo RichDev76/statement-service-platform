@@ -4,8 +4,4 @@ public class SignatureException extends RuntimeException {
     public SignatureException(String message, Throwable cause) {
         super(message, cause);
     }
-
-    public SignatureException(String message) {
-        super(message);
-    }
 }

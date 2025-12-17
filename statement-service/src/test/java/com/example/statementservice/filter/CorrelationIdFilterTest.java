@@ -33,7 +33,6 @@ class CorrelationIdFilterTest {
             assertNotNull(headerValue, "Correlation id header should be set on response");
             assertEquals(headerValue, mdcValueInChain.get(), "MDC value should match header value inside the chain");
         } finally {
-            // After request completes, MDC should be cleared
             assertNull(MDC.get(CorrelationIdFilter.CORRELATION_ID_MDC_KEY));
         }
     }

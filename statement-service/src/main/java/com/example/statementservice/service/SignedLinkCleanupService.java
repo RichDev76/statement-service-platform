@@ -29,7 +29,7 @@ public class SignedLinkCleanupService {
             lockAtLeastFor = "#{@signedLinkCleanupProperties.lockAtLeastFor}")
     @Transactional
     public void cleanup() {
-        String correlationId = UUID.randomUUID().toString();
+        var correlationId = UUID.randomUUID().toString();
         MDC.put(CORRELATION_ID_KEY, correlationId);
 
         try {
@@ -38,8 +38,8 @@ public class SignedLinkCleanupService {
                 return;
             }
 
-            OffsetDateTime now = OffsetDateTime.now();
-            OffsetDateTime cutoff = now.minus(properties.getRetentionPeriod());
+            var now = OffsetDateTime.now();
+            var cutoff = now.minus(properties.getRetentionPeriod());
 
             int totalDeleted = 0;
             int deleted;

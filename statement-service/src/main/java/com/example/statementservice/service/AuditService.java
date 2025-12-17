@@ -36,7 +36,7 @@ public class AuditService {
             UUID signedLinkId,
             String performedBy,
             Map<String, Object> details) {
-        AuditLog auditLog = buildAuditLog(action, statementId, accountNumber, signedLinkId, performedBy, details);
+        var auditLog = buildAuditLog(action, statementId, accountNumber, signedLinkId, performedBy, details);
         executor.submit(() -> {
             try {
                 auditLogRepository.save(auditLog);
@@ -57,7 +57,7 @@ public class AuditService {
             UUID signedLinkId,
             String performedBy,
             Map<String, Object> details) {
-        AuditLog auditLog = new AuditLog();
+        var auditLog = new AuditLog();
         auditLog.setId(UUID.randomUUID());
         auditLog.setAction(action);
         auditLog.setStatementId(statementId);

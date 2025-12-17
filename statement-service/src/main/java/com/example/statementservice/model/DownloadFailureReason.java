@@ -16,5 +16,4 @@ public enum DownloadFailureReason {
     DownloadFailureReason(String value) {
         this.value = value;
     }
-
 }

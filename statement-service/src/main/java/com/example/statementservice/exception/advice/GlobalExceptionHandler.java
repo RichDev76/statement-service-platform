@@ -20,6 +20,7 @@ import com.example.statementservice.exception.UnsupportedContentTypeException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -62,6 +63,65 @@ public class GlobalExceptionHandler {
     private static final String DEFAULT_BAD_REQUEST_MSG = "Bad request";
     private static final String DEFAULT_INTERNAL_ERROR_MSG = "Internal server error";
 
+    // Title Descriptions
+    public static final String TITLE_DESCRIPTION_NOT_FOUND = "Not Found";
+    public static final String TITLE_DESCRIPTION_VALIDATION_FAILED = "Validation Failed";
+    public static final String TITLE_DESCRIPTION_INVALID_MESSAGE_DIGEST = "Invalid Message Digest";
+    public static final String TITLE_DESCRIPTION_MISSING_FILE = "Missing File";
+    public static final String TITLE_DESCRIPTION_INVALID_ACCOUNT_NUMBER = "Invalid Account Number";
+    public static final String TITLE_DESCRIPTION_INVALID_DATE_FORMAT = "Invalid Date Format";
+    public static final String TITLE_DESCRIPTION_DIGEST_MISMATCH = "Digest Mismatch";
+    public static final String TITLE_DESCRIPTION_DIGEST_COMPUTATION_FAILED = "Digest Computation Failed";
+    public static final String TITLE_DESCRIPTION_STATEMENT_UPLOAD_FAILED = "Statement Upload Failed";
+    public static final String TITLE_DESCRIPTION_INVALID_SIGNATURE = "Invalid Signature";
+    public static final String TITLE_DESCRIPTION_LINK_EXPIRED_OR_USED = "Link Expired or Used";
+    public static final String TITLE_DESCRIPTION_FILE_MISSING = "File Missing";
+    public static final String TITLE_DESCRIPTION_DECRYPTION_FAILED = "Decryption Failed";
+    public static final String TITLE_DESCRIPTION_UNSUPPORTED_MEDIA_TYPE = "Unsupported Media Type";
+
+    // Metadata maps for consolidated exception handlers
+    private static final Map<Class<? extends Exception>, ExceptionMetadata> VALIDATION_EXCEPTION_METADATA = Map.of(
+            InvalidMessageDigestException.class,
+            new ExceptionMetadata(TITLE_DESCRIPTION_INVALID_MESSAGE_DIGEST, ERROR_CODE_INVALID_MESSAGE_DIGEST),
+            MissingFileException.class,
+            new ExceptionMetadata(TITLE_DESCRIPTION_MISSING_FILE, ERROR_CODE_MISSING_FILE),
+            InvalidAccountNumberException.class,
+            new ExceptionMetadata(TITLE_DESCRIPTION_INVALID_ACCOUNT_NUMBER, ERROR_CODE_INVALID_ACCOUNT_NUMBER),
+            InvalidDateException.class,
+            new ExceptionMetadata(TITLE_DESCRIPTION_INVALID_DATE_FORMAT, ERROR_CODE_INVALID_DATE),
+            DigestMismatchException.class,
+            new ExceptionMetadata(TITLE_DESCRIPTION_DIGEST_MISMATCH, ERROR_CODE_DIGEST_MISMATCH),
+            DigestComputationException.class,
+            new ExceptionMetadata(TITLE_DESCRIPTION_DIGEST_COMPUTATION_FAILED, ERROR_CODE_DIGEST_ERROR));
+
+    private static final Map<Class<? extends Exception>, ExceptionMetadata> DOWNLOAD_EXCEPTION_METADATA = Map.of(
+            DownloadInvalidSignatureException.class,
+            new ExceptionMetadata(
+                    TITLE_DESCRIPTION_INVALID_SIGNATURE, ERROR_CODE_INVALID_SIGNATURE, HttpStatus.FORBIDDEN),
+            DownloadLinkExpiredException.class,
+            new ExceptionMetadata(
+                    TITLE_DESCRIPTION_LINK_EXPIRED_OR_USED, ERROR_CODE_LINK_EXPIRED, HttpStatus.NOT_FOUND),
+            DownloadFileMissingException.class,
+            new ExceptionMetadata(TITLE_DESCRIPTION_FILE_MISSING, ERROR_CODE_FILE_MISSING, HttpStatus.NOT_FOUND),
+            DecryptionFailedException.class,
+            new ExceptionMetadata(
+                    TITLE_DESCRIPTION_DECRYPTION_FAILED,
+                    ERROR_CODE_DECRYPTION_FAILED,
+                    HttpStatus.INTERNAL_SERVER_ERROR));
+
+    /**
+     * Helper record to store exception metadata
+     */
+    private record ExceptionMetadata(String title, String errorCode, HttpStatus status) {
+        // Constructor for validation exceptions (all use BAD_REQUEST)
+        ExceptionMetadata(String title, String errorCode) {
+            this(title, errorCode, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Creates a ProblemDetail response with consistent structure
+     */
     private ProblemDetail createProblemDetail(
             HttpStatus status, URI type, String title, String detail, String errorCode) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail != null ? detail : title);
@@ -71,17 +131,22 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
+    /**
+     * Handles statement not found exceptions
+     */
     @ExceptionHandler(StatementNotFoundException.class)
     public ProblemDetail handleStatementNotFound(StatementNotFoundException ex, HttpServletRequest request) {
-
         return createProblemDetail(
                 HttpStatus.NOT_FOUND,
                 buildProblemDetailTypeURI(request, TYPE_STATEMENT),
-                "Not Found",
+                TITLE_DESCRIPTION_NOT_FOUND,
                 ex.getMessage(),
                 ERROR_CODE_STATEMENT_NOT_FOUND);
     }
 
+    /**
+     * Handles Spring/Jakarta validation exceptions
+     */
     @ExceptionHandler({
         MethodArgumentNotValidException.class,
         MissingServletRequestParameterException.class,
@@ -93,131 +158,84 @@ public class GlobalExceptionHandler {
         return createProblemDetail(
                 HttpStatus.BAD_REQUEST,
                 buildProblemDetailTypeURI(request, TYPE_VALIDATION),
-                "Validation Failed",
+                TITLE_DESCRIPTION_VALIDATION_FAILED,
                 ex.getMessage(),
                 ERROR_CODE_INVALID_INPUT);
     }
 
-    @ExceptionHandler(InvalidMessageDigestException.class)
-    public ProblemDetail handleInvalidMessageDigest(InvalidMessageDigestException ex, HttpServletRequest request) {
+    /**
+     * Handles custom input validation exceptions (consolidated)
+     * All return BAD_REQUEST with unique error codes and titles
+     */
+    @ExceptionHandler({
+        InvalidMessageDigestException.class,
+        MissingFileException.class,
+        InvalidAccountNumberException.class,
+        InvalidDateException.class,
+        DigestMismatchException.class,
+        DigestComputationException.class
+    })
+    public ProblemDetail handleInputValidationExceptions(Exception ex, HttpServletRequest request) {
+        ExceptionMetadata metadata = VALIDATION_EXCEPTION_METADATA.get(ex.getClass());
+
         return createProblemDetail(
                 HttpStatus.BAD_REQUEST,
                 buildProblemDetailTypeURI(request, TYPE_VALIDATION),
-                "Invalid Message Digest",
+                metadata.title(),
                 ex.getMessage(),
-                ERROR_CODE_INVALID_MESSAGE_DIGEST);
+                metadata.errorCode());
     }
 
-    @ExceptionHandler(MissingFileException.class)
-    public ProblemDetail handleMissingFile(MissingFileException ex, HttpServletRequest request) {
-        return createProblemDetail(
-                HttpStatus.BAD_REQUEST,
-                buildProblemDetailTypeURI(request, TYPE_VALIDATION),
-                "Missing File",
-                ex.getMessage(),
-                ERROR_CODE_MISSING_FILE);
-    }
-
-    @ExceptionHandler(InvalidAccountNumberException.class)
-    public ProblemDetail handleInvalidAccountNumber(InvalidAccountNumberException ex, HttpServletRequest request) {
-        return createProblemDetail(
-                HttpStatus.BAD_REQUEST,
-                buildProblemDetailTypeURI(request, TYPE_VALIDATION),
-                "Invalid Account Number",
-                ex.getMessage(),
-                ERROR_CODE_INVALID_ACCOUNT_NUMBER);
-    }
-
-    @ExceptionHandler(InvalidDateException.class)
-    public ProblemDetail handleInvalidDate(InvalidDateException ex, HttpServletRequest request) {
-        return createProblemDetail(
-                HttpStatus.BAD_REQUEST,
-                buildProblemDetailTypeURI(request, TYPE_VALIDATION),
-                "Invalid Date Format",
-                ex.getMessage(),
-                ERROR_CODE_INVALID_DATE);
-    }
-
-    @ExceptionHandler(DigestMismatchException.class)
-    public ProblemDetail handleDigestMismatch(DigestMismatchException ex, HttpServletRequest request) {
-        return createProblemDetail(
-                HttpStatus.BAD_REQUEST,
-                buildProblemDetailTypeURI(request, TYPE_VALIDATION),
-                "Digest Mismatch",
-                ex.getMessage(),
-                ERROR_CODE_DIGEST_MISMATCH);
-    }
-
-    @ExceptionHandler(DigestComputationException.class)
-    public ProblemDetail handleDigestComputation(DigestComputationException ex, HttpServletRequest request) {
-        return createProblemDetail(
-                HttpStatus.BAD_REQUEST,
-                buildProblemDetailTypeURI(request, TYPE_VALIDATION),
-                "Digest Computation Failed",
-                ex.getMessage(),
-                ERROR_CODE_DIGEST_ERROR);
-    }
-
+    /**
+     * Handles statement upload failures
+     */
     @ExceptionHandler(StatementUploadException.class)
     public ProblemDetail handleUploadFailure(StatementUploadException ex, HttpServletRequest request) {
         return createProblemDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 buildProblemDetailTypeURI(request, TYPE_UPLOAD),
-                "Statement Upload Failed",
+                TITLE_DESCRIPTION_STATEMENT_UPLOAD_FAILED,
                 ex.getMessage(),
                 ERROR_CODE_UPLOAD_FAILED);
     }
 
-    @ExceptionHandler(DownloadInvalidSignatureException.class)
-    public ProblemDetail handleInvalidSignature(DownloadInvalidSignatureException ex, HttpServletRequest request) {
+    /**
+     * Handles download-related exceptions (consolidated)
+     * Returns different HTTP status codes based on exception type
+     */
+    @ExceptionHandler({
+        DownloadInvalidSignatureException.class,
+        DownloadLinkExpiredException.class,
+        DownloadFileMissingException.class,
+        DecryptionFailedException.class
+    })
+    public ProblemDetail handleDownloadExceptions(Exception ex, HttpServletRequest request) {
+        ExceptionMetadata metadata = DOWNLOAD_EXCEPTION_METADATA.get(ex.getClass());
+
         return createProblemDetail(
-                HttpStatus.FORBIDDEN,
+                metadata.status(),
                 buildProblemDetailTypeURI(request, TYPE_DOWNLOAD),
-                "Invalid Signature",
+                metadata.title(),
                 ex.getMessage(),
-                ERROR_CODE_INVALID_SIGNATURE);
+                metadata.errorCode());
     }
 
-    @ExceptionHandler(DownloadLinkExpiredException.class)
-    public ProblemDetail handleLinkExpired(DownloadLinkExpiredException ex, HttpServletRequest request) {
-        return createProblemDetail(
-                HttpStatus.NOT_FOUND,
-                buildProblemDetailTypeURI(request, TYPE_DOWNLOAD),
-                "Link Expired or Used",
-                ex.getMessage(),
-                ERROR_CODE_LINK_EXPIRED);
-    }
-
-    @ExceptionHandler(DownloadFileMissingException.class)
-    public ProblemDetail handleFileMissing(DownloadFileMissingException ex, HttpServletRequest request) {
-        return createProblemDetail(
-                HttpStatus.NOT_FOUND,
-                buildProblemDetailTypeURI(request, TYPE_DOWNLOAD),
-                "File Missing",
-                ex.getMessage(),
-                ERROR_CODE_FILE_MISSING);
-    }
-
-    @ExceptionHandler(DecryptionFailedException.class)
-    public ProblemDetail handleDecryptionFailed(DecryptionFailedException ex, HttpServletRequest request) {
-        return createProblemDetail(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                buildProblemDetailTypeURI(request, TYPE_DOWNLOAD),
-                "Decryption Failed",
-                ex.getMessage(),
-                ERROR_CODE_DECRYPTION_FAILED);
-    }
-
+    /**
+     * Handles unsupported media type exceptions
+     */
     @ExceptionHandler({UnsupportedContentTypeException.class, HttpMediaTypeNotSupportedException.class})
     public ProblemDetail handleUnsupportedMediaType(Exception ex, HttpServletRequest request) {
         return createProblemDetail(
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                 buildProblemDetailTypeURI(request, TYPE_MEDIA_TYPE),
-                "Unsupported Media Type",
+                TITLE_DESCRIPTION_UNSUPPORTED_MEDIA_TYPE,
                 ex.getMessage(),
                 ERROR_CODE_UNSUPPORTED_MEDIA);
     }
 
+    /**
+     * Handles generic runtime exceptions
+     */
     @ExceptionHandler(RuntimeException.class)
     public ProblemDetail handleRuntime(RuntimeException ex, HttpServletRequest request) {
         return createProblemDetail(
@@ -228,6 +246,9 @@ public class GlobalExceptionHandler {
                 ERROR_CODE_INVALID_INPUT);
     }
 
+    /**
+     * Handles all other unhandled exceptions
+     */
     @ExceptionHandler({Exception.class, SignatureException.class})
     public ProblemDetail handleGeneric(Exception ex, HttpServletRequest request) {
         return createProblemDetail(

@@ -71,7 +71,6 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should return paginated results with all filters")
     void getFilteredAuditLogs_AllFilters() {
-        // Given
         String accountNumber = "ACC123456";
         String startDate = "2024-01-01";
         String endDate = "2024-01-31";
@@ -81,16 +80,11 @@ class AuditQueryServiceTest {
         List<AuditLog> auditLogs = Arrays.asList(testAuditLog);
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Arrays.asList(testAuditLogDto);
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         AuditLogPage result = auditQueryService.getFilteredAuditLogs(accountNumber, startDate, endDate, page, size);
-
-        // Then
         assertThat(result).isNotNull();
         verify(auditLogRepository)
                 .findFilteredAuditLogs(
@@ -106,20 +100,14 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should handle null account number")
     void getFilteredAuditLogs_NullAccountNumber() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
-        AuditLogPage result = auditQueryService.getFilteredAuditLogs(null, null, null, null, null);
-
-        // Then
+        var result = auditQueryService.getFilteredAuditLogs(null, null, null, null, null);
         ArgumentCaptor<String> accountCaptor = ArgumentCaptor.forClass(String.class);
         verify(auditLogRepository).findFilteredAuditLogs(accountCaptor.capture(), any(), any(), any(Pageable.class));
         assertThat(accountCaptor.getValue()).isNull();
@@ -128,20 +116,14 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should normalize blank account number to null")
     void getFilteredAuditLogs_BlankAccountNumber() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs("   ", null, null, null, null);
-
-        // Then
         ArgumentCaptor<String> accountCaptor = ArgumentCaptor.forClass(String.class);
         verify(auditLogRepository).findFilteredAuditLogs(accountCaptor.capture(), any(), any(), any(Pageable.class));
         assertThat(accountCaptor.getValue()).isNull();
@@ -150,20 +132,14 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should trim account number")
     void getFilteredAuditLogs_TrimAccountNumber() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs("  ACC123  ", null, null, null, null);
-
-        // Then
         ArgumentCaptor<String> accountCaptor = ArgumentCaptor.forClass(String.class);
         verify(auditLogRepository).findFilteredAuditLogs(accountCaptor.capture(), any(), any(), any(Pageable.class));
         assertThat(accountCaptor.getValue()).isEqualTo("ACC123");
@@ -172,20 +148,14 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should use default page and size when null")
     void getFilteredAuditLogs_DefaultPagination() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, null, null, null, null);
-
-        // Then
         verify(testAuditLogPage).page(0); // DEFAULT_PAGE
         verify(testAuditLogPage).size(50); // DEFAULT_SIZE
     }
@@ -193,84 +163,59 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should normalize negative page to 0")
     void getFilteredAuditLogs_NegativePage() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, null, null, -5, null);
-
-        // Then
         verify(testAuditLogPage).page(0);
     }
 
     @Test
     @DisplayName("getFilteredAuditLogs - should cap size at MAX_SIZE (100)")
     void getFilteredAuditLogs_MaxSize() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, null, null, null, 200);
-
-        // Then
         verify(testAuditLogPage).size(100); // MAX_SIZE
     }
 
     @Test
     @DisplayName("getFilteredAuditLogs - should enforce MIN_SIZE (1)")
     void getFilteredAuditLogs_MinSize() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, null, null, null, 0);
-
-        // Then
-        verify(testAuditLogPage).size(1); // MIN_SIZE
+        verify(testAuditLogPage).size(1);
     }
 
     @Test
     @DisplayName("getFilteredAuditLogs - should parse valid start date")
     void getFilteredAuditLogs_ValidStartDate() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, "2024-01-15", null, null, null);
-
-        // Then
         ArgumentCaptor<OffsetDateTime> startCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
         verify(auditLogRepository).findFilteredAuditLogs(any(), startCaptor.capture(), any(), any(Pageable.class));
-
-        OffsetDateTime capturedStart = startCaptor.getValue();
+        var capturedStart = startCaptor.getValue();
         assertThat(capturedStart).isNotNull();
         assertThat(capturedStart.toLocalDate()).isEqualTo(LocalDate.of(2024, 1, 15));
         assertThat(capturedStart.getHour()).isEqualTo(0);
@@ -280,24 +225,17 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should parse valid end date to end of day")
     void getFilteredAuditLogs_ValidEndDate() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, null, "2024-01-31", null, null);
-
-        // Then
         ArgumentCaptor<OffsetDateTime> endCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
         verify(auditLogRepository).findFilteredAuditLogs(any(), any(), endCaptor.capture(), any(Pageable.class));
-
-        OffsetDateTime capturedEnd = endCaptor.getValue();
+        var capturedEnd = endCaptor.getValue();
         assertThat(capturedEnd).isNotNull();
         assertThat(capturedEnd.toLocalDate()).isEqualTo(LocalDate.of(2024, 1, 31));
         assertThat(capturedEnd.getHour()).isEqualTo(23);
@@ -308,7 +246,6 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should throw InvalidDateException for invalid start date format")
     void getFilteredAuditLogs_InvalidStartDateFormat() {
-        // When/Then
         assertThatThrownBy(() -> auditQueryService.getFilteredAuditLogs(null, "invalid-date", null, null, null))
                 .isInstanceOf(InvalidDateException.class)
                 .hasMessageContaining("Invalid start date format");
@@ -317,7 +254,6 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should throw InvalidDateException for invalid end date format")
     void getFilteredAuditLogs_InvalidEndDateFormat() {
-        // When/Then
         assertThatThrownBy(() -> auditQueryService.getFilteredAuditLogs(null, null, "2024/01/31", null, null))
                 .isInstanceOf(InvalidDateException.class)
                 .hasMessageContaining("Invalid end date format");
@@ -326,7 +262,6 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should throw InvalidDateException when start date is after end date")
     void getFilteredAuditLogs_StartAfterEnd() {
-        // When/Then
         assertThatThrownBy(() -> auditQueryService.getFilteredAuditLogs(null, "2024-02-01", "2024-01-01", null, null))
                 .isInstanceOf(InvalidDateException.class)
                 .hasMessageContaining("Start date must be before or equal to end date");
@@ -335,20 +270,14 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should handle blank start date as null")
     void getFilteredAuditLogs_BlankStartDate() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, "   ", null, null, null);
-
-        // Then
         ArgumentCaptor<OffsetDateTime> startCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
         verify(auditLogRepository).findFilteredAuditLogs(any(), startCaptor.capture(), any(), any(Pageable.class));
         assertThat(startCaptor.getValue()).isNull();
@@ -357,20 +286,14 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should handle blank end date as null")
     void getFilteredAuditLogs_BlankEndDate() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, null, "   ", null, null);
-
-        // Then
         ArgumentCaptor<OffsetDateTime> endCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
         verify(auditLogRepository).findFilteredAuditLogs(any(), any(), endCaptor.capture(), any(Pageable.class));
         assertThat(endCaptor.getValue()).isNull();
@@ -379,25 +302,18 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should trim date strings")
     void getFilteredAuditLogs_TrimDates() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, "  2024-01-01  ", "  2024-01-31  ", null, null);
-
-        // Then
         ArgumentCaptor<OffsetDateTime> startCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
         ArgumentCaptor<OffsetDateTime> endCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
         verify(auditLogRepository)
                 .findFilteredAuditLogs(any(), startCaptor.capture(), endCaptor.capture(), any(Pageable.class));
-
         assertThat(startCaptor.getValue()).isNotNull();
         assertThat(endCaptor.getValue()).isNotNull();
     }
@@ -405,20 +321,14 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should allow same start and end date")
     void getFilteredAuditLogs_SameStartAndEndDate() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
-        AuditLogPage result = auditQueryService.getFilteredAuditLogs(null, "2024-01-15", "2024-01-15", null, null);
-
-        // Then
+        var result = auditQueryService.getFilteredAuditLogs(null, "2024-01-15", "2024-01-15", null, null);
         assertThat(result).isNotNull();
         verify(auditLogRepository).findFilteredAuditLogs(any(), any(), any(), any(Pageable.class));
     }
@@ -426,24 +336,17 @@ class AuditQueryServiceTest {
     @Test
     @DisplayName("getFilteredAuditLogs - should use descending sort by performedAt")
     void getFilteredAuditLogs_VerifySorting() {
-        // Given
         List<AuditLog> auditLogs = Collections.emptyList();
         Page<AuditLog> auditLogPage = new PageImpl<>(auditLogs);
         List<AuditLogDto> auditLogDtos = Collections.emptyList();
-
         when(auditLogRepository.findFilteredAuditLogs(any(), any(), any(), any()))
                 .thenReturn(auditLogPage);
         when(auditLogEntityMapper.toDtos(auditLogs)).thenReturn(auditLogDtos);
         when(auditApiMapper.toPage(auditLogDtos)).thenReturn(testAuditLogPage);
-
-        // When
         auditQueryService.getFilteredAuditLogs(null, null, null, null, null);
-
-        // Then
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(auditLogRepository).findFilteredAuditLogs(any(), any(), any(), pageableCaptor.capture());
-
-        Pageable capturedPageable = pageableCaptor.getValue();
+        var capturedPageable = pageableCaptor.getValue();
         assertThat(capturedPageable.getSort().getOrderFor("performedAt")).isNotNull();
         assertThat(capturedPageable.getSort().getOrderFor("performedAt").getDirection())
                 .isEqualTo(org.springframework.data.domain.Sort.Direction.DESC);

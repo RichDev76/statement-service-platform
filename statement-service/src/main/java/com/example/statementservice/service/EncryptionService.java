@@ -38,14 +38,13 @@ public class EncryptionService {
 
     public void encryptToFile(InputStream in, File outFile, byte[] initializationVector) throws IOException {
         try (FileOutputStream fileOutputStream = new FileOutputStream(outFile)) {
-            SecretKeySpec secretKeySpec = new SecretKeySpec(masterKeyProvider.getKey(), ALGORITHM_AES);
-            Cipher cipher = Cipher.getInstance(ALGO);
-            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, initializationVector);
+            var secretKeySpec = new SecretKeySpec(masterKeyProvider.getKey(), ALGORITHM_AES);
+            var cipher = Cipher.getInstance(ALGO);
+            var gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, initializationVector);
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
-            // write initialization vector at beginning
             fileOutputStream.write(initializationVector);
             try (CipherOutputStream cipherOutputStream = new CipherOutputStream(fileOutputStream, cipher)) {
-                byte[] readByteBuffer = new byte[8192];
+                var readByteBuffer = new byte[8192];
                 int bytesRead;
                 while ((bytesRead = in.read(readByteBuffer)) != -1) {
                     cipherOutputStream.write(readByteBuffer, 0, bytesRead);
@@ -58,16 +57,16 @@ public class EncryptionService {
 
     public InputStream decryptFileToStream(File encFile) throws IOException {
         try {
-            FileInputStream encFileInputStream = new FileInputStream(encFile);
-            byte[] iv = new byte[INITIALIZATION_VECTOR_LENGTH];
+            var encFileInputStream = new FileInputStream(encFile);
+            var iv = new byte[INITIALIZATION_VECTOR_LENGTH];
             int read = encFileInputStream.read(iv);
             if (read != INITIALIZATION_VECTOR_LENGTH) {
                 encFileInputStream.close();
                 throw new IOException("Invalid encrypted file format: initialization vector missing");
             }
-            SecretKeySpec keySpec = new SecretKeySpec(masterKeyProvider.getKey(), ALGORITHM_AES);
-            Cipher cipher = Cipher.getInstance(ALGO);
-            GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+            var keySpec = new SecretKeySpec(masterKeyProvider.getKey(), ALGORITHM_AES);
+            var cipher = Cipher.getInstance(ALGO);
+            var spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
             cipher.init(Cipher.DECRYPT_MODE, keySpec, spec);
             return new CipherInputStream(encFileInputStream, cipher);
         } catch (Exception e) {
@@ -77,10 +76,10 @@ public class EncryptionService {
 
     public String computeSha256Hex(org.springframework.web.multipart.MultipartFile file) {
         try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance(ALGORITHM_SHA_256);
-            byte[] fileBytes = file.getBytes();
-            byte[] hash = digest.digest(fileBytes);
-            StringBuilder sb = new StringBuilder(hash.length * 2);
+            var digest = java.security.MessageDigest.getInstance(ALGORITHM_SHA_256);
+            var fileBytes = file.getBytes();
+            var hash = digest.digest(fileBytes);
+            var sb = new StringBuilder(hash.length * 2);
             for (byte b : hash) {
                 sb.append(String.format(java.util.Locale.ROOT, "%02x", b));
             }
@@ -92,9 +91,9 @@ public class EncryptionService {
 
     public String computeAccountNumberHash(String accountNumber) {
         try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance(ALGORITHM_SHA_256);
-            byte[] hash = digest.digest(accountNumber.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder accountNumberHash = new StringBuilder(hash.length * 2);
+            var digest = java.security.MessageDigest.getInstance(ALGORITHM_SHA_256);
+            var hash = digest.digest(accountNumber.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            var accountNumberHash = new StringBuilder(hash.length * 2);
             for (byte b : hash) {
                 accountNumberHash.append(String.format(java.util.Locale.ROOT, "%02x", b));
             }

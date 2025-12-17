@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import com.example.statementservice.model.DownloadOutcome;
 import com.example.statementservice.exception.InvalidInputException;
 import com.example.statementservice.exception.StatementNotFoundException;
+import com.example.statementservice.model.DownloadOutcome;
 import com.example.statementservice.model.api.StatementSummary;
 import com.example.statementservice.model.api.StatementSummaryPage;
 import com.example.statementservice.service.DownloadService;
@@ -73,12 +73,9 @@ class StatementsControllerTest {
         testStatementSummaryPage.setTotalPages(0);
     }
 
-    // ==================== downloadStatementByFileName Tests ====================
-
     @Test
     @DisplayName("downloadStatementByFileName - should return OK response with file content")
     void downloadStatementByFileName_Success() {
-        // Given
         String fileName = "statement-2024-01.pdf";
         Long expires = 1234567890L;
         String signature = "test-signature";
@@ -95,11 +92,9 @@ class StatementsControllerTest {
                 .thenReturn(successResult);
         when(downloadResponseFactory.build(fileName, successResult)).thenReturn(expectedResponse);
 
-        // When
         ResponseEntity<Resource> response =
                 statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -112,7 +107,6 @@ class StatementsControllerTest {
     @Test
     @DisplayName("downloadStatementByFileName - should return FORBIDDEN for invalid signature")
     void downloadStatementByFileName_InvalidSignature() {
-        // Given
         String fileName = "statement.pdf";
         Long expires = 1234567890L;
         String signature = "invalid-signature";
@@ -127,11 +121,9 @@ class StatementsControllerTest {
                 .thenReturn(failureResult);
         when(downloadResponseFactory.build(fileName, failureResult)).thenReturn(forbiddenResponse);
 
-        // When
         ResponseEntity<Resource> response =
                 statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(response.getBody()).isNull();
@@ -140,7 +132,6 @@ class StatementsControllerTest {
     @Test
     @DisplayName("downloadStatementByFileName - should return NOT_FOUND for expired link")
     void downloadStatementByFileName_ExpiredLink() {
-        // Given
         String fileName = "statement.pdf";
         Long expires = 1234567890L;
         String signature = "expired-signature";
@@ -155,11 +146,9 @@ class StatementsControllerTest {
                 .thenReturn(expiredResult);
         when(downloadResponseFactory.build(fileName, expiredResult)).thenReturn(notFoundResponse);
 
-        // When
         ResponseEntity<Resource> response =
                 statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
@@ -167,7 +156,7 @@ class StatementsControllerTest {
     @Test
     @DisplayName("downloadStatementByFileName - should use request info from provider")
     void downloadStatementByFileName_UsesRequestInfo() {
-        // Given
+
         String fileName = "statement.pdf";
         Long expires = 1234567890L;
         String signature = "signature";
@@ -182,17 +171,15 @@ class StatementsControllerTest {
         when(downloadResponseFactory.build(anyString(), any()))
                 .thenReturn(ResponseEntity.ok().build());
 
-        // When
         statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
-        // Then
         verify(downloadService).validateAndStreamDetailed(signature, "10.0.0.1", "Custom-Agent", "customUser");
     }
 
     @Test
     @DisplayName("downloadStatementByFileName - should pass signature to download service")
     void downloadStatementByFileName_PassesSignature() {
-        // Given
+
         String fileName = "statement.pdf";
         Long expires = 1234567890L;
         String signature = "specific-signature-value";
@@ -206,17 +193,15 @@ class StatementsControllerTest {
         when(downloadResponseFactory.build(anyString(), any()))
                 .thenReturn(ResponseEntity.ok().build());
 
-        // When
         statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
-        // Then
         verify(downloadService).validateAndStreamDetailed(eq(signature), anyString(), anyString(), anyString());
     }
 
     @Test
     @DisplayName("downloadStatementByFileName - should handle statement not found")
     void downloadStatementByFileName_StatementNotFound() {
-        // Given
+
         String fileName = "statement.pdf";
         Long expires = 1234567890L;
         String signature = "signature";
@@ -231,29 +216,23 @@ class StatementsControllerTest {
                 .thenReturn(notFoundResult);
         when(downloadResponseFactory.build(fileName, notFoundResult)).thenReturn(notFoundResponse);
 
-        // When
         ResponseEntity<Resource> response =
                 statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
-    // ==================== getDownloadSignedLinkById (getStatementById legacy tests) ====================
-
     @Test
     @DisplayName("getDownloadSignedLinkById - should return OK with statement summary when found")
     void getDownloadSignedLinkById_Found() {
-        // Given
+
         when(statementQueryService.getStatementSummaryWithSignedDownloadLinkById(testStatementId))
                 .thenReturn(Optional.of(testStatementSummary));
 
-        // When
         ResponseEntity<StatementSummary> response =
                 statementsController.getDownloadSignedLinkById(testStatementId, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -266,11 +245,10 @@ class StatementsControllerTest {
     @Test
     @DisplayName("getDownloadSignedLinkById - should throw StatementNotFoundException when not found")
     void getDownloadSignedLinkById_NotFound() {
-        // Given
+
         when(statementQueryService.getStatementSummaryWithSignedDownloadLinkById(testStatementId))
                 .thenReturn(Optional.empty());
 
-        // When/Then
         assertThatThrownBy(() -> statementsController.getDownloadSignedLinkById(testStatementId, null))
                 .isInstanceOf(StatementNotFoundException.class)
                 .hasMessageContaining("Statement(s) not found for Id: " + testStatementId);
@@ -281,7 +259,7 @@ class StatementsControllerTest {
     @Test
     @DisplayName("getDownloadSignedLinkById - should pass correct statement ID to service")
     void getDownloadSignedLinkById_PassesCorrectId() {
-        // Given
+
         UUID specificId = UUID.randomUUID();
         StatementSummary summary = new StatementSummary();
         summary.setStatementId(specificId);
@@ -289,10 +267,8 @@ class StatementsControllerTest {
         when(statementQueryService.getStatementSummaryWithSignedDownloadLinkById(specificId))
                 .thenReturn(Optional.of(summary));
 
-        // When
         ResponseEntity<StatementSummary> response = statementsController.getDownloadSignedLinkById(specificId, null);
 
-        // Then
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getStatementId()).isEqualTo(specificId);
         verify(statementQueryService).getStatementSummaryWithSignedDownloadLinkById(eq(specificId));
@@ -301,11 +277,10 @@ class StatementsControllerTest {
     @Test
     @DisplayName("getDownloadSignedLinkById - should propagate service exceptions")
     void getDownloadSignedLinkById_ServiceException() {
-        // Given
+
         when(statementQueryService.getStatementSummaryWithSignedDownloadLinkById(any()))
                 .thenThrow(new RuntimeException("Service error"));
 
-        // When/Then
         assertThatThrownBy(() -> statementsController.getDownloadSignedLinkById(testStatementId, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
@@ -313,21 +288,17 @@ class StatementsControllerTest {
         verify(statementQueryService).getStatementSummaryWithSignedDownloadLinkById(testStatementId);
     }
 
-    // ==================== searchStatements Tests ====================
-
     @Test
     @DisplayName("searchStatements - should return OK with results when account number provided")
     void searchStatements_WithAccountNumber() {
-        // Given
+
         String accountNumber = "123456789";
         when(statementQueryService.searchPaged(accountNumber, null, null, null, null))
                 .thenReturn(testStatementSummaryPage);
 
-        // When
         ResponseEntity<StatementSummaryPage> response =
                 statementsController.searchStatements(null, accountNumber, null, null, null, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -339,15 +310,13 @@ class StatementsControllerTest {
     @Test
     @DisplayName("searchStatements - should return OK with results when date provided")
     void searchStatements_WithDate() {
-        // Given
+
         String date = "2024-01-15";
         when(statementQueryService.searchPaged(null, date, null, null, null)).thenReturn(testStatementSummaryPage);
 
-        // When
         ResponseEntity<StatementSummaryPage> response =
                 statementsController.searchStatements(null, null, date, null, null, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(statementQueryService).searchPaged(null, date, null, null, null);
@@ -356,17 +325,15 @@ class StatementsControllerTest {
     @Test
     @DisplayName("searchStatements - should return OK when both account number and date provided")
     void searchStatements_WithBothAccountAndDate() {
-        // Given
+
         String accountNumber = "123456789";
         String date = "2024-01-15";
         when(statementQueryService.searchPaged(accountNumber, date, null, null, null))
                 .thenReturn(testStatementSummaryPage);
 
-        // When
         ResponseEntity<StatementSummaryPage> response =
                 statementsController.searchStatements(null, accountNumber, date, null, null, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(statementQueryService).searchPaged(accountNumber, date, null, null, null);
@@ -375,7 +342,6 @@ class StatementsControllerTest {
     @Test
     @DisplayName("searchStatements - should throw InvalidInputException when neither account nor date provided")
     void searchStatements_NeitherAccountNorDate() {
-        // When/Then
         assertThatThrownBy(() -> statementsController.searchStatements(null, null, null, null, null, null))
                 .isInstanceOf(InvalidInputException.class)
                 .hasMessageContaining("At least one of accountNumber or date must be provided");
@@ -386,7 +352,6 @@ class StatementsControllerTest {
     @Test
     @DisplayName("searchStatements - should throw InvalidInputException when both are blank strings")
     void searchStatements_BothBlankStrings() {
-        // When/Then
         assertThatThrownBy(() -> statementsController.searchStatements(null, "", "   ", null, null, null))
                 .isInstanceOf(InvalidInputException.class)
                 .hasMessageContaining("At least one of accountNumber or date must be provided");
@@ -397,16 +362,14 @@ class StatementsControllerTest {
     @Test
     @DisplayName("searchStatements - should accept blank account number if date is provided")
     void searchStatements_BlankAccountWithDate() {
-        // Given
+
         String date = "2024-01-15";
         when(statementQueryService.searchPaged(anyString(), eq(date), any(), any(), any()))
                 .thenReturn(testStatementSummaryPage);
 
-        // When
         ResponseEntity<StatementSummaryPage> response =
                 statementsController.searchStatements(null, "", date, null, null, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -414,16 +377,14 @@ class StatementsControllerTest {
     @Test
     @DisplayName("searchStatements - should accept blank date if account number is provided")
     void searchStatements_BlankDateWithAccount() {
-        // Given
+
         String accountNumber = "123456789";
         when(statementQueryService.searchPaged(eq(accountNumber), anyString(), any(), any(), any()))
                 .thenReturn(testStatementSummaryPage);
 
-        // When
         ResponseEntity<StatementSummaryPage> response =
                 statementsController.searchStatements(null, accountNumber, "   ", null, null, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -431,40 +392,36 @@ class StatementsControllerTest {
     @Test
     @DisplayName("searchStatements - should pass pagination parameters to service")
     void searchStatements_WithPagination() {
-        // Given
+
         String accountNumber = "123456789";
         Integer page = 1;
         Integer size = 25;
         when(statementQueryService.searchPaged(accountNumber, null, page, size, null))
                 .thenReturn(testStatementSummaryPage);
 
-        // When
         statementsController.searchStatements(null, accountNumber, null, page, size, null);
 
-        // Then
         verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), eq(page), eq(size), isNull());
     }
 
     @Test
     @DisplayName("searchStatements - should pass sort parameter to service")
     void searchStatements_WithSort() {
-        // Given
+
         String accountNumber = "123456789";
         String sort = "uploadedAt:desc";
         when(statementQueryService.searchPaged(accountNumber, null, null, null, sort))
                 .thenReturn(testStatementSummaryPage);
 
-        // When
         statementsController.searchStatements(null, accountNumber, null, null, null, sort);
 
-        // Then
         verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), isNull(), isNull(), eq(sort));
     }
 
     @Test
     @DisplayName("searchStatements - should pass all parameters to service")
     void searchStatements_AllParameters() {
-        // Given
+
         String accountNumber = "123456789";
         String date = "2024-01-15";
         Integer page = 2;
@@ -474,22 +431,19 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, date, page, size, sort))
                 .thenReturn(testStatementSummaryPage);
 
-        // When
         statementsController.searchStatements(null, accountNumber, date, page, size, sort);
 
-        // Then
         verify(statementQueryService).searchPaged(eq(accountNumber), eq(date), eq(page), eq(size), eq(sort));
     }
 
     @Test
     @DisplayName("searchStatements - should propagate service exceptions")
     void searchStatements_ServiceException() {
-        // Given
+
         String accountNumber = "123456789";
         when(statementQueryService.searchPaged(anyString(), any(), any(), any(), any()))
                 .thenThrow(new RuntimeException("Service error"));
 
-        // When/Then
         assertThatThrownBy(() -> statementsController.searchStatements(null, accountNumber, null, null, null, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
@@ -500,7 +454,7 @@ class StatementsControllerTest {
     @Test
     @DisplayName("searchStatements - should handle empty result page")
     void searchStatements_EmptyResults() {
-        // Given
+
         String accountNumber = "123456789";
         StatementSummaryPage emptyPage = new StatementSummaryPage();
         emptyPage.setContent(new ArrayList<>());
@@ -509,11 +463,9 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, null, null, null, null))
                 .thenReturn(emptyPage);
 
-        // When
         ResponseEntity<StatementSummaryPage> response =
                 statementsController.searchStatements(null, accountNumber, null, null, null, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -524,7 +476,7 @@ class StatementsControllerTest {
     @Test
     @DisplayName("searchStatements - should handle large result sets")
     void searchStatements_LargeResults() {
-        // Given
+
         String accountNumber = "123456789";
         StatementSummaryPage largePage = new StatementSummaryPage();
         largePage.setContent(new ArrayList<>());
@@ -534,11 +486,9 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, null, null, null, null))
                 .thenReturn(largePage);
 
-        // When
         ResponseEntity<StatementSummaryPage> response =
                 statementsController.searchStatements(null, accountNumber, null, null, null, null);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getTotalElements()).isEqualTo(1000L);

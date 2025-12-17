@@ -1,8 +1,13 @@
 package com.example.statementservice.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.example.statementservice.model.AuditAction;
 import com.example.statementservice.model.DownloadOutcome;
@@ -91,7 +96,7 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should successfully download when all validations pass")
     void validateAndStreamDetailed_Success() throws Exception {
-        // Given
+
         File tempFile = tempDir.resolve("test-statement.pdf.enc").toFile();
         Files.write(tempFile.toPath(), "encrypted content".getBytes());
         testStatement.setFilePath(tempFile.getAbsolutePath());
@@ -103,11 +108,9 @@ class DownloadServiceTest {
         InputStream mockStream = new ByteArrayInputStream("decrypted content".getBytes());
         when(encryptionService.decryptFileToStream(any(File.class))).thenReturn(mockStream);
 
-        // When
         DownloadStreamResult result =
                 downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.OK);
         assertThat(result.stream()).isPresent();
@@ -130,15 +133,13 @@ class DownloadServiceTest {
     @DisplayName(
             "validateAndStreamDetailed - should return INVALID_SIGNATURE when link validation fails with NOT_FOUND")
     void validateAndStreamDetailed_InvalidSignature() {
-        // Given
+
         LinkValidationResult invalidResult = LinkValidationResult.notFound();
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(invalidResult);
 
-        // When
         DownloadStreamResult result =
                 downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.STATEMENT_NOT_FOUND);
         assertThat(result.stream()).isEmpty();
@@ -158,16 +159,14 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should return LINK_EXPIRED_OR_USED when link is expired")
     void validateAndStreamDetailed_ExpiredLink() {
-        // Given
+
         LinkValidationResult expiredResult = LinkValidationResult.expired(testLink);
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(expiredResult);
         when(statementRepository.findById(testStatementId)).thenReturn(Optional.of(testStatement));
 
-        // When
         DownloadStreamResult result =
                 downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.LINK_EXPIRED_OR_USED);
         assertThat(result.stream()).isEmpty();
@@ -186,16 +185,14 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should return LINK_EXPIRED_OR_USED when link is already used")
     void validateAndStreamDetailed_UsedLink() {
-        // Given
+
         LinkValidationResult usedResult = LinkValidationResult.used(testLink);
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(usedResult);
         when(statementRepository.findById(testStatementId)).thenReturn(Optional.of(testStatement));
 
-        // When
         DownloadStreamResult result =
                 downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.LINK_EXPIRED_OR_USED);
         assertThat(result.stream()).isEmpty();
@@ -214,15 +211,13 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should return STATEMENT_NOT_FOUND when link not found")
     void validateAndStreamDetailed_LinkNotFound() {
-        // Given
+
         LinkValidationResult notFoundResult = LinkValidationResult.notFound();
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(notFoundResult);
 
-        // When
         DownloadStreamResult result =
                 downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.STATEMENT_NOT_FOUND);
         assertThat(result.stream()).isEmpty();
@@ -241,16 +236,14 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should return STATEMENT_NOT_FOUND when statement not in database")
     void validateAndStreamDetailed_StatementNotFound() {
-        // Given
+
         LinkValidationResult validResult = LinkValidationResult.valid(testLink);
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(validResult);
         when(statementRepository.findById(testStatementId)).thenReturn(Optional.empty());
 
-        // When
         DownloadStreamResult result =
                 downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.STATEMENT_NOT_FOUND);
         assertThat(result.stream()).isEmpty();
@@ -271,17 +264,15 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should return FILE_MISSING when file does not exist")
     void validateAndStreamDetailed_FileMissing() {
-        // Given
+
         testStatement.setFilePath("/non/existent/path/file.pdf");
         LinkValidationResult validResult = LinkValidationResult.valid(testLink);
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(validResult);
         when(statementRepository.findById(testStatementId)).thenReturn(Optional.of(testStatement));
 
-        // When
         DownloadStreamResult result =
                 downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.FILE_MISSING);
         assertThat(result.stream()).isEmpty();
@@ -302,7 +293,7 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should return DECRYPTION_FAILED on decryption error")
     void validateAndStreamDetailed_DecryptionFailed() throws Exception {
-        // Given
+
         File tempFile = tempDir.resolve("test-statement.pdf.enc").toFile();
         Files.write(tempFile.toPath(), "encrypted content".getBytes());
         testStatement.setFilePath(tempFile.getAbsolutePath());
@@ -313,11 +304,9 @@ class DownloadServiceTest {
         when(encryptionService.decryptFileToStream(any(File.class)))
                 .thenThrow(new RuntimeException("Decryption error"));
 
-        // When
         DownloadStreamResult result =
                 downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.DECRYPTION_FAILED);
         assertThat(result.stream()).isEmpty();
@@ -338,28 +327,18 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should still return stream even if audit recording fails")
     void validateAndStreamDetailed_AuditFailureDoesNotPreventDownload() throws Exception {
-        // Given
-        File tempFile = tempDir.resolve("test-statement.pdf.enc").toFile();
+        var tempFile = tempDir.resolve("test-statement.pdf.enc").toFile();
         Files.write(tempFile.toPath(), "encrypted content".getBytes());
         testStatement.setFilePath(tempFile.getAbsolutePath());
-
         LinkValidationResult validResult = LinkValidationResult.valid(testLink);
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(validResult);
         when(statementRepository.findById(testStatementId)).thenReturn(Optional.of(testStatement));
-
-        InputStream mockStream = new ByteArrayInputStream("decrypted content".getBytes());
+        var mockStream = new ByteArrayInputStream("decrypted content".getBytes());
         when(encryptionService.decryptFileToStream(any(File.class))).thenReturn(mockStream);
-
-        // Audit service throws exception
         doThrow(new RuntimeException("Audit failure"))
                 .when(auditService)
                 .record(any(), any(), any(), any(), any(), any());
-
-        // When
-        DownloadStreamResult result =
-                downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
-
-        // Then - download should still succeed
+        var result = downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.OK);
         assertThat(result.stream()).isPresent();
@@ -368,15 +347,10 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should handle null clientIp gracefully")
     void validateAndStreamDetailed_NullClientIp() {
-        // Given
-        LinkValidationResult invalidResult = LinkValidationResult.notFound();
+        var invalidResult = LinkValidationResult.notFound();
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(invalidResult);
-
-        // When
         DownloadStreamResult result =
                 downloadService.validateAndStreamDetailed(testToken, null, testUserAgent, testPerformedBy);
-
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.STATEMENT_NOT_FOUND);
         verify(auditService).record(any(), any(), any(), any(), any(), any(Map.class));
@@ -385,15 +359,9 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should handle null userAgent gracefully")
     void validateAndStreamDetailed_NullUserAgent() {
-        // Given
-        LinkValidationResult invalidResult = LinkValidationResult.notFound();
+        var invalidResult = LinkValidationResult.notFound();
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(invalidResult);
-
-        // When
-        DownloadStreamResult result =
-                downloadService.validateAndStreamDetailed(testToken, testClientIp, null, testPerformedBy);
-
-        // Then
+        var result = downloadService.validateAndStreamDetailed(testToken, testClientIp, null, testPerformedBy);
         assertThat(result).isNotNull();
         assertThat(result.outcome()).isEqualTo(DownloadOutcome.STATEMENT_NOT_FOUND);
         verify(auditService).record(any(), any(), any(), any(), any(), any(Map.class));
@@ -402,15 +370,10 @@ class DownloadServiceTest {
     @Test
     @DisplayName("validateAndStreamDetailed - should fetch account number when statement exists")
     void validateAndStreamDetailed_FetchesAccountNumber() {
-        // Given
-        LinkValidationResult expiredResult = LinkValidationResult.expired(testLink);
+        var expiredResult = LinkValidationResult.expired(testLink);
         when(signedLinkService.validateAndConsume(testToken)).thenReturn(expiredResult);
         when(statementRepository.findById(testStatementId)).thenReturn(Optional.of(testStatement));
-
-        // When
         downloadService.validateAndStreamDetailed(testToken, testClientIp, testUserAgent, testPerformedBy);
-
-        // Then
         verify(statementRepository).findById(testStatementId);
         verify(auditService)
                 .record(

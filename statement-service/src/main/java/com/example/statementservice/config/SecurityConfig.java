@@ -38,33 +38,24 @@ public class SecurityConfig {
             AccessDeniedHandler problemDetailAccessDeniedHandler)
             throws Exception {
 
-        http
-                // Stateless API
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // CSRF is not needed for stateless APIs; ignore configured API paths
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf ->
                         csrf.ignoringRequestMatchers(endpoints.getCsrfIgnored().toArray(String[]::new)))
-                // Authorization rules
                 .authorizeHttpRequests(auth -> {
-                    // Public endpoints from configuration
                     if (!endpoints.getWhitelist().isEmpty()) {
                         auth.requestMatchers(endpoints.getWhitelist().toArray(String[]::new))
                                 .permitAll();
                     }
 
-                    // Role-based endpoint protection
                     auth.requestMatchers("/api/v1/statements/upload").hasRole("Upload");
                     auth.requestMatchers("/api/v1/statements/audit/logs").hasRole("AuditLogsSearch");
                     auth.requestMatchers("/api/v1/statements/search").hasRole("Search");
                     auth.requestMatchers("/api/v1/statements/*/link").hasRole("GenerateSignedLink");
 
-                    // Everything else must be authenticated
                     auth.anyRequest().authenticated();
                 })
-                // ProblemDetail for authentication/authorization errors
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(problemDetailAuthEntryPoint)
                         .accessDeniedHandler(problemDetailAccessDeniedHandler))
-                // OAuth2 Resource Server (JWT)
                 .oauth2ResourceServer(
                         oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
 
@@ -81,13 +72,13 @@ public class SecurityConfig {
     @Bean
     public AuthenticationEntryPoint problemDetailAuthEntryPoint(ObjectMapper objectMapper) {
         return (request, response, authException) -> {
-            // Minimal, safe logging of unauthenticated access
             log.warn("Unauthenticated access - path={}, method={}", request.getRequestURI(), request.getMethod());
 
-            ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+            var pd = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
             pd.setType(buildProblemDetailTypeURI(request, "/errors/authentication"));
             pd.setTitle("Unauthenticated");
             pd.setDetail("Authentication required to access this resource");
+
             try {
                 pd.setInstance(URI.create(request.getRequestURI()));
             } catch (Exception ignored) {
@@ -102,10 +93,9 @@ public class SecurityConfig {
     @Bean
     public AccessDeniedHandler problemDetailAccessDeniedHandler(ObjectMapper objectMapper) {
         return (request, response, accessDeniedException) -> {
-            // Minimal, safe logging of forbidden access
             log.warn("Access denied - path={}, method={}", request.getRequestURI(), request.getMethod());
 
-            ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+            var pd = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
             pd.setType(buildProblemDetailTypeURI(request, "/errors/authorization"));
             pd.setTitle("Forbidden");
             pd.setDetail("You do not have permission to access this resource");

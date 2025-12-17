@@ -7,8 +7,4 @@ public class UnsupportedContentTypeException extends RuntimeException {
     public UnsupportedContentTypeException(String message) {
         super(message);
     }
-
-    public UnsupportedContentTypeException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

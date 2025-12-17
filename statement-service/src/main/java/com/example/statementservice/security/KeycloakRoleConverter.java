@@ -9,20 +9,20 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-/**
- * Converts Keycloak roles from either a top-level "roles" claim or the default
- * "realm_access.roles" claim into Spring Security authorities (ROLE_*)
- */
 public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
+
+    public static final String JWT_CLAIM_ROLES = "roles";
+    public static final String REALM_ACCESS = "realm_access";
+    public static final String ROLE_PREFIX = "ROLE_";
 
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
-        List<String> roles = jwt.getClaimAsStringList("roles");
+        var roles = jwt.getClaimAsStringList(JWT_CLAIM_ROLES);
 
         if (roles == null || roles.isEmpty()) {
-            Object realmAccessObj = jwt.getClaim("realm_access");
+            var realmAccessObj = jwt.getClaim(REALM_ACCESS);
             if (realmAccessObj instanceof Map<?, ?> realmAccess) {
-                Object rawRoles = realmAccess.get("roles");
+                var rawRoles = realmAccess.get(JWT_CLAIM_ROLES);
                 if (rawRoles instanceof List<?> list) {
                     roles = list.stream()
                             .filter(String.class::isInstance)
@@ -37,7 +37,7 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
         }
 
         return roles.stream()
-                .map(role -> "ROLE_" + role)
+                .map(role -> ROLE_PREFIX + role)
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }

@@ -22,44 +22,30 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should create SignatureUtil with secret key")
     void testConstructor() {
-        // Act
         SignatureUtil util = new SignatureUtil("my-secret");
-
-        // Assert
         assertNotNull(util);
     }
 
     @Test
     @DisplayName("Should generate signature for valid inputs")
     void testSignWithMethod_ValidInputs() {
-        // Arrange
         String path = "/api/statements/123";
         long expires = 1234567890L;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
-        // Base64 URL-encoded without padding should not contain '=' at the end
         assertFalse(signature.endsWith("="));
     }
 
     @Test
     @DisplayName("Should generate consistent signatures for same inputs")
     void testSignWithMethod_Consistency() {
-        // Arrange
         String path = "/download/file.pdf";
         long expires = 9876543210L;
         String method = "GET";
-
-        // Act
         String signature1 = signatureUtil.signWithMethod(path, expires, method);
         String signature2 = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature1);
         assertNotNull(signature2);
         assertEquals(signature1, signature2);
@@ -68,17 +54,12 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should generate different signatures for different paths")
     void testSignWithMethod_DifferentPaths() {
-        // Arrange
         long expires = 1234567890L;
         String method = "GET";
         String path1 = "/api/statements/123";
         String path2 = "/api/statements/456";
-
-        // Act
         String signature1 = signatureUtil.signWithMethod(path1, expires, method);
         String signature2 = signatureUtil.signWithMethod(path2, expires, method);
-
-        // Assert
         assertNotNull(signature1);
         assertNotNull(signature2);
         assertNotEquals(signature1, signature2);
@@ -87,17 +68,12 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should generate different signatures for different expiration times")
     void testSignWithMethod_DifferentExpires() {
-        // Arrange
         String path = "/api/statements/123";
         String method = "GET";
         long expires1 = 1234567890L;
         long expires2 = 9876543210L;
-
-        // Act
         String signature1 = signatureUtil.signWithMethod(path, expires1, method);
         String signature2 = signatureUtil.signWithMethod(path, expires2, method);
-
-        // Assert
         assertNotNull(signature1);
         assertNotNull(signature2);
         assertNotEquals(signature1, signature2);
@@ -106,17 +82,12 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should generate different signatures for different methods")
     void testSignWithMethod_DifferentMethods() {
-        // Arrange
         String path = "/api/statements/123";
         long expires = 1234567890L;
         String method1 = "GET";
         String method2 = "POST";
-
-        // Act
         String signature1 = signatureUtil.signWithMethod(path, expires, method1);
         String signature2 = signatureUtil.signWithMethod(path, expires, method2);
-
-        // Assert
         assertNotNull(signature1);
         assertNotNull(signature2);
         assertNotEquals(signature1, signature2);
@@ -125,18 +96,13 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should generate different signatures with different secret keys")
     void testSignWithMethod_DifferentSecrets() {
-        // Arrange
         SignatureUtil util1 = new SignatureUtil("secret1");
         SignatureUtil util2 = new SignatureUtil("secret2");
         String path = "/api/statements/123";
         long expires = 1234567890L;
         String method = "GET";
-
-        // Act
         String signature1 = util1.signWithMethod(path, expires, method);
         String signature2 = util2.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature1);
         assertNotNull(signature2);
         assertNotEquals(signature1, signature2);
@@ -145,15 +111,10 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should handle empty path")
     void testSignWithMethod_EmptyPath() {
-        // Arrange
         String path = "";
         long expires = 1234567890L;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
     }
@@ -161,15 +122,10 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should handle empty method")
     void testSignWithMethod_EmptyMethod() {
-        // Arrange
         String path = "/api/statements/123";
         long expires = 1234567890L;
         String method = "";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
     }
@@ -177,15 +133,10 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should handle special characters in path")
     void testSignWithMethod_SpecialCharactersInPath() {
-        // Arrange
         String path = "/api/statements/file%20name.pdf?param=value&other=123";
         long expires = 1234567890L;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
     }
@@ -193,15 +144,10 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should handle Unicode characters in path")
     void testSignWithMethod_UnicodeCharacters() {
-        // Arrange
         String path = "/api/statements/文件名.pdf";
         long expires = 1234567890L;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
     }
@@ -209,18 +155,13 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should handle long path strings")
     void testSignWithMethod_LongPath() {
-        // Arrange
         StringBuilder longPath = new StringBuilder("/api/statements/");
         for (int i = 0; i < 100; i++) {
             longPath.append("segment").append(i).append("/");
         }
         long expires = 1234567890L;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(longPath.toString(), expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
     }
@@ -228,15 +169,10 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should handle zero expiration time")
     void testSignWithMethod_ZeroExpires() {
-        // Arrange
         String path = "/api/statements/123";
         long expires = 0L;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
     }
@@ -244,15 +180,10 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should handle negative expiration time")
     void testSignWithMethod_NegativeExpires() {
-        // Arrange
         String path = "/api/statements/123";
         long expires = -1234567890L;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
     }
@@ -260,15 +191,10 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should handle maximum long expiration time")
     void testSignWithMethod_MaxLongExpires() {
-        // Arrange
         String path = "/api/statements/123";
         long expires = Long.MAX_VALUE;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
     }
@@ -276,44 +202,31 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should generate valid Base64 URL-encoded signature")
     void testSignWithMethod_Base64UrlEncoding() {
-        // Arrange
         String path = "/api/statements/123";
         long expires = 1234567890L;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
-        // Base64 URL encoding should not contain '+' or '/' characters
         assertFalse(signature.contains("+"));
         assertFalse(signature.contains("/"));
-        // Should not have padding
         assertFalse(signature.endsWith("="));
     }
 
     @Test
     @DisplayName("Should handle various HTTP methods")
     void testSignWithMethod_VariousHttpMethods() {
-        // Arrange
         String path = "/api/statements/123";
         long expires = 1234567890L;
-
-        // Act & Assert
         String getSignature = signatureUtil.signWithMethod(path, expires, "GET");
         String postSignature = signatureUtil.signWithMethod(path, expires, "POST");
         String putSignature = signatureUtil.signWithMethod(path, expires, "PUT");
         String deleteSignature = signatureUtil.signWithMethod(path, expires, "DELETE");
         String patchSignature = signatureUtil.signWithMethod(path, expires, "PATCH");
-
         assertNotNull(getSignature);
         assertNotNull(postSignature);
         assertNotNull(putSignature);
         assertNotNull(deleteSignature);
         assertNotNull(patchSignature);
-
-        // All should be different
         assertNotEquals(getSignature, postSignature);
         assertNotEquals(getSignature, putSignature);
         assertNotEquals(postSignature, deleteSignature);
@@ -322,12 +235,8 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should throw exception when signing with empty secret key")
     void testConstructor_EmptySecret() {
-        // Arrange
         SignatureUtil util = new SignatureUtil("");
-
-        // Act & Assert
         assertNotNull(util);
-        // Empty secret key should cause SignatureException when trying to sign
         assertThrows(SignatureException.class, () -> {
             util.signWithMethod("/path", 123L, "GET");
         });
@@ -336,15 +245,10 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should handle pipe character in data components")
     void testSignWithMethod_PipeCharacterHandling() {
-        // Arrange - pipe is used as delimiter in the signature data format
         String path = "/api/statements/file|with|pipes.pdf";
         long expires = 1234567890L;
         String method = "GET";
-
-        // Act
         String signature = signatureUtil.signWithMethod(path, expires, method);
-
-        // Assert
         assertNotNull(signature);
         assertFalse(signature.isEmpty());
     }
@@ -352,23 +256,16 @@ class SignatureUtilTest {
     @Test
     @DisplayName("Should produce signatures of consistent length")
     void testSignWithMethod_ConsistentLength() {
-        // Arrange
         String path1 = "/short";
         String path2 = "/very/long/path/with/many/segments/and/parameters";
         long expires = 1234567890L;
         String method = "GET";
-
-        // Act
         String signature1 = signatureUtil.signWithMethod(path1, expires, method);
         String signature2 = signatureUtil.signWithMethod(path2, expires, method);
-
-        // Assert
-        // HMAC-SHA256 produces 256-bit (32-byte) output, Base64 encoding should produce similar lengths
         assertNotNull(signature1);
         assertNotNull(signature2);
         assertTrue(signature1.length() > 0);
         assertTrue(signature2.length() > 0);
-        // SHA256 hash is always same size, so Base64 encoding should produce similar lengths
         assertEquals(signature1.length(), signature2.length());
     }
 }

@@ -5,14 +5,17 @@ import java.net.URI;
 
 public class CommonUtil {
 
+    public static final String HTTP = "http";
+    public static final String HTTPS = "https";
+
     public static URI buildProblemDetailTypeURI(HttpServletRequest request, String contextPath) {
-        String scheme = request.getScheme();
-        String serverName = request.getServerName();
+        var scheme = request.getScheme();
+        var serverName = request.getServerName();
         int serverPort = request.getServerPort();
 
         StringBuilder baseUrl = new StringBuilder(scheme).append("://").append(serverName);
 
-        if (!((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443))) {
+        if (!((scheme.equals(HTTP) && serverPort == 80) || (scheme.equals(HTTPS) && serverPort == 443))) {
             baseUrl.append(":").append(serverPort);
         }
 

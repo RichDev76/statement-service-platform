@@ -23,7 +23,7 @@ public interface AuditApiMapper {
     AuditLogEntry toApi(AuditLogDto dto);
 
     default AuditLogPage toPage(List<AuditLogDto> dtos) {
-        AuditLogPage page = new AuditLogPage();
+        var page = new AuditLogPage();
         page.setContent(
                 dtos == null ? List.of() : dtos.stream().map(this::toApi).collect(Collectors.toList()));
         return page;

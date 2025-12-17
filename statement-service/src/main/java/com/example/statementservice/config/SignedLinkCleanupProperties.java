@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class SignedLinkCleanupProperties {
 
     private boolean enabled = true;
-    private String cron = "0 0/5 * * * *"; // default: every 5 minutes
+    private String cron = "0 0/5 * * * *";
     private Duration retentionPeriod = Duration.ZERO;
     private int batchSize = 500;
     private Duration lockAtMostFor = Duration.ofMinutes(5);

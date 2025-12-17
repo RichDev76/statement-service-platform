@@ -15,25 +15,18 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class StatementUploadService {
 
+    public static final String ADMIN_USER = "admin";
     private final ValidationUtil validationUtil;
     private final RequestInfoProvider requestInfoProvider;
     private final StatementService statementService;
     private final AuditService auditService;
 
-    /**
-     * Orchestrates the statement upload flow: validates inputs, resolves request context,
-     * delegates to StatementService to persist, and records an audit entry on success.
-     */
     public UploadResponseDto upload(String xMessageDigest, MultipartFile file, String accountNumber, String date) {
         this.validationUtil.validateFileUploadInputs(file, xMessageDigest, accountNumber, date);
         var requestInfo = requestInfoProvider.get();
-        String performedBy = requestInfo.getPerformedBy() != null ? requestInfo.getPerformedBy() : "admin";
-
-        UploadResponseDto dto =
-                this.statementService.uploadStatement(accountNumber, LocalDate.parse(date), file, performedBy);
-
+        var performedBy = requestInfo.getPerformedBy() != null ? requestInfo.getPerformedBy() : ADMIN_USER;
+        var dto = this.statementService.uploadStatement(accountNumber, LocalDate.parse(date), file, performedBy);
         auditUpload(accountNumber, requestInfo, dto, performedBy);
-
         return dto;
     }
 

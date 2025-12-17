@@ -3,12 +3,20 @@ package com.example.statementservice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.example.statementservice.model.entity.AuditLog;
 import com.example.statementservice.repository.AuditLogRepository;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,24 +56,16 @@ class AuditServiceTest {
         testDetails.put("userAgent", "Mozilla/5.0");
     }
 
-    // ==================== record Tests ====================
-
     @Test
     @DisplayName("record - should save audit log asynchronously")
     void record_Success() {
-        // Given
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
         auditService.record(
                 testAction, testStatementId, testAccountNumber, testSignedLinkId, testPerformedBy, testDetails);
-
-        // Then - Wait for async execution
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
             verify(auditLogRepository).save(captor.capture());
-
-            AuditLog savedLog = captor.getValue();
+            var savedLog = captor.getValue();
             assertThat(savedLog.getId()).isNotNull();
             assertThat(savedLog.getAction()).isEqualTo(testAction);
             assertThat(savedLog.getStatementId()).isEqualTo(testStatementId);
@@ -80,18 +80,12 @@ class AuditServiceTest {
     @Test
     @DisplayName("record - should handle null statement ID")
     void record_NullStatementId() {
-        // Given
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
         auditService.record(testAction, null, testAccountNumber, testSignedLinkId, testPerformedBy, testDetails);
-
-        // Then
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
             verify(auditLogRepository).save(captor.capture());
-
-            AuditLog savedLog = captor.getValue();
+            var savedLog = captor.getValue();
             assertThat(savedLog.getStatementId()).isNull();
         });
     }
@@ -99,18 +93,12 @@ class AuditServiceTest {
     @Test
     @DisplayName("record - should handle null account number")
     void record_NullAccountNumber() {
-        // Given
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
         auditService.record(testAction, testStatementId, null, testSignedLinkId, testPerformedBy, testDetails);
-
-        // Then
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
             verify(auditLogRepository).save(captor.capture());
-
-            AuditLog savedLog = captor.getValue();
+            var savedLog = captor.getValue();
             assertThat(savedLog.getAccountNumber()).isNull();
         });
     }
@@ -118,18 +106,12 @@ class AuditServiceTest {
     @Test
     @DisplayName("record - should handle null signed link ID")
     void record_NullSignedLinkId() {
-        // Given
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
         auditService.record(testAction, testStatementId, testAccountNumber, null, testPerformedBy, testDetails);
-
-        // Then
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
             verify(auditLogRepository).save(captor.capture());
-
-            AuditLog savedLog = captor.getValue();
+            var savedLog = captor.getValue();
             assertThat(savedLog.getSignedLinkId()).isNull();
         });
     }
@@ -137,18 +119,12 @@ class AuditServiceTest {
     @Test
     @DisplayName("record - should handle null details")
     void record_NullDetails() {
-        // Given
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
         auditService.record(testAction, testStatementId, testAccountNumber, testSignedLinkId, testPerformedBy, null);
-
-        // Then
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
             verify(auditLogRepository).save(captor.capture());
-
-            AuditLog savedLog = captor.getValue();
+            var savedLog = captor.getValue();
             assertThat(savedLog.getDetails()).isNull();
         });
     }
@@ -156,21 +132,14 @@ class AuditServiceTest {
     @Test
     @DisplayName("record - should handle empty details map")
     void record_EmptyDetails() {
-        // Given
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Map<String, Object> emptyDetails = new HashMap<>();
-
-        // When
+        var emptyDetails = new HashMap<String, Object>();
         auditService.record(
                 testAction, testStatementId, testAccountNumber, testSignedLinkId, testPerformedBy, emptyDetails);
-
-        // Then
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
             verify(auditLogRepository).save(captor.capture());
-
-            AuditLog savedLog = captor.getValue();
+            var savedLog = captor.getValue();
             assertThat(savedLog.getDetails()).isEmpty();
         });
     }
@@ -178,41 +147,26 @@ class AuditServiceTest {
     @Test
     @DisplayName("record - should handle repository exception gracefully")
     void record_RepositoryException() {
-        // Given
         when(auditLogRepository.save(any(AuditLog.class))).thenThrow(new RuntimeException("Database error"));
-
-        // When - Should not throw exception, just log error
         auditService.record(
                 testAction, testStatementId, testAccountNumber, testSignedLinkId, testPerformedBy, testDetails);
-
-        // Then - Wait and verify save was attempted
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             verify(auditLogRepository).save(any(AuditLog.class));
         });
-
-        // No exception should be propagated
     }
 
     @Test
     @DisplayName("record - should set performedAt timestamp")
     void record_PerformedAtTimestamp() {
-        // Given
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        OffsetDateTime before = OffsetDateTime.now();
-
-        // When
+        var before = OffsetDateTime.now();
         auditService.record(
                 testAction, testStatementId, testAccountNumber, testSignedLinkId, testPerformedBy, testDetails);
-
-        // Then
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
             verify(auditLogRepository).save(captor.capture());
-
-            AuditLog savedLog = captor.getValue();
-            OffsetDateTime after = OffsetDateTime.now();
-
+            var savedLog = captor.getValue();
+            var after = OffsetDateTime.now();
             assertThat(savedLog.getPerformedAt()).isNotNull();
             assertThat(savedLog.getPerformedAt()).isAfterOrEqualTo(before.minusSeconds(1));
             assertThat(savedLog.getPerformedAt()).isBeforeOrEqualTo(after.plusSeconds(1));
@@ -222,29 +176,22 @@ class AuditServiceTest {
     @Test
     @DisplayName("record - should generate unique IDs for each audit log")
     void record_UniqueIds() {
-        // Given
-        List<AuditLog> savedLogs = new ArrayList<>();
+        var savedLogs = new ArrayList<AuditLog>();
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> {
             AuditLog log = invocation.getArgument(0);
             savedLogs.add(log);
             return log;
         });
-
-        // When - Record multiple audit logs
         auditService.record(
                 "ACTION1", testStatementId, testAccountNumber, testSignedLinkId, testPerformedBy, testDetails);
         auditService.record(
                 "ACTION2", testStatementId, testAccountNumber, testSignedLinkId, testPerformedBy, testDetails);
         auditService.record(
                 "ACTION3", testStatementId, testAccountNumber, testSignedLinkId, testPerformedBy, testDetails);
-
-        // Then
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             verify(auditLogRepository, times(3)).save(any(AuditLog.class));
         });
-
-        // Verify all IDs are unique
-        Set<UUID> uniqueIds = new HashSet<>();
+        var uniqueIds = new HashSet<UUID>();
         for (AuditLog log : savedLogs) {
             uniqueIds.add(log.getId());
         }
@@ -254,48 +201,33 @@ class AuditServiceTest {
     @Test
     @DisplayName("record - should handle complex details map")
     void record_ComplexDetails() {
-        // Given
-        Map<String, Object> complexDetails = new HashMap<>();
+        var complexDetails = new HashMap<String, Object>();
         complexDetails.put("ip", "192.168.1.1");
         complexDetails.put("userAgent", "Mozilla/5.0");
         complexDetails.put("attemptCount", 3);
         complexDetails.put("success", true);
         complexDetails.put("metadata", Map.of("key1", "value1", "key2", "value2"));
-
         when(auditLogRepository.save(any(AuditLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // When
         auditService.record(
                 testAction, testStatementId, testAccountNumber, testSignedLinkId, testPerformedBy, complexDetails);
-
-        // Then
         await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
             verify(auditLogRepository).save(captor.capture());
-
-            AuditLog savedLog = captor.getValue();
+            var savedLog = captor.getValue();
             assertThat(savedLog.getDetails()).isEqualTo(complexDetails);
             assertThat(savedLog.getDetails()).containsEntry("attemptCount", 3);
             assertThat(savedLog.getDetails()).containsEntry("success", true);
         });
     }
 
-    // ==================== getAllAuditLogs Tests ====================
-
     @Test
     @DisplayName("getAllAuditLogs - should return all audit logs")
     void getAllAuditLogs_Success() {
-        // Given
-        AuditLog log1 = createAuditLog("ACTION1");
-        AuditLog log2 = createAuditLog("ACTION2");
-        List<AuditLog> logs = Arrays.asList(log1, log2);
-
+        var log1 = createAuditLog("ACTION1");
+        var log2 = createAuditLog("ACTION2");
+        var logs = Arrays.asList(log1, log2);
         when(auditLogRepository.findAll()).thenReturn(logs);
-
-        // When
-        List<AuditLog> result = auditService.getAllAuditLogs();
-
-        // Then
+        var result = auditService.getAllAuditLogs();
         assertThat(result).hasSize(2);
         assertThat(result).containsExactly(log1, log2);
         verify(auditLogRepository).findAll();
@@ -304,13 +236,8 @@ class AuditServiceTest {
     @Test
     @DisplayName("getAllAuditLogs - should return empty list when no logs exist")
     void getAllAuditLogs_Empty() {
-        // Given
         when(auditLogRepository.findAll()).thenReturn(Collections.emptyList());
-
-        // When
-        List<AuditLog> result = auditService.getAllAuditLogs();
-
-        // Then
+        var result = auditService.getAllAuditLogs();
         assertThat(result).isEmpty();
         verify(auditLogRepository).findAll();
     }
@@ -318,26 +245,18 @@ class AuditServiceTest {
     @Test
     @DisplayName("getAllAuditLogs - should return multiple audit logs")
     void getAllAuditLogs_Multiple() {
-        // Given
-        List<AuditLog> logs = new ArrayList<>();
+        var logs = new ArrayList<AuditLog>();
         for (int i = 0; i < 10; i++) {
             logs.add(createAuditLog("ACTION" + i));
         }
-
         when(auditLogRepository.findAll()).thenReturn(logs);
-
-        // When
-        List<AuditLog> result = auditService.getAllAuditLogs();
-
-        // Then
+        var result = auditService.getAllAuditLogs();
         assertThat(result).hasSize(10);
         verify(auditLogRepository).findAll();
     }
 
-    // ==================== Helper Methods ====================
-
     private AuditLog createAuditLog(String action) {
-        AuditLog log = new AuditLog();
+        var log = new AuditLog();
         log.setId(UUID.randomUUID());
         log.setAction(action);
         log.setStatementId(testStatementId);

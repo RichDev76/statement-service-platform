@@ -109,7 +109,7 @@ public class StatementService {
             File out,
             byte[] iv,
             String contentHash) {
-        Statement stmt = new Statement();
+        var stmt = new Statement();
         stmt.setId(id);
         stmt.setAccountNumber(accountNumber);
         stmt.setStatementDate(statementDate);

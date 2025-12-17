@@ -34,11 +34,6 @@ public class DownloadService {
     private final EncryptionService encryptionService;
     private final AuditService auditService;
 
-    /**
-     * Detailed validation and streaming method to support controller status-code mapping per OpenAPI.
-     * Currently binds only to signature token; fileName/expires are part of the signed token payload
-     * validated in SignedLinkService/SignatureUtil. If future coupling is needed, extend validation here.
-     */
     public DownloadStreamResult validateAndStreamDetailed(
             String token, String clientIp, String userAgent, String performedBy) {
         log.debug("Download request (detailed) - token: {}, ip: {}, user: {}", maskToken(token), clientIp, performedBy);
@@ -185,7 +180,6 @@ public class DownloadService {
             return Optional.of(decrypted);
         } catch (Exception e) {
             log.error("Decryption failed - statementId: {}, error: {}", statement.getId(), e.getMessage(), e);
-
             var errorAuditDetails = new HashMap<>(getUserAuditDetails(
                     token, clientIp, userAgent, DownloadFailureReason.DECRYPTION_FAILED.getValue()));
             errorAuditDetails.put(AUDIT_KEY_ERROR, e.getMessage());

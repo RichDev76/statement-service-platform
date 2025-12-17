@@ -32,6 +32,11 @@ public class StatementQueryService {
     private final AuditHelper auditHelper;
     private final RequestInfoProvider requestInfoProvider;
 
+    private static final int DEFAULT_LIMIT = 50;
+    private static final int DEFAULT_OFFSET = 0;
+    private static final int DEFAULT_PAGE = 0;
+    private static final int DEFAULT_SIZE = 50;
+
     public Optional<StatementSummary> getStatementSummaryWithSignedDownloadLinkById(UUID statementId) {
         String performedBy = getPerformedBy();
 
@@ -73,13 +78,13 @@ public class StatementQueryService {
     }
 
     public List<StatementSummary> searchByAccount(String accountNumber, Integer limit, Integer offset) {
-        int safeLimit = Math.max(1, Math.min(100, limit));
-        int safeOffset = Math.max(0, offset);
+        int effectiveLimit = (limit != null) ? limit : DEFAULT_LIMIT;
+        int effectiveOffset = (offset != null) ? offset : DEFAULT_OFFSET;
 
         try {
             var statements = this.statementService.getStatementsDtoByAccountNumber(accountNumber);
-            int fromIndex = Math.min(safeOffset, statements.size());
-            int toIndex = Math.min(fromIndex + safeLimit, statements.size());
+            int fromIndex = Math.min(effectiveOffset, statements.size());
+            int toIndex = Math.min(fromIndex + effectiveLimit, statements.size());
             var page = statements.subList(fromIndex, toIndex);
             return this.statementApiMapper.toApis(page);
         } catch (StatementNotFoundException e) {
@@ -96,38 +101,34 @@ public class StatementQueryService {
 
     public StatementSummaryPage searchPaged(
             String accountNumber, String date, Integer page, Integer size, String sort) {
-        boolean hasAccount = accountNumber != null;
-        boolean hasDate = date != null;
 
-        if (!hasAccount && !hasDate) {
-            throw new IllegalArgumentException("At least one of accountNumber or date must be provided");
-        }
+        int effectivePage = (page != null) ? page : DEFAULT_PAGE;
+        int effectiveSize = (size != null) ? size : DEFAULT_SIZE;
 
-        int pageNum = page == null ? 0 : Math.max(0, page);
-        int pageSize = size == null ? 50 : Math.max(1, Math.min(100, size));
+        var result = new StatementSummaryPage();
+        result.page(effectivePage);
+        result.size(effectiveSize);
 
-        StatementSummaryPage result = new StatementSummaryPage();
-        result.page(pageNum);
-        result.size(pageSize);
+        var defaultSort = Sort.by(Sort.Order.desc("uploadedAt"), Sort.Order.desc("id"));
 
-        Sort defaultSort = Sort.by(Sort.Order.desc("uploadedAt"), Sort.Order.desc("id"));
-
-        if (hasAccount && hasDate) {
+        // Both account and date provided
+        if (accountNumber != null && date != null) {
             var parsedDate = LocalDate.parse(date);
             Optional<StatementDto> opt =
                     this.statementService.getStatementDtoByAccountNumberAndStatementDate(accountNumber, parsedDate);
             var content = opt.map(dto -> List.of(toBase(dto))).orElseGet(List::of);
             long total = content.size();
-            int totalPages = (int) Math.ceil(total / (double) pageSize);
+            int totalPages = (int) Math.ceil(total / (double) effectiveSize);
             result.setContent(content);
             result.totalElements(total);
             result.totalPages(totalPages);
             return result;
         }
 
-        if (hasAccount) {
+        // Account only
+        if (accountNumber != null) {
             Page<Statement> statements = this.statementService.getStatementsByAccountNumber(
-                    accountNumber, PageRequest.of(pageNum, pageSize, defaultSort));
+                    accountNumber, PageRequest.of(effectivePage, effectiveSize, defaultSort));
             var content =
                     statements.map(stmt -> toBase(statementService.toDto(stmt))).getContent();
             result.setContent(content);
@@ -136,6 +137,7 @@ public class StatementQueryService {
             return result;
         }
 
+        // Date only (not currently supported by business logic)
         result.setContent(new ArrayList<>());
         result.totalElements(0L);
         result.totalPages(0);

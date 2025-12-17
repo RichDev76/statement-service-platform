@@ -24,7 +24,7 @@ public class FileStorageService {
         var accountNumberHash = this.encryptionService.computeAccountNumberHash(accountNumber);
         var storageDirectory = getStorageDirectory(accountNumberHash, statementDate);
         var encryptedFileOutput = new java.io.File(storageDirectory, id + FILE_EXTENSION_PDF_ENC);
-        byte[] initializationVector = this.encryptionService.generateInitializationVector();
+        var initializationVector = this.encryptionService.generateInitializationVector();
         try {
             this.encryptionService.encryptToFile(file.getInputStream(), encryptedFileOutput, initializationVector);
         } catch (java.io.IOException e) {

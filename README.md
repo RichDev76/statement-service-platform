@@ -13,6 +13,20 @@ A multi-module platform for secure storage and delivery of monthly account state
 
 ---
 
+### Architecture & Documentation
+
+For detailed information about the system architecture, components, and design decisions:
+
+- **[Architecture Overview](docs/Architecture_Overview.md)** - Comprehensive architecture documentation covering:
+    - High-level system context and components
+    - Core use cases and flows (upload, download, signed links, audit logging)
+    - Security architecture and authentication
+    - Data protection and cryptography
+    - Deployment and runtime architecture
+
+- **[High-Level Architecture Diagram](docs/HighLevelArchitectureDiagram.drawio)** - Visual representation of the system architecture (open with draw.io or diagrams.net)
+
+---
 ### Prerequisites
 
 - Java 25 (for running locally via Maven)

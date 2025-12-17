@@ -18,15 +18,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class DownloadResponseFactory {
 
+    public static final String CACHE_CONTROL = "no-store, no-cache, must-revalidate";
+    public static final String HTTP_HEADER_PRAGMA = "Pragma";
+    public static final String CONTENT_DISPOSITION_ATTACHMENT = "attachment";
+    public static final String PRAGMA_NO_CACHE = "no-cache";
+
     public ResponseEntity<Resource> build(String fileName, DownloadService.DownloadStreamResult result) {
         switch (result.outcome()) {
             case OK -> {
                 var resource = new InputStreamResource(result.stream().get());
-                HttpHeaders headers = new HttpHeaders();
+                var headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-                headers.setContentDispositionFormData("attachment", fileName);
-                headers.setCacheControl("no-store, no-cache, must-revalidate");
-                headers.add("Pragma", "no-cache");
+                headers.setContentDispositionFormData(CONTENT_DISPOSITION_ATTACHMENT, fileName);
+                headers.setCacheControl(CACHE_CONTROL);
+                headers.add(HTTP_HEADER_PRAGMA, PRAGMA_NO_CACHE);
                 return ResponseEntity.ok().headers(headers).body(resource);
             }
             case INVALID_SIGNATURE -> {

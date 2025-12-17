@@ -33,14 +33,14 @@ public class SignedLinkService {
     @Transactional
     public SignedLink createSignedLink(UUID statementId, boolean singleUse, String createdBy, String basePath) {
         var expires = OffsetDateTime.now().plusSeconds(defaultExpirySeconds);
-        SignedLink link = buildSignedDownloadLink(statementId, singleUse, createdBy, basePath, expires);
+        var link = buildSignedDownloadLink(statementId, singleUse, createdBy, basePath, expires);
         signedLinkRepository.save(link);
         return link;
     }
 
     private SignedLink buildSignedDownloadLink(
             UUID statementId, boolean singleUse, String createdBy, String basePath, OffsetDateTime expires) {
-        SignedLink link = new SignedLink();
+        var link = new SignedLink();
         link.setId(UUID.randomUUID());
         link.setStatementId(statementId);
         link.setToken(this.signatureUtil.signWithMethod(basePath, expires.toEpochSecond(), HttpMethod.GET.toString()));
@@ -54,7 +54,7 @@ public class SignedLinkService {
 
     @Transactional
     public URI buildSignedDownloadLink(SignedLink signedLink, String basePath) {
-        long expires = signedLink.getExpiresAt().toEpochSecond();
+        var expires = signedLink.getExpiresAt().toEpochSecond();
         try {
             var signature = signedLink.getToken();
             var url = basePath + EXPIRES_PATH_VARIABLE + expires + SIGNATURE_PATH_VARIABLE + signature;
@@ -66,7 +66,7 @@ public class SignedLinkService {
 
     @Transactional
     public LinkValidationResult validateAndConsume(String token) {
-        var optionalSignedLink = signedLinkRepository.findByTokenForUpdate(token);
+        var optionalSignedLink = signedLinkRepository.findByToken(token);
 
         if (optionalSignedLink.isEmpty()) {
             return LinkValidationResult.notFound();
@@ -74,20 +74,20 @@ public class SignedLinkService {
 
         var link = optionalSignedLink.get();
 
-        // Check if already used
         if (link.isUsed()) {
             return LinkValidationResult.used(link);
         }
 
-        // Check if expired
         if (link.getExpiresAt().isBefore(OffsetDateTime.now())) {
             return LinkValidationResult.expired(link);
         }
 
-        // Valid - mark as used if single-use
         if (link.isSingleUse()) {
-            link.setUsed(true);
-            signedLinkRepository.save(link);
+            int updated = signedLinkRepository.consumeSingleUse(token);
+
+            if (updated == 0) {
+                return LinkValidationResult.used(link);
+            }
         }
 
         return LinkValidationResult.valid(link);

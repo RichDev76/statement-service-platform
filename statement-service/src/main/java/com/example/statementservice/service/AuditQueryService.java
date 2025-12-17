@@ -28,17 +28,6 @@ public class AuditQueryService {
     private final AuditLogEntityMapper auditLogEntityMapper;
     private final AuditApiMapper auditApiMapper;
 
-    /**
-     * Retrieves audit logs with database-level filtering and pagination.
-     *
-     * @param accountNumber Optional account number filter
-     * @param startDate Optional start date (YYYY-MM-DD format, inclusive)
-     * @param endDate Optional end date (YYYY-MM-DD format, inclusive)
-     * @param page Page number (0-indexed, default: 0)
-     * @param size Page size (1-100, default: 50)
-     * @return Paginated audit log results
-     * @throws InvalidDateException if date format is invalid or range is illogical
-     */
     public AuditLogPage getFilteredAuditLogs(
             String accountNumber, String startDate, String endDate, Integer page, Integer size) {
 
@@ -50,27 +39,21 @@ public class AuditQueryService {
                 page,
                 size);
 
-        // Validate and parse dates
         var startDateTime = parseDate(startDate, false);
         var endDateTime = parseDate(endDate, true);
         validateDateRange(startDateTime, endDateTime);
 
-        // Validate and normalize pagination parameters
         int pageNum = normalizePageNumber(page);
         int pageSize = normalizePageSize(size);
 
-        // Create pageable with sorting
         var pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "performedAt"));
 
-        // Execute database query with filtering and pagination
         var auditLogPage = auditLogRepository.findFilteredAuditLogs(
                 normalizeAccountNumber(accountNumber), startDateTime, endDateTime, pageable);
 
-        // Map to DTOs and API response
         var auditLogDtos = auditLogEntityMapper.toDtos(auditLogPage.getContent());
         var apiPage = auditApiMapper.toPage(auditLogDtos);
 
-        // Set pagination metadata
         apiPage.page(pageNum);
         apiPage.size(pageSize);
         apiPage.totalElements(auditLogPage.getTotalElements());

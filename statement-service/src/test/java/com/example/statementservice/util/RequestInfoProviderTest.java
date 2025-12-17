@@ -56,7 +56,6 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should get request info with authenticated user")
     void testGet_WithAuthenticatedUser() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(requestAttributes);
         when(requestAttributes.getRequest()).thenReturn(request);
         when(request.getRemoteAddr()).thenReturn("192.168.1.100");
@@ -65,11 +64,7 @@ class RequestInfoProviderTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("john.doe");
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertEquals("192.168.1.100", result.getClientIp());
         assertEquals("Mozilla/5.0", result.getUserAgent());
@@ -79,7 +74,6 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should get request info with unauthenticated user")
     void testGet_WithUnauthenticatedUser() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(requestAttributes);
         when(requestAttributes.getRequest()).thenReturn(request);
         when(request.getRemoteAddr()).thenReturn("10.0.0.5");
@@ -87,11 +81,7 @@ class RequestInfoProviderTest {
         when(SecurityContextHolder.getContext()).thenReturn(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(false);
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertEquals("10.0.0.5", result.getClientIp());
         assertEquals("Chrome/90.0", result.getUserAgent());
@@ -101,18 +91,13 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should get request info when authentication is null")
     void testGet_NullAuthentication() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(requestAttributes);
         when(requestAttributes.getRequest()).thenReturn(request);
         when(request.getRemoteAddr()).thenReturn("172.16.0.1");
         when(request.getHeader("User-Agent")).thenReturn("Safari/14.0");
         when(SecurityContextHolder.getContext()).thenReturn(securityContext);
         when(securityContext.getAuthentication()).thenReturn(null);
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertEquals("172.16.0.1", result.getClientIp());
         assertEquals("Safari/14.0", result.getUserAgent());
@@ -122,17 +107,12 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should get request info when security context is null")
     void testGet_NullSecurityContext() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(requestAttributes);
         when(requestAttributes.getRequest()).thenReturn(request);
         when(request.getRemoteAddr()).thenReturn("192.168.0.50");
         when(request.getHeader("User-Agent")).thenReturn("Edge/91.0");
         when(SecurityContextHolder.getContext()).thenReturn(null);
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertEquals("192.168.0.50", result.getClientIp());
         assertEquals("Edge/91.0", result.getUserAgent());
@@ -142,17 +122,12 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should handle exception during authentication resolution")
     void testGet_ExceptionDuringAuthResolution() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(requestAttributes);
         when(requestAttributes.getRequest()).thenReturn(request);
         when(request.getRemoteAddr()).thenReturn("192.168.10.20");
         when(request.getHeader("User-Agent")).thenReturn("Firefox/89.0");
         when(SecurityContextHolder.getContext()).thenThrow(new RuntimeException("Auth error"));
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertEquals("192.168.10.20", result.getClientIp());
         assertEquals("Firefox/89.0", result.getUserAgent());
@@ -162,17 +137,12 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should return unknown when request attributes are null")
     void testGet_NullRequestAttributes() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(null);
         when(SecurityContextHolder.getContext()).thenReturn(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("admin");
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertEquals("unknown", result.getClientIp());
         assertEquals("unknown", result.getUserAgent());
@@ -182,18 +152,13 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should return unknown when request is null")
     void testGet_NullRequest() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(requestAttributes);
         when(requestAttributes.getRequest()).thenReturn(null);
         when(SecurityContextHolder.getContext()).thenReturn(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("testuser");
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertEquals("unknown", result.getClientIp());
         assertEquals("unknown", result.getUserAgent());
@@ -203,7 +168,6 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should handle null User-Agent header")
     void testGet_NullUserAgent() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(requestAttributes);
         when(requestAttributes.getRequest()).thenReturn(request);
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
@@ -212,11 +176,7 @@ class RequestInfoProviderTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("apiuser");
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertEquals("127.0.0.1", result.getClientIp());
         assertNull(result.getUserAgent()); // Returns null when header is null but request is not
@@ -226,7 +186,6 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should handle null remote address")
     void testGet_NullRemoteAddress() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(requestAttributes);
         when(requestAttributes.getRequest()).thenReturn(request);
         when(request.getRemoteAddr()).thenReturn(null);
@@ -235,11 +194,7 @@ class RequestInfoProviderTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("service-account");
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertNull(result.getClientIp()); // Returns null when remote address is null but request is not
         assertEquals("Postman/7.0", result.getUserAgent());
@@ -249,14 +204,9 @@ class RequestInfoProviderTest {
     @Test
     @DisplayName("Should handle all null values")
     void testGet_AllNullValues() {
-        // Arrange
         when(RequestContextHolder.getRequestAttributes()).thenReturn(null);
         when(SecurityContextHolder.getContext()).thenReturn(null);
-
-        // Act
         RequestInfo result = requestInfoProvider.get();
-
-        // Assert
         assertNotNull(result);
         assertEquals("unknown", result.getClientIp());
         assertEquals("unknown", result.getUserAgent());

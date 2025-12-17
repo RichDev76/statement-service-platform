@@ -4,7 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.example.statementservice.exception.StatementNotFoundException;
 import com.example.statementservice.mapper.StatementApiMapper;
@@ -19,7 +23,12 @@ import com.example.statementservice.util.RequestInfoProvider;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,7 +41,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("StatementQueryService Unit Tests")
+@DisplayName("StatementQueryService Unit Tests (Refactored)")
 class StatementQueryServiceTest {
 
     @Mock
@@ -88,17 +97,13 @@ class StatementQueryServiceTest {
         testRequestInfo = new RequestInfo("127.0.0.1", "JUnit", "test-user");
     }
 
-    // ==================== getStatementSummaryWithSignedDownloadLinkById Tests ====================
-
     @Test
     @DisplayName("getStatementSummaryWithSignedDownloadLinkById - should return summary when statement exists")
     void getStatementSummaryWithSignedDownloadLinkById_Found() {
-        // Given
         when(requestInfoProvider.get()).thenReturn(testRequestInfo);
         when(statementService.getStatementDtoById(testStatementId)).thenReturn(testStatementDto);
         when(statementApiMapper.toApi(testStatementDto)).thenReturn(testStatementSummary);
 
-        // Signed link interactions
         String basePath = "http://localhost/files/" + testStatementDto.getFileName();
         SignedLink signedLink = new SignedLink();
         signedLink.setId(UUID.randomUUID());
@@ -110,11 +115,9 @@ class StatementQueryServiceTest {
         when(signedLinkService.buildSignedDownloadLink(signedLink, basePath))
                 .thenReturn(java.net.URI.create("http://localhost/download/statement.pdf"));
 
-        // When
         Optional<StatementSummary> result =
                 statementQueryService.getStatementSummaryWithSignedDownloadLinkById(testStatementId);
 
-        // Then
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(testStatementSummary);
         verify(statementService).getStatementDtoById(testStatementId);
@@ -127,28 +130,22 @@ class StatementQueryServiceTest {
     @Test
     @DisplayName("getStatementSummaryWithSignedDownloadLinkById - should return empty when statement not found")
     void getStatementSummaryWithSignedDownloadLinkById_NotFound() {
-        // Given
         when(requestInfoProvider.get()).thenReturn(testRequestInfo);
         when(statementService.getStatementDtoById(testStatementId))
                 .thenThrow(new StatementNotFoundException("Not found"));
 
-        // When
         Optional<StatementSummary> result =
                 statementQueryService.getStatementSummaryWithSignedDownloadLinkById(testStatementId);
 
-        // Then
         assertThat(result).isEmpty();
         verify(statementService).getStatementDtoById(testStatementId);
         verify(statementApiMapper, never()).toApi(any());
         verify(auditHelper).recordStatementNotFound(eq(testStatementId), eq("test-user"));
     }
 
-    // ==================== searchByAccount Tests ====================
-
     @Test
-    @DisplayName("searchByAccount - should return statements with default pagination")
+    @DisplayName("searchByAccount - should use defaults when parameters are null")
     void searchByAccount_DefaultPagination() {
-        // Given
         List<StatementDto> dtos = Arrays.asList(testStatementDto);
         List<StatementSummary> summaries = Arrays.asList(testStatementSummary);
 
@@ -156,10 +153,8 @@ class StatementQueryServiceTest {
                 .thenReturn(dtos);
         when(statementApiMapper.toApis(anyList())).thenReturn(summaries);
 
-        // When
         List<StatementSummary> result = statementQueryService.searchByAccount(testAccountNumber, null, null);
 
-        // Then
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(testStatementSummary);
         verify(statementService).getStatementsDtoByAccountNumber(testAccountNumber);
@@ -168,94 +163,37 @@ class StatementQueryServiceTest {
     @Test
     @DisplayName("searchByAccount - should apply limit correctly")
     void searchByAccount_WithLimit() {
-        // Given
         List<StatementDto> dtos = createMultipleDtos(10);
         when(statementService.getStatementsDtoByAccountNumber(testAccountNumber))
                 .thenReturn(dtos);
         when(statementApiMapper.toApis(anyList())).thenReturn(Collections.emptyList());
 
-        // When
         statementQueryService.searchByAccount(testAccountNumber, 5, 0);
 
-        // Then
         verify(statementApiMapper).toApis(argThat(list -> list.size() == 5));
     }
 
     @Test
     @DisplayName("searchByAccount - should apply offset correctly")
     void searchByAccount_WithOffset() {
-        // Given
         List<StatementDto> dtos = createMultipleDtos(10);
         when(statementService.getStatementsDtoByAccountNumber(testAccountNumber))
                 .thenReturn(dtos);
         when(statementApiMapper.toApis(anyList())).thenReturn(Collections.emptyList());
 
-        // When
         statementQueryService.searchByAccount(testAccountNumber, 5, 3);
 
-        // Then - Should skip first 3, take next 5
-        verify(statementApiMapper).toApis(argThat(list -> list.size() == 5));
-    }
-
-    @Test
-    @DisplayName("searchByAccount - should cap limit at 100")
-    void searchByAccount_MaxLimit() {
-        // Given
-        List<StatementDto> dtos = createMultipleDtos(150);
-        when(statementService.getStatementsDtoByAccountNumber(testAccountNumber))
-                .thenReturn(dtos);
-        when(statementApiMapper.toApis(anyList())).thenReturn(Collections.emptyList());
-
-        // When
-        statementQueryService.searchByAccount(testAccountNumber, 200, 0);
-
-        // Then - Should cap at 100
-        verify(statementApiMapper).toApis(argThat(list -> list.size() == 100));
-    }
-
-    @Test
-    @DisplayName("searchByAccount - should enforce minimum limit of 1")
-    void searchByAccount_MinLimit() {
-        // Given
-        List<StatementDto> dtos = createMultipleDtos(10);
-        when(statementService.getStatementsDtoByAccountNumber(testAccountNumber))
-                .thenReturn(dtos);
-        when(statementApiMapper.toApis(anyList())).thenReturn(Collections.emptyList());
-
-        // When
-        statementQueryService.searchByAccount(testAccountNumber, 0, 0);
-
-        // Then - Should use minimum of 1
-        verify(statementApiMapper).toApis(argThat(list -> list.size() == 1));
-    }
-
-    @Test
-    @DisplayName("searchByAccount - should handle negative offset as 0")
-    void searchByAccount_NegativeOffset() {
-        // Given
-        List<StatementDto> dtos = createMultipleDtos(10);
-        when(statementService.getStatementsDtoByAccountNumber(testAccountNumber))
-                .thenReturn(dtos);
-        when(statementApiMapper.toApis(anyList())).thenReturn(Collections.emptyList());
-
-        // When
-        statementQueryService.searchByAccount(testAccountNumber, 5, -10);
-
-        // Then - Should treat as offset 0
         verify(statementApiMapper).toApis(argThat(list -> list.size() == 5));
     }
 
     @Test
     @DisplayName("searchByAccount - should return empty list when no statements found")
     void searchByAccount_NotFound() {
-        // Given
         when(statementService.getStatementsDtoByAccountNumber(testAccountNumber))
                 .thenThrow(new StatementNotFoundException("Not found"));
 
-        // When
-        List<StatementSummary> result = statementQueryService.searchByAccount(testAccountNumber, null, null);
+        List<StatementSummary> result = statementQueryService.searchByAccount(testAccountNumber, 50, 0);
 
-        // Then
         assertThat(result).isEmpty();
         verify(statementApiMapper, never()).toApis(any());
     }
@@ -263,33 +201,25 @@ class StatementQueryServiceTest {
     @Test
     @DisplayName("searchByAccount - should handle offset beyond list size")
     void searchByAccount_OffsetBeyondSize() {
-        // Given
         List<StatementDto> dtos = createMultipleDtos(5);
         when(statementService.getStatementsDtoByAccountNumber(testAccountNumber))
                 .thenReturn(dtos);
         when(statementApiMapper.toApis(anyList())).thenReturn(Collections.emptyList());
 
-        // When
         statementQueryService.searchByAccount(testAccountNumber, 10, 100);
 
-        // Then - Should return empty sublist
         verify(statementApiMapper).toApis(argThat(List::isEmpty));
     }
-
-    // ==================== searchByAccountAndDate Tests ====================
 
     @Test
     @DisplayName("searchByAccountAndDate - should return statement when found")
     void searchByAccountAndDate_Found() {
-        // Given
         when(statementService.getStatementDtoByAccountNumberAndStatementDate(testAccountNumber, testDate))
                 .thenReturn(Optional.of(testStatementDto));
         when(statementApiMapper.toApi(testStatementDto)).thenReturn(testStatementSummary);
 
-        // When
         List<StatementSummary> result = statementQueryService.searchByAccountAndDate(testAccountNumber, "2024-01-15");
 
-        // Then
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(testStatementSummary);
         verify(statementService).getStatementDtoByAccountNumberAndStatementDate(testAccountNumber, testDate);
@@ -298,41 +228,32 @@ class StatementQueryServiceTest {
     @Test
     @DisplayName("searchByAccountAndDate - should return empty list when not found")
     void searchByAccountAndDate_NotFound() {
-        // Given
         when(statementService.getStatementDtoByAccountNumberAndStatementDate(testAccountNumber, testDate))
                 .thenReturn(Optional.empty());
 
-        // When
         List<StatementSummary> result = statementQueryService.searchByAccountAndDate(testAccountNumber, "2024-01-15");
 
-        // Then
         assertThat(result).isEmpty();
         verify(statementApiMapper, never()).toApi(any());
     }
 
     @Test
-    @DisplayName("searchByAccountAndDate - should throw exception for invalid date format")
+    @DisplayName("searchByAccountAndDate - invalid date should not reach service (OpenAPI validation)")
     void searchByAccountAndDate_InvalidDateFormat() {
-        // When/Then
         assertThatThrownBy(() -> statementQueryService.searchByAccountAndDate(testAccountNumber, "invalid-date"))
                 .isInstanceOf(DateTimeParseException.class);
     }
 
-    // ==================== searchPaged Tests ====================
-
     @Test
     @DisplayName("searchPaged - should return paged results for account number only")
     void searchPaged_AccountOnly() {
-        // Given
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
         when(statementService.toDto(any())).thenReturn(testStatementDto);
 
-        // When
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, 0, 50, null);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getPage()).isEqualTo(0);
         assertThat(result.getSize()).isEqualTo(50);
@@ -342,16 +263,27 @@ class StatementQueryServiceTest {
     }
 
     @Test
+    @DisplayName("searchPaged - should use defaults when pagination parameters are null")
+    void searchPaged_DefaultPagination() {
+        Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
+        when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
+                .thenReturn(page);
+        when(statementService.toDto(any())).thenReturn(testStatementDto);
+
+        StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, null, null, null);
+
+        assertThat(result.getPage()).isEqualTo(0);
+        assertThat(result.getSize()).isEqualTo(50);
+    }
+
+    @Test
     @DisplayName("searchPaged - should return result for account and date")
     void searchPaged_AccountAndDate() {
-        // Given
         when(statementService.getStatementDtoByAccountNumberAndStatementDate(testAccountNumber, testDate))
                 .thenReturn(Optional.of(testStatementDto));
 
-        // When
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, "2024-01-15", 0, 50, null);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getTotalElements()).isEqualTo(1);
@@ -360,10 +292,8 @@ class StatementQueryServiceTest {
     @Test
     @DisplayName("searchPaged - should return empty page for date only")
     void searchPaged_DateOnly() {
-        // When
         StatementSummaryPage result = statementQueryService.searchPaged(null, "2024-01-15", 0, 50, null);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).isEmpty();
         assertThat(result.getTotalElements()).isEqualTo(0);
@@ -371,114 +301,25 @@ class StatementQueryServiceTest {
     }
 
     @Test
-    @DisplayName("searchPaged - should throw exception when neither account nor date provided")
-    void searchPaged_NoParameters() {
-        // When/Then
-        assertThatThrownBy(() -> statementQueryService.searchPaged(null, null, 0, 50, null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("At least one of accountNumber or date must be provided");
-    }
-
-    @Test
-    @DisplayName("searchPaged - should use default page and size")
-    void searchPaged_DefaultPagination() {
-        // Given
+    @DisplayName("searchPaged - should handle valid pagination parameters")
+    void searchPaged_ValidPagination() {
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
         when(statementService.toDto(any())).thenReturn(testStatementDto);
 
-        // When
-        StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, null, null, null);
+        StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, 2, 25, null);
 
-        // Then
-        assertThat(result.getPage()).isEqualTo(0); // Default page
-        assertThat(result.getSize()).isEqualTo(50); // Default size
+        assertThat(result.getPage()).isEqualTo(2);
+        assertThat(result.getSize()).isEqualTo(25);
     }
 
     @Test
-    @DisplayName("searchPaged - should normalize negative page to 0")
-    void searchPaged_NegativePage() {
-        // Given
-        Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
-        when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
-                .thenReturn(page);
-        when(statementService.toDto(any())).thenReturn(testStatementDto);
-
-        // When
-        StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, -5, 50, null);
-
-        // Then
-        assertThat(result.getPage()).isEqualTo(0);
-    }
-
-    @Test
-    @DisplayName("searchPaged - should cap size at 100")
-    void searchPaged_MaxSize() {
-        // Given
-        Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
-        when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
-                .thenReturn(page);
-        when(statementService.toDto(any())).thenReturn(testStatementDto);
-
-        // When
-        StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, 0, 200, null);
-
-        // Then
-        assertThat(result.getSize()).isEqualTo(100);
-    }
-
-    @Test
-    @DisplayName("searchPaged - should enforce minimum size of 1")
-    void searchPaged_MinSize() {
-        // Given
-        Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
-        when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
-                .thenReturn(page);
-        when(statementService.toDto(any())).thenReturn(testStatementDto);
-
-        // When
-        StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, 0, 0, null);
-
-        // Then
-        assertThat(result.getSize()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("searchPaged - should handle blank account number as null")
-    void searchPaged_BlankAccountNumber() {
-        // When/Then
-        assertThatThrownBy(() -> statementQueryService.searchPaged("   ", null, 0, 50, null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("At least one of accountNumber or date must be provided");
-    }
-
-    @Test
-    @DisplayName("searchPaged - should handle blank date as null")
-    void searchPaged_BlankDate() {
-        // Given
-        Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
-        when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
-                .thenReturn(page);
-        when(statementService.toDto(any())).thenReturn(testStatementDto);
-
-        // When
-        StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, "   ", 0, 50, null);
-
-        // Then - Should ignore blank date and search by account only
-        assertThat(result).isNotNull();
-        verify(statementService).getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class));
-    }
-
-    @Test
-    @DisplayName("searchPaged - should throw exception for invalid date format")
+    @DisplayName("searchPaged - invalid date format should not reach service (OpenAPI validation)")
     void searchPaged_InvalidDateFormat() {
-        // When/Then
         assertThatThrownBy(() -> statementQueryService.searchPaged(testAccountNumber, "invalid-date", 0, 50, null))
                 .isInstanceOf(DateTimeParseException.class);
     }
-
-    // ==================== Helper Methods ====================
 
     private List<StatementDto> createMultipleDtos(int count) {
         List<StatementDto> dtos = new ArrayList<>();

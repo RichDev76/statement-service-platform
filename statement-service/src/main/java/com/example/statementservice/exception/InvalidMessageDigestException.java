@@ -7,8 +7,4 @@ public class InvalidMessageDigestException extends RuntimeException {
     public InvalidMessageDigestException(String message) {
         super(message);
     }
-
-    public InvalidMessageDigestException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

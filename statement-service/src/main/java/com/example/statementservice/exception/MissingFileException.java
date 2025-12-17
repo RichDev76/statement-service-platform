@@ -7,8 +7,4 @@ public class MissingFileException extends RuntimeException {
     public MissingFileException(String message) {
         super(message);
     }
-
-    public MissingFileException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

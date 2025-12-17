@@ -32,10 +32,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should create notFound result with null link and NOT_FOUND reason")
     void testNotFound() {
-        // Act
         LinkValidationResult result = LinkValidationResult.notFound();
-
-        // Assert
         assertNotNull(result);
         assertNull(result.getLink());
         assertFalse(result.isValid());
@@ -45,10 +42,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should create used result with link and USED reason")
     void testUsed() {
-        // Act
         LinkValidationResult result = LinkValidationResult.used(mockLink);
-
-        // Assert
         assertNotNull(result);
         assertNotNull(result.getLink());
         assertEquals(mockLink, result.getLink());
@@ -61,10 +55,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should create expired result with link and EXPIRED reason")
     void testExpired() {
-        // Act
         LinkValidationResult result = LinkValidationResult.expired(mockLink);
-
-        // Assert
         assertNotNull(result);
         assertNotNull(result.getLink());
         assertEquals(mockLink, result.getLink());
@@ -77,10 +68,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should create valid result with link and null failure reason")
     void testValid() {
-        // Act
         LinkValidationResult result = LinkValidationResult.valid(mockLink);
-
-        // Assert
         assertNotNull(result);
         assertNotNull(result.getLink());
         assertEquals(mockLink, result.getLink());
@@ -93,10 +81,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should handle null link in used method")
     void testUsed_NullLink() {
-        // Act
         LinkValidationResult result = LinkValidationResult.used(null);
-
-        // Assert
         assertNotNull(result);
         assertNull(result.getLink());
         assertFalse(result.isValid());
@@ -106,10 +91,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should handle null link in expired method")
     void testExpired_NullLink() {
-        // Act
         LinkValidationResult result = LinkValidationResult.expired(null);
-
-        // Assert
         assertNotNull(result);
         assertNull(result.getLink());
         assertFalse(result.isValid());
@@ -119,10 +101,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should handle null link in valid method")
     void testValid_NullLink() {
-        // Act
         LinkValidationResult result = LinkValidationResult.valid(null);
-
-        // Assert
         assertNotNull(result);
         assertNull(result.getLink());
         assertTrue(result.isValid());
@@ -132,10 +111,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should create result with constructor")
     void testConstructor() {
-        // Act
         LinkValidationResult result = new LinkValidationResult(mockLink, true, null);
-
-        // Assert
         assertNotNull(result);
         assertEquals(mockLink, result.getLink());
         assertTrue(result.isValid());
@@ -145,10 +121,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should create invalid result with constructor")
     void testConstructor_Invalid() {
-        // Act
         LinkValidationResult result = new LinkValidationResult(mockLink, false, ValidationFailureReason.USED);
-
-        // Assert
         assertNotNull(result);
         assertEquals(mockLink, result.getLink());
         assertFalse(result.isValid());
@@ -158,16 +131,10 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should maintain immutability of link reference")
     void testLinkReference() {
-        // Arrange
         LinkValidationResult result = LinkValidationResult.valid(mockLink);
         String originalToken = mockLink.getToken();
-
-        // Act
         SignedLink retrievedLink = result.getLink();
         retrievedLink.setToken("modified-token");
-
-        // Assert
-        // The link reference is the same, so changes will be reflected
         assertEquals("modified-token", mockLink.getToken());
         assertEquals("modified-token", result.getLink().getToken());
         assertNotEquals(originalToken, result.getLink().getToken());
@@ -176,12 +143,9 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should distinguish between different validation failure reasons")
     void testDifferentFailureReasons() {
-        // Act
         LinkValidationResult notFoundResult = LinkValidationResult.notFound();
         LinkValidationResult usedResult = LinkValidationResult.used(mockLink);
         LinkValidationResult expiredResult = LinkValidationResult.expired(mockLink);
-
-        // Assert
         assertNotEquals(notFoundResult.getFailureReason(), usedResult.getFailureReason());
         assertNotEquals(usedResult.getFailureReason(), expiredResult.getFailureReason());
         assertNotEquals(expiredResult.getFailureReason(), notFoundResult.getFailureReason());
@@ -190,12 +154,9 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should indicate all invalid results have isValid as false")
     void testAllInvalidResultsAreFalse() {
-        // Act
         LinkValidationResult notFoundResult = LinkValidationResult.notFound();
         LinkValidationResult usedResult = LinkValidationResult.used(mockLink);
         LinkValidationResult expiredResult = LinkValidationResult.expired(mockLink);
-
-        // Assert
         assertFalse(notFoundResult.isValid());
         assertFalse(usedResult.isValid());
         assertFalse(expiredResult.isValid());
@@ -204,10 +165,7 @@ class LinkValidationResultTest {
     @Test
     @DisplayName("Should indicate valid result has isValid as true")
     void testValidResultIsTrue() {
-        // Act
         LinkValidationResult result = LinkValidationResult.valid(mockLink);
-
-        // Assert
         assertTrue(result.isValid());
     }
 }

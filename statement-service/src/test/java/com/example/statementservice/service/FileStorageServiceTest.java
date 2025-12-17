@@ -3,10 +3,15 @@ package com.example.statementservice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.example.statementservice.exception.StatementUploadException;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -56,26 +61,18 @@ class FileStorageServiceTest {
         ReflectionTestUtils.setField(fileStorageService, "baseDir", tempDir.toString());
     }
 
-    // ==================== storeEncrypted Tests ====================
-
     @Test
     @DisplayName("storeEncrypted - should successfully store encrypted file")
     void storeEncrypted_Success() throws IOException {
-        // Given
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         FileStorageService.FileStorageResult result =
                 fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, testStatementDate);
-
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.file()).isNotNull();
         assertThat(result.file().getName()).endsWith(".pdf.enc");
         assertThat(result.initializationVector()).isEqualTo(testIv);
-
         verify(encryptionService).computeAccountNumberHash(testAccountNumber);
         verify(encryptionService).generateInitializationVector();
         verify(encryptionService).encryptToFile(any(), any(), eq(testIv));
@@ -84,21 +81,14 @@ class FileStorageServiceTest {
     @Test
     @DisplayName("storeEncrypted - should create directory structure")
     void storeEncrypted_CreatesDirectories() throws IOException {
-        // Given
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         FileStorageService.FileStorageResult result =
                 fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, testStatementDate);
-
-        // Then
-        File parentDir = result.file().getParentFile();
+        var parentDir = result.file().getParentFile();
         assertThat(parentDir).exists();
         assertThat(parentDir).isDirectory();
-
-        // Verify directory structure: baseDir/statements/accountHash/2024/01
         assertThat(parentDir.getPath()).contains("statements");
         assertThat(parentDir.getPath()).contains(testAccountHash);
         assertThat(parentDir.getPath()).contains("2024");
@@ -108,16 +98,11 @@ class FileStorageServiceTest {
     @Test
     @DisplayName("storeEncrypted - should use correct file naming convention")
     void storeEncrypted_CorrectFileName() throws IOException {
-        // Given
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         FileStorageService.FileStorageResult result =
                 fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, testStatementDate);
-
-        // Then
         String fileName = result.file().getName();
         assertThat(fileName).isEqualTo(testId + ".pdf.enc");
     }
@@ -125,17 +110,12 @@ class FileStorageServiceTest {
     @Test
     @DisplayName("storeEncrypted - should handle different months correctly")
     void storeEncrypted_DifferentMonths() throws IOException {
-        // Given
-        LocalDate decemberDate = LocalDate.of(2024, 12, 25);
+        var decemberDate = LocalDate.of(2024, 12, 25);
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         FileStorageService.FileStorageResult result =
                 fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, decemberDate);
-
-        // Then
         assertThat(result.file().getPath()).contains("2024");
         assertThat(result.file().getPath()).contains("12");
     }
@@ -143,32 +123,23 @@ class FileStorageServiceTest {
     @Test
     @DisplayName("storeEncrypted - should handle single digit months with zero padding")
     void storeEncrypted_SingleDigitMonth() throws IOException {
-        // Given
-        LocalDate januaryDate = LocalDate.of(2024, 1, 1);
+        var januaryDate = LocalDate.of(2024, 1, 1);
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         FileStorageService.FileStorageResult result =
                 fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, januaryDate);
-
-        // Then
         assertThat(result.file().getPath()).contains("01"); // Zero-padded
     }
 
     @Test
     @DisplayName("storeEncrypted - should throw exception for null account hash")
     void storeEncrypted_NullAccountHash() {
-        // Given
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(null);
-
-        // When/Then
         assertThatThrownBy(
                         () -> fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, testStatementDate))
                 .isInstanceOf(StatementUploadException.class)
                 .hasMessageContaining("accountNumberHash must be provided");
-
         verify(encryptionService).computeAccountNumberHash(testAccountNumber);
         verify(encryptionService, never()).generateInitializationVector();
     }
@@ -176,49 +147,36 @@ class FileStorageServiceTest {
     @Test
     @DisplayName("storeEncrypted - should throw exception for blank account hash")
     void storeEncrypted_BlankAccountHash() {
-        // Given
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn("   ");
-
-        // When/Then
         assertThatThrownBy(
                         () -> fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, testStatementDate))
                 .isInstanceOf(StatementUploadException.class)
                 .hasMessageContaining("accountNumberHash must be provided");
-
         verify(encryptionService).computeAccountNumberHash(testAccountNumber);
     }
 
     @Test
     @DisplayName("storeEncrypted - should throw exception when encryption fails")
     void storeEncrypted_EncryptionFailure() throws IOException {
-        // Given
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doThrow(new IOException("Encryption error")).when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When/Then
         assertThatThrownBy(
                         () -> fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, testStatementDate))
                 .isInstanceOf(StatementUploadException.class)
                 .hasMessageContaining("Failed to encrypt and store file");
-
         verify(encryptionService).encryptToFile(any(), any(), any());
     }
 
     @Test
     @DisplayName("storeEncrypted - should handle different years correctly")
     void storeEncrypted_DifferentYears() throws IOException {
-        // Given
-        LocalDate futureDate = LocalDate.of(2025, 6, 15);
+        var futureDate = LocalDate.of(2025, 6, 15);
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         FileStorageService.FileStorageResult result =
                 fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, futureDate);
-
-        // Then
         assertThat(result.file().getPath()).contains("2025");
         assertThat(result.file().getPath()).contains("06");
     }
@@ -226,20 +184,13 @@ class FileStorageServiceTest {
     @Test
     @DisplayName("storeEncrypted - should reuse existing directory structure")
     void storeEncrypted_ReuseExistingDirectory() throws IOException {
-        // Given
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When - Store first file
         FileStorageService.FileStorageResult result1 =
                 fileStorageService.storeEncrypted(UUID.randomUUID(), testFile, testAccountNumber, testStatementDate);
-
-        // When - Store second file in same directory
         FileStorageService.FileStorageResult result2 =
                 fileStorageService.storeEncrypted(UUID.randomUUID(), testFile, testAccountNumber, testStatementDate);
-
-        // Then - Both should use the same directory
         assertThat(result1.file().getParentFile()).isEqualTo(result2.file().getParentFile());
         verify(encryptionService, times(2)).encryptToFile(any(), any(), any());
     }
@@ -247,24 +198,18 @@ class FileStorageServiceTest {
     @Test
     @DisplayName("storeEncrypted - should handle different account numbers")
     void storeEncrypted_DifferentAccounts() throws IOException {
-        // Given
         String account1 = "111111111";
         String account2 = "222222222";
         String hash1 = "hash1";
         String hash2 = "hash2";
-
         when(encryptionService.computeAccountNumberHash(account1)).thenReturn(hash1);
         when(encryptionService.computeAccountNumberHash(account2)).thenReturn(hash2);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         FileStorageService.FileStorageResult result1 =
                 fileStorageService.storeEncrypted(UUID.randomUUID(), testFile, account1, testStatementDate);
         FileStorageService.FileStorageResult result2 =
                 fileStorageService.storeEncrypted(UUID.randomUUID(), testFile, account2, testStatementDate);
-
-        // Then - Should be in different directories
         assertThat(result1.file().getPath()).contains(hash1);
         assertThat(result2.file().getPath()).contains(hash2);
         assertThat(result1.file().getParentFile()).isNotEqualTo(result2.file().getParentFile());
@@ -273,34 +218,23 @@ class FileStorageServiceTest {
     @Test
     @DisplayName("storeEncrypted - should pass input stream to encryption service")
     void storeEncrypted_PassesInputStream() throws IOException {
-        // Given
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, testStatementDate);
-
-        // Then
         verify(encryptionService).encryptToFile(any(), any(), eq(testIv));
     }
 
     @Test
     @DisplayName("storeEncrypted - FileStorageResult should be immutable record")
     void storeEncrypted_ResultIsImmutable() throws IOException {
-        // Given
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         FileStorageService.FileStorageResult result =
                 fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, testStatementDate);
-
-        // Then - Record fields should be accessible
-        File file = result.file();
-        byte[] iv = result.initializationVector();
-
+        var file = result.file();
+        var iv = result.initializationVector();
         assertThat(file).isNotNull();
         assertThat(iv).isNotNull();
         assertThat(iv).isEqualTo(testIv);
@@ -309,17 +243,12 @@ class FileStorageServiceTest {
     @Test
     @DisplayName("storeEncrypted - should handle leap year dates")
     void storeEncrypted_LeapYearDate() throws IOException {
-        // Given
-        LocalDate leapYearDate = LocalDate.of(2024, 2, 29);
+        var leapYearDate = LocalDate.of(2024, 2, 29);
         when(encryptionService.computeAccountNumberHash(testAccountNumber)).thenReturn(testAccountHash);
         when(encryptionService.generateInitializationVector()).thenReturn(testIv);
         doNothing().when(encryptionService).encryptToFile(any(), any(), any());
-
-        // When
         FileStorageService.FileStorageResult result =
                 fileStorageService.storeEncrypted(testId, testFile, testAccountNumber, leapYearDate);
-
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.file().getPath()).contains("2024");
         assertThat(result.file().getPath()).contains("02");

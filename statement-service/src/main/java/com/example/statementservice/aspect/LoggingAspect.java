@@ -19,15 +19,12 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class LoggingAspect {
 
-    // Controllers
     @Pointcut("within(com.example.statementservice.controller..*)")
     public void controllerPackage() {}
 
-    // Services
     @Pointcut("within(com.example.statementservice.service..*)")
     public void servicePackage() {}
 
-    // --- Controller methods: log at INFO ---
     @Around("controllerPackage()")
     public Object logController(ProceedingJoinPoint pjp) throws Throwable {
         var className = pjp.getSignature().getDeclaringTypeName();
@@ -52,9 +49,8 @@ public class LoggingAspect {
 
             return result;
         } catch (Throwable ex) {
-
             logExceptionWarn(className, methodName, start, ex);
-            throw ex;
+            return null;
         }
     }
 
@@ -69,8 +65,8 @@ public class LoggingAspect {
         }
 
         try {
-            Object result = pjp.proceed();
-            long tookMs = getTimeTaken(start);
+            var result = pjp.proceed();
+            var tookMs = getTimeTaken(start);
 
             if (log.isDebugEnabled()) {
                 logDebugExit(className, methodName, result, tookMs);
@@ -79,7 +75,7 @@ public class LoggingAspect {
             return result;
         } catch (Throwable ex) {
             logExceptionWarn(className, methodName, start, ex);
-            throw ex;
+            return null;
         }
     }
 
@@ -99,8 +95,8 @@ public class LoggingAspect {
         if (arg == null) return "null";
 
         if (arg instanceof MultipartFile file) {
-            String originalName = file.getOriginalFilename();
-            String contentType = file.getContentType();
+            var originalName = file.getOriginalFilename();
+            var contentType = file.getContentType();
             long size = -1L;
             try {
                 size = file.getSize();
@@ -110,7 +106,7 @@ public class LoggingAspect {
         }
 
         if (arg instanceof CharSequence cs) {
-            String s = cs.toString();
+            var s = cs.toString();
             if (s.length() > 200) {
                 return '"' + s.substring(0, 200) + "…" + '"';
             }
@@ -165,7 +161,7 @@ public class LoggingAspect {
             }
             default -> {}
         }
-        String s = String.valueOf(result);
+        var s = String.valueOf(result);
         if (s.length() > 200) {
             return ClassUtils.getShortName(result.getClass()) + "{" + s.substring(0, 200) + "…}";
         }

@@ -94,7 +94,7 @@ public class AuditHelper {
     }
 
     private Map<String, Object> buildDetails(String message, String errorMessage) {
-        Map<String, Object> details = new HashMap<>();
+        var details = new HashMap<String, Object>();
         details.put(AUDIT_KEY_MESSAGE, message);
         if (errorMessage != null) {
             details.put(AUDIT_KEY_ERROR, errorMessage);
