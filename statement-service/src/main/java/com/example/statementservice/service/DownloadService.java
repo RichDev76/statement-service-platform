@@ -1,8 +1,8 @@
 package com.example.statementservice.service;
 
-import com.example.statementservice.enums.AuditAction;
-import com.example.statementservice.enums.DownloadFailureReason;
-import com.example.statementservice.enums.DownloadOutcome;
+import com.example.statementservice.model.AuditAction;
+import com.example.statementservice.model.DownloadFailureReason;
+import com.example.statementservice.model.DownloadOutcome;
 import com.example.statementservice.model.entity.SignedLink;
 import com.example.statementservice.model.entity.Statement;
 import com.example.statementservice.repository.StatementRepository;

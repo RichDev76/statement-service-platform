@@ -1,6 +1,6 @@
 package com.example.statementservice.util;
 
-import com.example.statementservice.enums.ValidationFailureReason;
+import com.example.statementservice.model.ValidationFailureReason;
 import com.example.statementservice.model.entity.SignedLink;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

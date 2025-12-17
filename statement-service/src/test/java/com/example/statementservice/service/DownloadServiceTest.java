@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import com.example.statementservice.enums.AuditAction;
-import com.example.statementservice.enums.DownloadOutcome;
+import com.example.statementservice.model.AuditAction;
+import com.example.statementservice.model.DownloadOutcome;
 import com.example.statementservice.model.entity.SignedLink;
 import com.example.statementservice.model.entity.Statement;
 import com.example.statementservice.repository.StatementRepository;

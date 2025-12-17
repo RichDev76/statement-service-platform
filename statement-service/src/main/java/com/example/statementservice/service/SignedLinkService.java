@@ -33,12 +33,12 @@ public class SignedLinkService {
     @Transactional
     public SignedLink createSignedLink(UUID statementId, boolean singleUse, String createdBy, String basePath) {
         var expires = OffsetDateTime.now().plusSeconds(defaultExpirySeconds);
-        SignedLink link = buildSignedLink(statementId, singleUse, createdBy, basePath, expires);
+        SignedLink link = buildSignedDownloadLink(statementId, singleUse, createdBy, basePath, expires);
         signedLinkRepository.save(link);
         return link;
     }
 
-    private SignedLink buildSignedLink(
+    private SignedLink buildSignedDownloadLink(
             UUID statementId, boolean singleUse, String createdBy, String basePath, OffsetDateTime expires) {
         SignedLink link = new SignedLink();
         link.setId(UUID.randomUUID());
@@ -53,16 +53,14 @@ public class SignedLinkService {
     }
 
     @Transactional
-    public URI buildSignedLink(String fileName, UUID statementId) {
-        var filesBaseUrl = getFilesBaseUrl(fileName);
-        var signedLink = createSignedLink(statementId, true, "system", filesBaseUrl);
+    public URI buildSignedDownloadLink(SignedLink signedLink, String basePath) {
         long expires = signedLink.getExpiresAt().toEpochSecond();
         try {
             var signature = signedLink.getToken();
-            var url = filesBaseUrl + EXPIRES_PATH_VARIABLE + expires + SIGNATURE_PATH_VARIABLE + signature;
+            var url = basePath + EXPIRES_PATH_VARIABLE + expires + SIGNATURE_PATH_VARIABLE + signature;
             return URI.create(url);
         } catch (Exception e) {
-            return URI.create(filesBaseUrl);
+            return URI.create(basePath);
         }
     }
 
@@ -99,7 +97,7 @@ public class SignedLinkService {
         return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     }
 
-    private String getFilesBaseUrl(String fileName) {
+    public String getFilesBaseUrl(String fileName) {
         var filesBaseUrl = getServerBaseUrl();
         var base = filesBaseUrl.endsWith("/") ? filesBaseUrl.substring(0, filesBaseUrl.length() - 1) : filesBaseUrl;
         return URI.create(base + downloadPath + fileName).toString();

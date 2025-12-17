@@ -11,6 +11,7 @@ import com.example.statementservice.mapper.StatementApiMapper;
 import com.example.statementservice.model.api.StatementSummary;
 import com.example.statementservice.model.api.StatementSummaryPage;
 import com.example.statementservice.model.dto.StatementDto;
+import com.example.statementservice.model.entity.SignedLink;
 import com.example.statementservice.model.entity.Statement;
 import com.example.statementservice.util.AuditHelper;
 import com.example.statementservice.util.RequestInfo;
@@ -96,7 +97,17 @@ class StatementQueryServiceTest {
         when(requestInfoProvider.get()).thenReturn(testRequestInfo);
         when(statementService.getStatementDtoById(testStatementId)).thenReturn(testStatementDto);
         when(statementApiMapper.toApi(testStatementDto)).thenReturn(testStatementSummary);
-        when(signedLinkService.buildSignedLink(testStatementDto.getFileName(), testStatementId))
+
+        // Signed link interactions
+        String basePath = "http://localhost/files/" + testStatementDto.getFileName();
+        SignedLink signedLink = new SignedLink();
+        signedLink.setId(UUID.randomUUID());
+        signedLink.setStatementId(testStatementId);
+
+        when(signedLinkService.getFilesBaseUrl(testStatementDto.getFileName())).thenReturn(basePath);
+        when(signedLinkService.createSignedLink(testStatementId, true, "test-user", basePath))
+                .thenReturn(signedLink);
+        when(signedLinkService.buildSignedDownloadLink(signedLink, basePath))
                 .thenReturn(java.net.URI.create("http://localhost/download/statement.pdf"));
 
         // When
@@ -108,7 +119,9 @@ class StatementQueryServiceTest {
         assertThat(result.get()).isEqualTo(testStatementSummary);
         verify(statementService).getStatementDtoById(testStatementId);
         verify(statementApiMapper).toApi(testStatementDto);
-        verify(auditHelper).recordLinkGenerated(eq(testStatementId), eq(testAccountNumber), isNull(), eq("test-user"));
+        verify(auditHelper)
+                .recordLinkGenerated(
+                        eq(testStatementId), eq(testAccountNumber), eq(signedLink.getId()), eq("test-user"));
     }
 
     @Test

@@ -2,7 +2,7 @@ package com.example.statementservice.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.example.statementservice.enums.ValidationFailureReason;
+import com.example.statementservice.model.ValidationFailureReason;
 import com.example.statementservice.model.entity.SignedLink;
 import java.time.OffsetDateTime;
 import java.util.UUID;

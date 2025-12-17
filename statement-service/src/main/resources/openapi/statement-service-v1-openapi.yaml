@@ -553,6 +553,9 @@ components:
         userAgent:
           type: string
           description: User agent string
+        performedBy:
+          type: string
+          description: "The role that performed the action"
         details:
           type: object
           additionalProperties: true

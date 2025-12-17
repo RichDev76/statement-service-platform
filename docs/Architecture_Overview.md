@@ -107,8 +107,8 @@ The **Statement Service Platform** implements a robust, production‑grade archi
 
 1. Customer (or portal) calls the download URL:
     - `GET /api/v1/statements/download/{fileName}?expires=...&signature=...`
-    - Depending on configuration, may also pass `Authorization: Bearer <token>` with `Download` role.
-2. `DownloadController` delegates to `DownloadService`, which invokes `SignedLinkService.validateAndConsume`:
+    - This endpoint is whitelisted and does not require authentication (configured via `security.endpoints.whitelist`).
+2. `StatementsController` delegates to `DownloadService`, which invokes `SignedLinkService.validateAndConsume`:
     - Looks up `SignedLink` by token/signature
     - Validates not **expired** (`expiresAt`) and not already `used` if `singleUse` is enabled
     - Optionally marks link as `used` (for single-use)
@@ -156,8 +156,10 @@ The `statement-service` module follows a traditional **layered architecture**:
         - Uploading and encrypting statements (`StatementUploadService`)
         - Generating, persisting, and validating signed links (`SignedLinkService`)
         - Streaming decrypted downloads (`DownloadService`)
+        - Searching and retrieving statements with pagination (`StatementQueryService`)
         - Querying audit logs (`AuditQueryService`)
         - Cleaning up expired/used signed links (`SignedLinkCleanupService`)
+        - Managing encrypted file storage with structured directories (`FileStorageService`)
     - Orchestrates repositories, encryption, auditing, and external integrations
 
 - **Persistence Layer** (`repository` package)
@@ -169,10 +171,11 @@ The `statement-service` module follows a traditional **layered architecture**:
     - API DTOs and mappers connecting entities to OpenAPI interfaces
 
 - **Cross‑Cutting Concerns**
-    - **Security**: `SecurityConfig`, Keycloak role conversion, JWT resource server
+    - **Security**: `SecurityConfig`, `SecurityEndpointsProperties`, Keycloak role conversion, JWT resource server
     - **Logging**: `LoggingAspect` for controllers and services
-    - **Auditing**: `AuditService` and background executor
+    - **Auditing**: `AuditService`, `AuditHelper` (convenience methods for common audit events), and background executor
     - **Request context**: `RequestInfoProvider` for IP, User-Agent, and user identity
+    - **Utilities**: `SignatureUtil` (HMAC‑SHA256 signing), `ValidationUtil`, `CommonUtil`
 
 ---
 
@@ -194,7 +197,13 @@ The `statement-service` module follows a traditional **layered architecture**:
 - `GET /api/v1/statements/audit/logs` → `ROLE_AuditLogsSearch`
 - `GET /api/v1/statements/search` → `ROLE_Search`
 - `GET /api/v1/statements/*/link` → `ROLE_GenerateSignedLink`
-- `GET /api/v1/statements/download/**` → No authentication enabled
+- `GET /api/v1/statements/download/**` → Whitelisted (no authentication required)
+
+Additional whitelisted endpoints (configured via `security.endpoints.whitelist`):
+- `/api/v1/statements/actuator/health/**` – health check endpoints
+- `/api/v1/statements/actuator/info` – application info
+- `/api/v1/statements/v3/api-docs/**` – OpenAPI documentation
+- `/api/v1/statements/swagger-ui/**` – Swagger UI
 
 Unauthorized and forbidden errors are returned as **RFC 7807 ProblemDetail** JSON.
 
@@ -241,6 +250,14 @@ Unauthorized and forbidden errors are returned as **RFC 7807 ProblemDetail** JSO
     - Initialises decryption cipher
     - Streams decrypted content using `CipherInputStream`
 
+#### File Storage Structure
+
+- `FileStorageService` manages encrypted file storage with a structured directory layout:
+    - Base directory: configured via `statement.storage.base-dir` (default: `/data/files`)
+    - Directory structure: `{baseDir}/statements/{accountNumberHash}/{year}/{month}/{statementId}.pdf.enc`
+    - Account numbers are hashed (SHA‑256) before use in paths for privacy
+    - Files are stored with `.pdf.enc` extension indicating encrypted PDF
+
 #### Account Number Handling
 
 - Clear‑text account numbers are **never stored directly**.
@@ -261,11 +278,12 @@ A `SignedLink` entity typically contains:
 
 - `id` – primary key (UUID)
 - `statementId` – foreign key to `Statement`
-- `token` / `signature` – high‑entropy random value
-- `expiresAt` – expiration timestamp (UTC)
-- `singleUse` – whether the link can be used only once
+- `token` – HMAC‑SHA256 signature computed from `{method}|{path}|{expires}` using a shared secret
+- `expiresAt` – expiration timestamp (UTC), default 900 seconds (15 minutes) from creation
+- `singleUse` – whether the link can be used only once (default: true)
 - `used` – whether the link has already been consumed
-- Timestamps for auditing and cleanup
+- `createdAt` – creation timestamp
+- `createdBy` – user or system that created the link
 
 #### Creation & Validation
 
@@ -299,10 +317,11 @@ A `SignedLink` entity typically contains:
 #### Audit Logging
 
 - `AuditService` records actions such as:
-    - `UPLOAD_SUCCESS`
-    - `DOWNLOAD_SUCCESS`
-    - `DOWNLOAD_FAILED`
-    - (Optionally) `SIGNED_LINK_CREATED`, `SIGNED_LINK_EXPIRED`, etc.
+    - `UPLOAD_SUCCESS` – statement uploaded successfully
+    - `DOWNLOAD_SUCCESS` – statement downloaded successfully
+    - `DOWNLOAD_FAILED` – download attempt failed (expired, invalid, used link, etc.)
+    - `LINK_GENERATED` – signed download link created successfully
+    - `LINK_GENERATION_FAILED` – failed to generate download link (statement not found, unexpected error)
 - Each `AuditLog` entry contains:
     - `id` (UUID)
     - `action`

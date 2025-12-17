@@ -1,6 +1,6 @@
 package com.example.statementservice.service;
 
-import com.example.statementservice.enums.AuditAction;
+import com.example.statementservice.model.AuditAction;
 import com.example.statementservice.model.dto.UploadResponseDto;
 import com.example.statementservice.util.RequestInfo;
 import com.example.statementservice.util.RequestInfoProvider;

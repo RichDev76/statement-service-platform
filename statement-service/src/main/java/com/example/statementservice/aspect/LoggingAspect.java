@@ -30,17 +30,17 @@ public class LoggingAspect {
     // --- Controller methods: log at INFO ---
     @Around("controllerPackage()")
     public Object logController(ProceedingJoinPoint pjp) throws Throwable {
-        String className = pjp.getSignature().getDeclaringTypeName();
-        String methodName = pjp.getSignature().getName();
-        long start = System.nanoTime();
+        var className = pjp.getSignature().getDeclaringTypeName();
+        var methodName = pjp.getSignature().getName();
+        var start = System.nanoTime();
 
         if (log.isInfoEnabled()) {
             logInfoEntry(className, methodName);
         }
 
         try {
-            Object result = pjp.proceed();
-            long tookMs = getTimeTaken(start);
+            var result = pjp.proceed();
+            var tookMs = getTimeTaken(start);
 
             if (log.isInfoEnabled()) {
                 logInfoExit(className, methodName, tookMs);
@@ -60,9 +60,9 @@ public class LoggingAspect {
 
     @Around("servicePackage()")
     public Object logService(ProceedingJoinPoint pjp) throws Throwable {
-        String className = pjp.getSignature().getDeclaringTypeName();
-        String methodName = pjp.getSignature().getName();
-        long start = System.nanoTime();
+        var className = pjp.getSignature().getDeclaringTypeName();
+        var methodName = pjp.getSignature().getName();
+        var start = System.nanoTime();
 
         if (log.isDebugEnabled()) {
             logDebugEntry(pjp, className, methodName);

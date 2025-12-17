@@ -1,6 +1,6 @@
 package com.example.statementservice.util;
 
-import com.example.statementservice.enums.AuditAction;
+import com.example.statementservice.model.AuditAction;
 import com.example.statementservice.service.AuditService;
 import java.util.HashMap;
 import java.util.Map;

@@ -2,7 +2,7 @@ package com.example.statementservice.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.example.statementservice.enums.DownloadOutcome;
+import com.example.statementservice.model.DownloadOutcome;
 import com.example.statementservice.exception.DecryptionFailedException;
 import com.example.statementservice.service.DownloadService;
 import java.io.ByteArrayInputStream;
@@ -122,9 +122,7 @@ class DownloadResponseFactoryTest {
                 new DownloadService.DownloadStreamResult(DownloadOutcome.DECRYPTION_FAILED, Optional.empty());
 
         // Act & Assert
-        assertThrows(
-                DecryptionFailedException.class,
-                () -> downloadResponseFactory.build(fileName, result));
+        assertThrows(DecryptionFailedException.class, () -> downloadResponseFactory.build(fileName, result));
     }
 
     @Test

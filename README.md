@@ -61,7 +61,11 @@ STATEMENT_STORAGE_DIR=/app/data/files
 STATEMENT_MASTER_KEY=<32-byte-hex-key>
 STATEMENT_SIGNATURE_SECRET=<your-signature-secret>
 ```
+```aiignore
+Sample command to use if you want to generate master key and/or signature secret : 
+openssl rand -base64 32
 
+```
 #### Step 2: Initial Bootstrap (First Time Only)
 
 Run this **only once** when setting up a new environment or to start fresh:

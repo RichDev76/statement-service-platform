@@ -4,18 +4,13 @@ import com.example.statementservice.exception.InvalidDateException;
 import com.example.statementservice.mapper.AuditApiMapper;
 import com.example.statementservice.mapper.AuditLogEntityMapper;
 import com.example.statementservice.model.api.AuditLogPage;
-import com.example.statementservice.model.dto.AuditLogDto;
-import com.example.statementservice.model.entity.AuditLog;
 import com.example.statementservice.repository.AuditLogRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -56,8 +51,8 @@ public class AuditQueryService {
                 size);
 
         // Validate and parse dates
-        OffsetDateTime startDateTime = parseDate(startDate, false);
-        OffsetDateTime endDateTime = parseDate(endDate, true);
+        var startDateTime = parseDate(startDate, false);
+        var endDateTime = parseDate(endDate, true);
         validateDateRange(startDateTime, endDateTime);
 
         // Validate and normalize pagination parameters
@@ -65,15 +60,15 @@ public class AuditQueryService {
         int pageSize = normalizePageSize(size);
 
         // Create pageable with sorting
-        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "performedAt"));
+        var pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "performedAt"));
 
         // Execute database query with filtering and pagination
-        Page<AuditLog> auditLogPage = auditLogRepository.findFilteredAuditLogs(
+        var auditLogPage = auditLogRepository.findFilteredAuditLogs(
                 normalizeAccountNumber(accountNumber), startDateTime, endDateTime, pageable);
 
         // Map to DTOs and API response
-        List<AuditLogDto> auditLogDtos = auditLogEntityMapper.toDtos(auditLogPage.getContent());
-        AuditLogPage apiPage = auditApiMapper.toPage(auditLogDtos);
+        var auditLogDtos = auditLogEntityMapper.toDtos(auditLogPage.getContent());
+        var apiPage = auditApiMapper.toPage(auditLogDtos);
 
         // Set pagination metadata
         apiPage.page(pageNum);
@@ -92,7 +87,7 @@ public class AuditQueryService {
             return null;
         }
         try {
-            LocalDate date = LocalDate.parse(dateString.trim());
+            var date = LocalDate.parse(dateString.trim());
             if (isEndOfDay) {
                 return date.atTime(23, 59, 59, 999999999)
                         .atZone(java.time.ZoneId.systemDefault())
@@ -101,7 +96,7 @@ public class AuditQueryService {
                 return date.atStartOfDay(java.time.ZoneId.systemDefault()).toOffsetDateTime();
             }
         } catch (DateTimeParseException e) {
-            String dateType = isEndOfDay ? "end" : "start";
+            var dateType = isEndOfDay ? "end" : "start";
             throw new InvalidDateException(
                     "Invalid " + dateType + " date format. Expected YYYY-MM-DD, got: " + dateString, e);
         }

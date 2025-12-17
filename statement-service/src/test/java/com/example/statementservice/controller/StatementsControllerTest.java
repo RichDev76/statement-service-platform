@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import com.example.statementservice.enums.DownloadOutcome;
+import com.example.statementservice.model.DownloadOutcome;
 import com.example.statementservice.exception.InvalidInputException;
 import com.example.statementservice.exception.StatementNotFoundException;
 import com.example.statementservice.model.api.StatementSummary;

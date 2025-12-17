@@ -1,4 +1,4 @@
-package com.example.statementservice.enums;
+package com.example.statementservice.model;
 
 public enum ValidationFailureReason {
     NOT_FOUND,

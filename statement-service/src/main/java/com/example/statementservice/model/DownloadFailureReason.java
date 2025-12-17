@@ -1,5 +1,8 @@
-package com.example.statementservice.enums;
+package com.example.statementservice.model;
 
+import lombok.Getter;
+
+@Getter
 public enum DownloadFailureReason {
     INVALID("invalid_link"),
     EXPIRED("expired_link"),
@@ -14,7 +17,4 @@ public enum DownloadFailureReason {
         this.value = value;
     }
 
-    public String getValue() {
-        return value;
-    }
 }

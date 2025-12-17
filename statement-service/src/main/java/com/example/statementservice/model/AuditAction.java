@@ -1,5 +1,8 @@
-package com.example.statementservice.enums;
+package com.example.statementservice.model;
 
+import lombok.Getter;
+
+@Getter
 public enum AuditAction {
     DOWNLOAD_SUCCESS("DOWNLOAD_SUCCESS"),
     DOWNLOAD_FAILED("DOWNLOAD_FAILED"),
@@ -11,9 +14,5 @@ public enum AuditAction {
 
     AuditAction(String value) {
         this.value = value;
-    }
-
-    public String getValue() {
-        return value;
     }
 }

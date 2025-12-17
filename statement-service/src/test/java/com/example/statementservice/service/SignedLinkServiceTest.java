@@ -140,7 +140,7 @@ class SignedLinkServiceTest {
         assertThat(methodCaptor.getValue()).isEqualTo("GET");
     }
 
-    // Note: buildSignedLink(String fileName, UUID statementId) method is not tested here
+    // Note: buildSignedDownloadLink(String fileName, UUID statementId) method is not tested here
     // because it depends on ServletUriComponentsBuilder which requires servlet request context.
     // This method is better suited for integration testing.
 
