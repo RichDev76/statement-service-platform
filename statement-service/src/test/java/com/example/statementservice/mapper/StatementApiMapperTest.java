@@ -7,19 +7,27 @@ import com.example.statementservice.model.dto.StatementDto;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("StatementApiMapper Tests")
 class StatementApiMapperTest {
 
     private final StatementApiMapper statementApiMapper = Mappers.getMapper(StatementApiMapper.class);
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(statementApiMapper, "dateMapper", new DateMapper());
+    }
 
     @Test
     @DisplayName("toApi - should map all fields from DTO to API model")
@@ -41,7 +49,10 @@ class StatementApiMapperTest {
         assertThat(result.getStatementId()).isEqualTo(statementId);
         assertThat(result.getAccountNumber()).isEqualTo("ACC123456");
         assertThat(result.getDate()).isEqualTo("2024-01-15");
-        assertThat(result.getUploadedAt()).isEqualTo(uploadedAt);
+        assertThat(result.getUploadedAt())
+                .isEqualTo(uploadedAt
+                        .atZoneSameInstant(ZoneId.of("Africa/Johannesburg"))
+                        .toOffsetDateTime());
         assertThat(result.getFileSize()).isEqualTo(2048L);
         assertThat(result.getFileName()).isEqualTo("statement.pdf");
         assertThat(result.getDownloadLink()).isEqualTo(downloadLink);
@@ -228,7 +239,10 @@ class StatementApiMapperTest {
         assertThat(summary.getStatementId()).isEqualTo(statementId);
         assertThat(summary.getAccountNumber()).isEqualTo("ACC555");
         assertThat(summary.getDate()).isEqualTo("2024-07-20");
-        assertThat(summary.getUploadedAt()).isEqualTo(uploadedAt);
+        assertThat(summary.getUploadedAt())
+                .isEqualTo(uploadedAt
+                        .atZoneSameInstant(ZoneId.of("Africa/Johannesburg"))
+                        .toOffsetDateTime());
         assertThat(summary.getFileSize()).isEqualTo(4096L);
         assertThat(summary.getFileName()).isEqualTo("test.pdf");
         assertThat(summary.getDownloadLink()).isEqualTo(downloadLink);

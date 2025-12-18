@@ -18,13 +18,13 @@ public class MasterKeyProvider {
             if (keyContent != null && !keyContent.trim().isEmpty()) {
                 this.key = java.util.Base64.getDecoder().decode(keyContent.trim());
             } else {
-                Path p = Path.of(keyFile);
+                var p = Path.of(keyFile);
                 if (!Files.exists(p)) {
                     throw new IllegalStateException("Master key file not found at: " + keyFile
                             + ". This is required if statement.encryption.master-key is not set.");
                 }
-                byte[] content = Files.readAllBytes(p);
-                String s = new String(content).trim();
+                var content = Files.readAllBytes(p);
+                var s = new String(content).trim();
                 this.key = java.util.Base64.getDecoder().decode(s);
             }
         } catch (Exception e) {

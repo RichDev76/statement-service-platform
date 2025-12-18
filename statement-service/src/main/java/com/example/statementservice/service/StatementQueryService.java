@@ -5,18 +5,17 @@ import com.example.statementservice.mapper.StatementApiMapper;
 import com.example.statementservice.model.api.StatementSummary;
 import com.example.statementservice.model.api.StatementSummaryPage;
 import com.example.statementservice.model.dto.StatementDto;
-import com.example.statementservice.model.entity.Statement;
 import com.example.statementservice.util.AuditHelper;
+import com.example.statementservice.util.RequestInfo;
 import com.example.statementservice.util.RequestInfoProvider;
-import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class StatementQueryService {
 
+    public static final String SYSTEM_USER = "system";
     private final StatementService statementService;
     private final StatementApiMapper statementApiMapper;
     private final SignedLinkService signedLinkService;
@@ -38,42 +38,46 @@ public class StatementQueryService {
     private static final int DEFAULT_SIZE = 50;
 
     public Optional<StatementSummary> getStatementSummaryWithSignedDownloadLinkById(UUID statementId) {
-        String performedBy = getPerformedBy();
+        var requestInfo = getRequestInfo();
+        var performedBy = requestInfo.getPerformedBy();
+        var clientIp = requestInfo.getClientIp();
+        var userAgent = requestInfo.getUserAgent();
 
         try {
-            StatementDto dto = this.statementService.getStatementDtoById(statementId);
-            String accountNumber = dto.getAccountNumber();
+            var dto = this.statementService.getStatementDtoById(statementId);
+            var accountNumber = dto.getAccountNumber();
 
             try {
                 var signedLinkBasePath = this.signedLinkService.getFilesBaseUrl(dto.getFileName());
                 var signedLink = this.signedLinkService.createSignedLink(
                         dto.getStatementId(), true, performedBy, signedLinkBasePath);
-                URI signedDownloadLink = signedLinkService.buildSignedDownloadLink(signedLink, signedLinkBasePath);
+                var signedDownloadLink = signedLinkService.buildSignedDownloadLink(signedLink, signedLinkBasePath);
                 dto.setDownloadLink(signedDownloadLink);
-
-                auditHelper.recordLinkGenerated(statementId, accountNumber, signedLink.getId(), performedBy);
+                auditHelper.recordLinkGenerated(
+                        statementId, accountNumber, signedLink.getId(), performedBy, clientIp, userAgent);
 
             } catch (Exception linkException) {
-                auditHelper.recordLinkGenerationFailed(statementId, accountNumber, performedBy, linkException);
+                auditHelper.recordLinkGenerationFailed(
+                        statementId, accountNumber, performedBy, linkException, clientIp, userAgent);
             }
 
             return Optional.of(statementApiMapper.toApi(dto));
 
         } catch (StatementNotFoundException e) {
-            auditHelper.recordStatementNotFound(statementId, performedBy);
+            auditHelper.recordStatementNotFound(statementId, performedBy, clientIp, userAgent);
             return Optional.empty();
         } catch (Exception e) {
-            auditHelper.recordUnexpectedError(statementId, null, performedBy, e);
+            auditHelper.recordUnexpectedError(statementId, null, performedBy, e, clientIp, userAgent);
             throw e;
         }
     }
 
-    private String getPerformedBy() {
+    private RequestInfo getRequestInfo() {
         try {
-            return requestInfoProvider.get().getPerformedBy();
+            return requestInfoProvider.get();
         } catch (Exception e) {
-            log.warn("Failed to get performedBy from request context", e);
-            return "system";
+            log.warn("Failed to get request info from context", e);
+            return new RequestInfo(null, null, SYSTEM_USER);
         }
     }
 
@@ -109,14 +113,13 @@ public class StatementQueryService {
         result.page(effectivePage);
         result.size(effectiveSize);
 
-        var defaultSort = Sort.by(Sort.Order.desc("uploadedAt"), Sort.Order.desc("id"));
+        var sortOrder = parseSort(sort);
 
-        // Both account and date provided
         if (accountNumber != null && date != null) {
             var parsedDate = LocalDate.parse(date);
             Optional<StatementDto> opt =
                     this.statementService.getStatementDtoByAccountNumberAndStatementDate(accountNumber, parsedDate);
-            var content = opt.map(dto -> List.of(toBase(dto))).orElseGet(List::of);
+            var content = opt.map(dto -> List.of(statementApiMapper.toBase(dto))).orElseGet(List::of);
             long total = content.size();
             int totalPages = (int) Math.ceil(total / (double) effectiveSize);
             result.setContent(content);
@@ -127,10 +130,10 @@ public class StatementQueryService {
 
         // Account only
         if (accountNumber != null) {
-            Page<Statement> statements = this.statementService.getStatementsByAccountNumber(
-                    accountNumber, PageRequest.of(effectivePage, effectiveSize, defaultSort));
+            var statements = this.statementService.getStatementsByAccountNumber(
+                    accountNumber, PageRequest.of(effectivePage, effectiveSize, sortOrder));
             var content =
-                    statements.map(stmt -> toBase(statementService.toDto(stmt))).getContent();
+                    statements.map(stmt -> statementApiMapper.toBase(statementService.toDto(stmt))).getContent();
             result.setContent(content);
             result.totalElements(statements.getTotalElements());
             result.totalPages(statements.getTotalPages());
@@ -144,14 +147,39 @@ public class StatementQueryService {
         return result;
     }
 
-    private com.example.statementservice.model.api.BaseStatement toBase(StatementDto dto) {
-        var base = new com.example.statementservice.model.api.BaseStatement();
-        base.setStatementId(dto.getStatementId());
-        base.setAccountNumber(dto.getAccountNumber());
-        base.setUploadedAt(dto.getUploadedAt());
-        base.setFileSize(dto.getFileSize());
-        base.setFileName(dto.getFileName());
-        base.setDate(dto.getStatementDate() != null ? dto.getStatementDate().toString() : null);
-        return base;
+    private Sort parseSort(String sort) {
+        var defaultSort = Sort.by(Sort.Order.desc("uploadedAt"), Sort.Order.desc("id"));
+
+        if (sort == null || sort.isBlank()) {
+            return defaultSort;
+        }
+
+        try {
+            var parts = sort.split(",");
+            if (parts.length < 2) {
+                log.warn("Invalid sort format '{}', using default sort", sort);
+                return defaultSort;
+            }
+
+            var property = parts[0].trim();
+            var direction = parts[1].trim().toLowerCase();
+
+            if (!isValidSortProperty(property)) {
+                log.warn("Invalid sort property '{}', using default sort", property);
+                return defaultSort;
+            }
+
+            Sort.Direction sortDirection = "asc".equals(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+            return Sort.by(sortDirection, property);
+        } catch (Exception e) {
+            log.warn("Failed to parse sort parameter '{}', using default sort: {}", sort, e.getMessage());
+            return defaultSort;
+        }
+    }
+
+    private boolean isValidSortProperty(String property) {
+        return Set.of("uploadedAt", "statementDate", "accountNumber", "id", "fileName", "fileSize")
+                .contains(property);
     }
 }

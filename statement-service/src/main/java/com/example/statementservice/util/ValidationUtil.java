@@ -77,7 +77,7 @@ public class ValidationUtil {
     }
 
     public void validateCorrectContentType(MultipartFile file) {
-        String contentType = file.getContentType();
+        var contentType = file.getContentType();
         if (!MediaType.APPLICATION_PDF_VALUE.equals(contentType)) {
             throw new UnsupportedContentTypeException(UNSUPPORTED_CONTENT_TYPE_MSG);
         }

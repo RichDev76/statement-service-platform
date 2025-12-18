@@ -31,7 +31,7 @@ public class EncryptionService {
     }
 
     public byte[] generateInitializationVector() {
-        byte[] initializationVector = new byte[INITIALIZATION_VECTOR_LENGTH];
+        var initializationVector = new byte[INITIALIZATION_VECTOR_LENGTH];
         random.nextBytes(initializationVector);
         return initializationVector;
     }

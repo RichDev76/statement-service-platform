@@ -50,7 +50,7 @@ public class LoggingAspect {
             return result;
         } catch (Throwable ex) {
             logExceptionWarn(className, methodName, start, ex);
-            return null;
+            throw ex;
         }
     }
 
@@ -75,7 +75,7 @@ public class LoggingAspect {
             return result;
         } catch (Throwable ex) {
             logExceptionWarn(className, methodName, start, ex);
-            return null;
+            throw ex;
         }
     }
 

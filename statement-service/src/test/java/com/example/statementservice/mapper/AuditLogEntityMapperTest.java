@@ -1,11 +1,9 @@
 package com.example.statementservice.mapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.example.statementservice.model.dto.AuditLogDto;
 import com.example.statementservice.model.entity.AuditLog;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,8 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 @DisplayName("AuditLogEntityMapper Tests")
 class AuditLogEntityMapperTest {

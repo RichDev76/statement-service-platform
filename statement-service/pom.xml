@@ -205,6 +205,9 @@
                             <generatorName>spring</generatorName>
                             <inputSpec>${project.basedir}/src/main/resources/openapi/statement-service-v1-openapi.yaml</inputSpec>
                             <modelPackage>com.example.statementservice.model.api</modelPackage>
+                            <typeMappings>
+                                <typeMapping>DateTime=OffsetDateTime</typeMapping>
+                            </typeMappings>
                         </configuration>
                     </execution>
                 </executions>

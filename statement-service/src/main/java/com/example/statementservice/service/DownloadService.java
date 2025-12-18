@@ -92,7 +92,7 @@ public class DownloadService {
     }
 
     private Map<String, Object> getUserAuditDetails(String token, String clientIp, String userAgent, String reason) {
-        Map<String, Object> details = new HashMap<>();
+        var details = new HashMap<String, Object>();
         details.put(AUDIT_KEY_IP, clientIp != null ? clientIp : AUDIT_UNKNOWN);
         details.put(AUDIT_KEY_USER_AGENT, userAgent != null ? userAgent : AUDIT_UNKNOWN);
         details.put(AUDIT_KEY_TOKEN, maskToken(token));
@@ -109,7 +109,7 @@ public class DownloadService {
 
     private void handleInvalidLink(
             LinkValidationResult result, String token, String clientIp, String userAgent, String performedBy) {
-        String reason = getReason(result);
+        var reason = getReason(result);
         var statementId = result.getLink() != null ? result.getLink().getStatementId() : null;
         var linkId = result.getLink() != null ? result.getLink().getId() : null;
 

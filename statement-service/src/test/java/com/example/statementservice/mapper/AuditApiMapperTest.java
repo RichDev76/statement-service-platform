@@ -6,15 +6,23 @@ import com.example.statementservice.model.api.AuditLogEntry;
 import com.example.statementservice.model.api.AuditLogPage;
 import com.example.statementservice.model.dto.AuditLogDto;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("AuditApiMapper Tests")
 class AuditApiMapperTest {
 
     private final AuditApiMapper auditApiMapper = Mappers.getMapper(AuditApiMapper.class);
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(auditApiMapper, "dateMapper", new DateMapper());
+    }
 
     @Test
     @DisplayName("toApi - should map all fields from DTO to API model")
@@ -43,7 +51,10 @@ class AuditApiMapperTest {
         assertThat(result.getAccountNumber()).isEqualTo("ACC123456");
         assertThat(result.getStatementId()).isEqualTo(statementId);
         assertThat(result.getAction()).isEqualTo("DOWNLOAD_SUCCESS");
-        assertThat(result.getTimestamp()).isEqualTo(performedAt);
+        assertThat(result.getTimestamp())
+                .isEqualTo(performedAt
+                        .atZoneSameInstant(ZoneId.of("Africa/Johannesburg"))
+                        .toOffsetDateTime());
         assertThat(result.getIpAddress()).isEqualTo("192.168.1.1");
         assertThat(result.getUserAgent()).isEqualTo("Mozilla/5.0");
         assertThat(result.getDetails()).isEqualTo(details);
@@ -104,7 +115,9 @@ class AuditApiMapperTest {
 
         AuditLogEntry result = auditApiMapper.toApi(dto);
 
-        assertThat(result.getTimestamp()).isEqualTo(now);
+        assertThat(result.getTimestamp())
+                .isEqualTo(
+                        now.atZoneSameInstant(ZoneId.of("Africa/Johannesburg")).toOffsetDateTime());
     }
 
     @Test
@@ -201,7 +214,10 @@ class AuditApiMapperTest {
         assertThat(entry.getAccountNumber()).isEqualTo("ACC999");
         assertThat(entry.getStatementId()).isEqualTo(statementId);
         assertThat(entry.getAction()).isEqualTo("UPLOAD_SUCCESS");
-        assertThat(entry.getTimestamp()).isEqualTo(timestamp);
+        assertThat(entry.getTimestamp())
+                .isEqualTo(timestamp
+                        .atZoneSameInstant(ZoneId.of("Africa/Johannesburg"))
+                        .toOffsetDateTime());
         assertThat(entry.getIpAddress()).isEqualTo("10.0.0.1");
         assertThat(entry.getUserAgent()).isEqualTo("TestAgent");
         assertThat(entry.getDetails()).isEqualTo(details);

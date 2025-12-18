@@ -3,7 +3,6 @@ package com.example.statementservice.controller;
 import com.example.statementservice.api.AdminApi;
 import com.example.statementservice.mapper.UploadResponseApiMapper;
 import com.example.statementservice.model.api.UploadResponse;
-import com.example.statementservice.model.dto.UploadResponseDto;
 import com.example.statementservice.service.StatementUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,8 +24,8 @@ public class AdminController implements AdminApi {
     @Override
     public ResponseEntity<UploadResponse> uploadStatement(
             String xMessageDigest, MultipartFile file, String accountNumber, String date, String xCorrelationId) {
-        UploadResponseDto dto = this.statementUploadService.upload(xMessageDigest, file, accountNumber, date);
-        UploadResponse api = uploadResponseApiMapper.toApi(dto);
+        var dto = this.statementUploadService.upload(xMessageDigest, file, accountNumber, date);
+        var api = uploadResponseApiMapper.toApi(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(api);
     }
 }

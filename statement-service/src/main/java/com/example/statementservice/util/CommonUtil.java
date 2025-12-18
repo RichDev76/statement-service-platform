@@ -13,7 +13,7 @@ public class CommonUtil {
         var serverName = request.getServerName();
         int serverPort = request.getServerPort();
 
-        StringBuilder baseUrl = new StringBuilder(scheme).append("://").append(serverName);
+        var baseUrl = new StringBuilder(scheme).append("://").append(serverName);
 
         if (!((scheme.equals(HTTP) && serverPort == 80) || (scheme.equals(HTTPS) && serverPort == 443))) {
             baseUrl.append(":").append(serverPort);

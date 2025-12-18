@@ -4,15 +4,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.statementservice.model.dto.UploadResponseDto;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("UploadResponseApiMapper Tests")
 class UploadResponseApiMapperTest {
 
     private final UploadResponseApiMapper uploadResponseApiMapper = Mappers.getMapper(UploadResponseApiMapper.class);
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(uploadResponseApiMapper, "dateMapper", new DateMapper());
+    }
 
     @Test
     @DisplayName("toApi - should map all fields from DTO to API model")
@@ -28,7 +36,10 @@ class UploadResponseApiMapperTest {
         var result = uploadResponseApiMapper.toApi(dto);
         assertThat(result).isNotNull();
         assertThat(result.getStatementId()).isEqualTo(statementId);
-        assertThat(result.getUploadedAt()).isEqualTo(uploadedAt);
+        assertThat(result.getUploadedAt())
+                .isEqualTo(uploadedAt
+                        .atZoneSameInstant(ZoneId.of("Africa/Johannesburg"))
+                        .toOffsetDateTime());
         assertThat(result.getFileSize()).isEqualTo(2048L);
         assertThat(result.getFileName()).isEqualTo("statement.pdf");
     }
@@ -255,7 +266,10 @@ class UploadResponseApiMapperTest {
                 .build();
         var result = uploadResponseApiMapper.toApi(dto);
         assertThat(result.getStatementId()).isEqualTo(statementId);
-        assertThat(result.getUploadedAt()).isEqualTo(uploadedAt);
+        assertThat(result.getUploadedAt())
+                .isEqualTo(uploadedAt
+                        .atZoneSameInstant(ZoneId.of("Africa/Johannesburg"))
+                        .toOffsetDateTime());
         assertThat(result.getFileSize()).isEqualTo(fileSize);
         assertThat(result.getFileName()).isEqualTo(fileName);
     }

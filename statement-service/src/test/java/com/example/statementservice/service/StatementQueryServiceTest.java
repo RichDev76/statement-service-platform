@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.example.statementservice.exception.StatementNotFoundException;
 import com.example.statementservice.mapper.StatementApiMapper;
+import com.example.statementservice.model.api.BaseStatement;
 import com.example.statementservice.model.api.StatementSummary;
 import com.example.statementservice.model.api.StatementSummaryPage;
 import com.example.statementservice.model.dto.StatementDto;
@@ -67,6 +68,7 @@ class StatementQueryServiceTest {
     private LocalDate testDate;
     private StatementDto testStatementDto;
     private StatementSummary testStatementSummary;
+    private BaseStatement testBaseStatement;
     private Statement testStatement;
     private RequestInfo testRequestInfo;
 
@@ -87,6 +89,11 @@ class StatementQueryServiceTest {
         testStatementSummary = new StatementSummary();
         testStatementSummary.setStatementId(testStatementId);
         testStatementSummary.setAccountNumber(testAccountNumber);
+
+        testBaseStatement = new BaseStatement();
+        testBaseStatement.setStatementId(testStatementId);
+        testBaseStatement.setAccountNumber(testAccountNumber);
+        testBaseStatement.setDate(testDate.toString());
 
         testStatement = new Statement();
         testStatement.setId(testStatementId);
@@ -124,7 +131,12 @@ class StatementQueryServiceTest {
         verify(statementApiMapper).toApi(testStatementDto);
         verify(auditHelper)
                 .recordLinkGenerated(
-                        eq(testStatementId), eq(testAccountNumber), eq(signedLink.getId()), eq("test-user"));
+                        eq(testStatementId),
+                        eq(testAccountNumber),
+                        eq(signedLink.getId()),
+                        eq("test-user"),
+                        eq("127.0.0.1"),
+                        eq("JUnit"));
     }
 
     @Test
@@ -140,7 +152,7 @@ class StatementQueryServiceTest {
         assertThat(result).isEmpty();
         verify(statementService).getStatementDtoById(testStatementId);
         verify(statementApiMapper, never()).toApi(any());
-        verify(auditHelper).recordStatementNotFound(eq(testStatementId), eq("test-user"));
+        verify(auditHelper).recordStatementNotFound(eq(testStatementId), eq("test-user"), eq("127.0.0.1"), eq("JUnit"));
     }
 
     @Test
@@ -251,6 +263,7 @@ class StatementQueryServiceTest {
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
         when(statementService.toDto(any())).thenReturn(testStatementDto);
+        when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
 
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, 0, 50, null);
 
@@ -269,6 +282,7 @@ class StatementQueryServiceTest {
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
         when(statementService.toDto(any())).thenReturn(testStatementDto);
+        when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
 
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, null, null, null);
 
@@ -281,6 +295,7 @@ class StatementQueryServiceTest {
     void searchPaged_AccountAndDate() {
         when(statementService.getStatementDtoByAccountNumberAndStatementDate(testAccountNumber, testDate))
                 .thenReturn(Optional.of(testStatementDto));
+        when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
 
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, "2024-01-15", 0, 50, null);
 
@@ -307,6 +322,7 @@ class StatementQueryServiceTest {
         when(statementService.getStatementsByAccountNumber(eq(testAccountNumber), any(Pageable.class)))
                 .thenReturn(page);
         when(statementService.toDto(any())).thenReturn(testStatementDto);
+        when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
 
         StatementSummaryPage result = statementQueryService.searchPaged(testAccountNumber, null, 2, 25, null);
 

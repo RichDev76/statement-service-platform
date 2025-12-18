@@ -5,9 +5,12 @@ import com.example.statementservice.model.api.AuditLogPage;
 import com.example.statementservice.model.dto.AuditLogDto;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",
+    uses = {DateMapper.class})
 public interface AuditApiMapper {
 
     @Mappings({
@@ -18,14 +21,14 @@ public interface AuditApiMapper {
         @Mapping(target = "ipAddress", source = "ipAddress"),
         @Mapping(target = "userAgent", source = "userAgent"),
         @Mapping(target = "action", source = "action"),
-        @Mapping(target = "timestamp", source = "performedAt")
+        @Mapping(target = "timestamp", source = "performedAt", qualifiedByName = "toLocalOffset")
     })
     AuditLogEntry toApi(AuditLogDto dto);
 
     default AuditLogPage toPage(List<AuditLogDto> dtos) {
         var page = new AuditLogPage();
         page.setContent(
-                dtos == null ? List.of() : dtos.stream().map(this::toApi).collect(Collectors.toList()));
+            dtos == null ? List.of() : dtos.stream().map(this::toApi).collect(Collectors.toList()));
         return page;
     }
 }
