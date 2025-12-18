@@ -11,7 +11,7 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should create RequestInfo with no-arg constructor")
     void testNoArgConstructor() {
-        RequestInfo requestInfo = new RequestInfo();
+        var requestInfo = new RequestInfo();
         assertNotNull(requestInfo);
         assertNull(requestInfo.getClientIp());
         assertNull(requestInfo.getUserAgent());
@@ -21,10 +21,10 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should create RequestInfo with all-args constructor")
     void testAllArgsConstructor() {
-        String clientIp = "192.168.1.100";
-        String userAgent = "Mozilla/5.0";
-        String performedBy = "john.doe";
-        RequestInfo requestInfo = new RequestInfo(clientIp, userAgent, performedBy);
+        var clientIp = "192.168.1.100";
+        var userAgent = "Mozilla/5.0";
+        var performedBy = "john.doe";
+        var requestInfo = new RequestInfo(clientIp, userAgent, performedBy);
         assertNotNull(requestInfo);
         assertEquals(clientIp, requestInfo.getClientIp());
         assertEquals(userAgent, requestInfo.getUserAgent());
@@ -34,8 +34,8 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should set and get clientIp")
     void testSetAndGetClientIp() {
-        RequestInfo requestInfo = new RequestInfo();
-        String clientIp = "10.0.0.5";
+        var requestInfo = new RequestInfo();
+        var clientIp = "10.0.0.5";
         requestInfo.setClientIp(clientIp);
         assertEquals(clientIp, requestInfo.getClientIp());
     }
@@ -43,8 +43,8 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should set and get userAgent")
     void testSetAndGetUserAgent() {
-        RequestInfo requestInfo = new RequestInfo();
-        String userAgent = "Chrome/90.0.4430.93";
+        var requestInfo = new RequestInfo();
+        var userAgent = "Chrome/90.0.4430.93";
         requestInfo.setUserAgent(userAgent);
         assertEquals(userAgent, requestInfo.getUserAgent());
     }
@@ -52,8 +52,8 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should set and get performedBy")
     void testSetAndGetPerformedBy() {
-        RequestInfo requestInfo = new RequestInfo();
-        String performedBy = "admin";
+        var requestInfo = new RequestInfo();
+        var performedBy = "admin";
         requestInfo.setPerformedBy(performedBy);
         assertEquals(performedBy, requestInfo.getPerformedBy());
     }
@@ -61,7 +61,7 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should handle null values in all-args constructor")
     void testAllArgsConstructor_NullValues() {
-        RequestInfo requestInfo = new RequestInfo(null, null, null);
+        var requestInfo = new RequestInfo(null, null, null);
         assertNotNull(requestInfo);
         assertNull(requestInfo.getClientIp());
         assertNull(requestInfo.getUserAgent());
@@ -71,7 +71,7 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should allow setting null values via setters")
     void testSetters_NullValues() {
-        RequestInfo requestInfo = new RequestInfo("192.168.1.1", "Firefox", "user");
+        var requestInfo = new RequestInfo("192.168.1.1", "Firefox", "user");
         requestInfo.setClientIp(null);
         requestInfo.setUserAgent(null);
         requestInfo.setPerformedBy(null);
@@ -83,7 +83,7 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should allow updating values via setters")
     void testUpdateValues() {
-        RequestInfo requestInfo = new RequestInfo("192.168.1.1", "Firefox", "user");
+        var requestInfo = new RequestInfo("192.168.1.1", "Firefox", "user");
         requestInfo.setClientIp("10.0.0.1");
         requestInfo.setUserAgent("Chrome");
         requestInfo.setPerformedBy("admin");
@@ -95,7 +95,7 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should handle empty strings")
     void testEmptyStrings() {
-        RequestInfo requestInfo = new RequestInfo("", "", "");
+        var requestInfo = new RequestInfo("", "", "");
         assertNotNull(requestInfo);
         assertEquals("", requestInfo.getClientIp());
         assertEquals("", requestInfo.getUserAgent());
@@ -105,10 +105,10 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should handle special characters in fields")
     void testSpecialCharacters() {
-        String clientIp = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"; // IPv6
-        String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
-        String performedBy = "user@example.com";
-        RequestInfo requestInfo = new RequestInfo(clientIp, userAgent, performedBy);
+        var clientIp = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"; // IPv6
+        var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
+        var performedBy = "user@example.com";
+        var requestInfo = new RequestInfo(clientIp, userAgent, performedBy);
         assertEquals(clientIp, requestInfo.getClientIp());
         assertEquals(userAgent, requestInfo.getUserAgent());
         assertEquals(performedBy, requestInfo.getPerformedBy());
@@ -117,9 +117,9 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should handle long strings")
     void testLongStrings() {
-        String longUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        var longUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                 + "Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59";
-        RequestInfo requestInfo = new RequestInfo();
+        var requestInfo = new RequestInfo();
         requestInfo.setUserAgent(longUserAgent);
         assertEquals(longUserAgent, requestInfo.getUserAgent());
     }
@@ -127,8 +127,8 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should maintain independence between instances")
     void testInstanceIndependence() {
-        RequestInfo info1 = new RequestInfo("192.168.1.1", "Firefox", "user1");
-        RequestInfo info2 = new RequestInfo("192.168.1.2", "Chrome", "user2");
+        var info1 = new RequestInfo("192.168.1.1", "Firefox", "user1");
+        var info2 = new RequestInfo("192.168.1.2", "Chrome", "user2");
         info1.setClientIp("10.0.0.1");
         assertEquals("10.0.0.1", info1.getClientIp());
         assertEquals("192.168.1.2", info2.getClientIp());
@@ -138,11 +138,11 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should create multiple instances with same values")
     void testMultipleInstancesSameValues() {
-        String clientIp = "192.168.1.100";
-        String userAgent = "Safari";
-        String performedBy = "testuser";
-        RequestInfo info1 = new RequestInfo(clientIp, userAgent, performedBy);
-        RequestInfo info2 = new RequestInfo(clientIp, userAgent, performedBy);
+        var clientIp = "192.168.1.100";
+        var userAgent = "Safari";
+        var performedBy = "testuser";
+        var info1 = new RequestInfo(clientIp, userAgent, performedBy);
+        var info2 = new RequestInfo(clientIp, userAgent, performedBy);
         assertNotSame(info1, info2);
         assertEquals(info1.getClientIp(), info2.getClientIp());
         assertEquals(info1.getUserAgent(), info2.getUserAgent());
@@ -152,7 +152,7 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should handle system default values")
     void testSystemDefaultValues() {
-        RequestInfo requestInfo = new RequestInfo("unknown", "unknown", "system");
+        var requestInfo = new RequestInfo("unknown", "unknown", "system");
         assertEquals("unknown", requestInfo.getClientIp());
         assertEquals("unknown", requestInfo.getUserAgent());
         assertEquals("system", requestInfo.getPerformedBy());
@@ -161,7 +161,7 @@ class RequestInfoTest {
     @Test
     @DisplayName("Should handle localhost scenarios")
     void testLocalhostScenarios() {
-        RequestInfo requestInfo = new RequestInfo("127.0.0.1", "PostmanRuntime/7.28.0", "developer");
+        var requestInfo = new RequestInfo("127.0.0.1", "PostmanRuntime/7.28.0", "developer");
         assertEquals("127.0.0.1", requestInfo.getClientIp());
         assertEquals("PostmanRuntime/7.28.0", requestInfo.getUserAgent());
         assertEquals("developer", requestInfo.getPerformedBy());

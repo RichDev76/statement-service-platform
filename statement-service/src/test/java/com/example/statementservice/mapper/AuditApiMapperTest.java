@@ -27,14 +27,14 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toApi - should map all fields from DTO to API model")
     void toApi_AllFields() {
-        UUID id = UUID.randomUUID();
-        UUID statementId = UUID.randomUUID();
-        OffsetDateTime performedAt = OffsetDateTime.now();
-        Map<String, Object> details = new HashMap<>();
+        var id = UUID.randomUUID();
+        var statementId = UUID.randomUUID();
+        var performedAt = OffsetDateTime.now();
+        var details = new HashMap<String, Object>();
         details.put("key1", "value1");
         details.put("key2", 123);
 
-        AuditLogDto dto = new AuditLogDto();
+        var dto = new AuditLogDto();
         dto.setId(id);
         dto.setAccountNumber("ACC123456");
         dto.setStatementId(statementId);
@@ -44,7 +44,7 @@ class AuditApiMapperTest {
         dto.setUserAgent("Mozilla/5.0");
         dto.setDetails(details);
 
-        AuditLogEntry result = auditApiMapper.toApi(dto);
+        var result = auditApiMapper.toApi(dto);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(id);
@@ -63,7 +63,7 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toApi - should handle null DTO")
     void toApi_NullDto() {
-        AuditLogEntry result = auditApiMapper.toApi(null);
+        var result = auditApiMapper.toApi(null);
 
         assertThat(result).isNull();
     }
@@ -71,11 +71,11 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toApi - should handle DTO with null fields")
     void toApi_NullFields() {
-        AuditLogDto dto = new AuditLogDto();
+        var dto = new AuditLogDto();
         dto.setId(UUID.randomUUID());
         dto.setAction("TEST_ACTION");
 
-        AuditLogEntry result = auditApiMapper.toApi(dto);
+        var result = auditApiMapper.toApi(dto);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isNotNull();
@@ -93,12 +93,12 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toApi - should handle empty details map")
     void toApi_EmptyDetails() {
-        AuditLogDto dto = new AuditLogDto();
+        var dto = new AuditLogDto();
         dto.setId(UUID.randomUUID());
         dto.setAction("TEST_ACTION");
         dto.setDetails(new HashMap<>());
 
-        AuditLogEntry result = auditApiMapper.toApi(dto);
+        var result = auditApiMapper.toApi(dto);
 
         assertThat(result).isNotNull();
         assertThat(result.getDetails()).isEmpty();
@@ -107,13 +107,13 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toApi - should map performedAt to timestamp")
     void toApi_TimestampMapping() {
-        OffsetDateTime now = OffsetDateTime.now();
-        AuditLogDto dto = new AuditLogDto();
+        var now = OffsetDateTime.now();
+        var dto = new AuditLogDto();
         dto.setId(UUID.randomUUID());
         dto.setAction("TEST_ACTION");
         dto.setPerformedAt(now);
 
-        AuditLogEntry result = auditApiMapper.toApi(dto);
+        var result = auditApiMapper.toApi(dto);
 
         assertThat(result.getTimestamp())
                 .isEqualTo(
@@ -123,12 +123,12 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toPage - should map list of DTOs to page with content")
     void toPage_WithContent() {
-        AuditLogDto dto1 = createAuditLogDto("ACTION1", "ACC1");
-        AuditLogDto dto2 = createAuditLogDto("ACTION2", "ACC2");
-        AuditLogDto dto3 = createAuditLogDto("ACTION3", "ACC3");
-        List<AuditLogDto> dtos = Arrays.asList(dto1, dto2, dto3);
+        var dto1 = createAuditLogDto("ACTION1", "ACC1");
+        var dto2 = createAuditLogDto("ACTION2", "ACC2");
+        var dto3 = createAuditLogDto("ACTION3", "ACC3");
+        var dtos = Arrays.asList(dto1, dto2, dto3);
 
-        AuditLogPage result = auditApiMapper.toPage(dtos);
+        var result = auditApiMapper.toPage(dtos);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(3);
@@ -140,7 +140,7 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toPage - should handle null list")
     void toPage_NullList() {
-        AuditLogPage result = auditApiMapper.toPage(null);
+        var result = auditApiMapper.toPage(null);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).isEmpty();
@@ -151,7 +151,7 @@ class AuditApiMapperTest {
     void toPage_EmptyList() {
         List<AuditLogDto> emptyList = Collections.emptyList();
 
-        AuditLogPage result = auditApiMapper.toPage(emptyList);
+        var result = auditApiMapper.toPage(emptyList);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).isEmpty();
@@ -161,10 +161,10 @@ class AuditApiMapperTest {
     @DisplayName("toPage - should handle single item list")
     void toPage_SingleItem() {
 
-        AuditLogDto dto = createAuditLogDto("SINGLE_ACTION", "ACC123");
+        var dto = createAuditLogDto("SINGLE_ACTION", "ACC123");
         List<AuditLogDto> dtos = Collections.singletonList(dto);
 
-        AuditLogPage result = auditApiMapper.toPage(dtos);
+        var result = auditApiMapper.toPage(dtos);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
@@ -175,12 +175,12 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toPage - should handle large list")
     void toPage_LargeList() {
-        List<AuditLogDto> dtos = new ArrayList<>();
+        var dtos = new ArrayList<AuditLogDto>();
         for (int i = 0; i < 100; i++) {
             dtos.add(createAuditLogDto("ACTION" + i, "ACC" + i));
         }
 
-        AuditLogPage result = auditApiMapper.toPage(dtos);
+        var result = auditApiMapper.toPage(dtos);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(100);
@@ -189,12 +189,12 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toPage - should preserve all DTO properties in mapped entries")
     void toPage_PreservesAllProperties() {
-        UUID id = UUID.randomUUID();
-        UUID statementId = UUID.randomUUID();
-        OffsetDateTime timestamp = OffsetDateTime.now();
+        var id = UUID.randomUUID();
+        var statementId = UUID.randomUUID();
+        var timestamp = OffsetDateTime.now();
         Map<String, Object> details = Collections.singletonMap("reason", "test");
 
-        AuditLogDto dto = new AuditLogDto();
+        var dto = new AuditLogDto();
         dto.setId(id);
         dto.setAccountNumber("ACC999");
         dto.setStatementId(statementId);
@@ -206,7 +206,7 @@ class AuditApiMapperTest {
 
         List<AuditLogDto> dtos = Collections.singletonList(dto);
 
-        AuditLogPage result = auditApiMapper.toPage(dtos);
+        var result = auditApiMapper.toPage(dtos);
 
         assertThat(result.getContent()).hasSize(1);
         AuditLogEntry entry = result.getContent().get(0);
@@ -226,10 +226,10 @@ class AuditApiMapperTest {
     @Test
     @DisplayName("toPage - should handle list with null elements")
     void toPage_WithNullElements() {
-        AuditLogDto dto1 = createAuditLogDto("ACTION1", "ACC1");
+        var dto1 = createAuditLogDto("ACTION1", "ACC1");
         List<AuditLogDto> dtos = Arrays.asList(dto1, null, createAuditLogDto("ACTION2", "ACC2"));
 
-        AuditLogPage result = auditApiMapper.toPage(dtos);
+        var result = auditApiMapper.toPage(dtos);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(3);
@@ -242,19 +242,19 @@ class AuditApiMapperTest {
     @DisplayName("toApi - should handle complex details map")
     void toApi_ComplexDetails() {
 
-        Map<String, Object> complexDetails = new HashMap<>();
+        var complexDetails = new HashMap<String, Object>();
         complexDetails.put("string", "value");
         complexDetails.put("number", 42);
         complexDetails.put("boolean", true);
         complexDetails.put("nested", Collections.singletonMap("key", "value"));
         complexDetails.put("list", Arrays.asList(1, 2, 3));
 
-        AuditLogDto dto = new AuditLogDto();
+        var dto = new AuditLogDto();
         dto.setId(UUID.randomUUID());
         dto.setAction("COMPLEX_ACTION");
         dto.setDetails(complexDetails);
 
-        AuditLogEntry result = auditApiMapper.toApi(dto);
+        var result = auditApiMapper.toApi(dto);
 
         assertThat(result.getDetails()).isEqualTo(complexDetails);
         assertThat(result.getDetails().get("string")).isEqualTo("value");
@@ -263,7 +263,7 @@ class AuditApiMapperTest {
     }
 
     private AuditLogDto createAuditLogDto(String action, String accountNumber) {
-        AuditLogDto dto = new AuditLogDto();
+        var dto = new AuditLogDto();
         dto.setId(UUID.randomUUID());
         dto.setAction(action);
         dto.setAccountNumber(accountNumber);

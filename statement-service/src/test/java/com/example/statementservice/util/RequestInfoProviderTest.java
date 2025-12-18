@@ -64,7 +64,7 @@ class RequestInfoProviderTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("john.doe");
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertEquals("192.168.1.100", result.getClientIp());
         assertEquals("Mozilla/5.0", result.getUserAgent());
@@ -81,7 +81,7 @@ class RequestInfoProviderTest {
         when(SecurityContextHolder.getContext()).thenReturn(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(false);
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertEquals("10.0.0.5", result.getClientIp());
         assertEquals("Chrome/90.0", result.getUserAgent());
@@ -97,7 +97,7 @@ class RequestInfoProviderTest {
         when(request.getHeader("User-Agent")).thenReturn("Safari/14.0");
         when(SecurityContextHolder.getContext()).thenReturn(securityContext);
         when(securityContext.getAuthentication()).thenReturn(null);
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertEquals("172.16.0.1", result.getClientIp());
         assertEquals("Safari/14.0", result.getUserAgent());
@@ -112,7 +112,7 @@ class RequestInfoProviderTest {
         when(request.getRemoteAddr()).thenReturn("192.168.0.50");
         when(request.getHeader("User-Agent")).thenReturn("Edge/91.0");
         when(SecurityContextHolder.getContext()).thenReturn(null);
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertEquals("192.168.0.50", result.getClientIp());
         assertEquals("Edge/91.0", result.getUserAgent());
@@ -127,7 +127,7 @@ class RequestInfoProviderTest {
         when(request.getRemoteAddr()).thenReturn("192.168.10.20");
         when(request.getHeader("User-Agent")).thenReturn("Firefox/89.0");
         when(SecurityContextHolder.getContext()).thenThrow(new RuntimeException("Auth error"));
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertEquals("192.168.10.20", result.getClientIp());
         assertEquals("Firefox/89.0", result.getUserAgent());
@@ -142,7 +142,7 @@ class RequestInfoProviderTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("admin");
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertEquals("unknown", result.getClientIp());
         assertEquals("unknown", result.getUserAgent());
@@ -158,7 +158,7 @@ class RequestInfoProviderTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("testuser");
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertEquals("unknown", result.getClientIp());
         assertEquals("unknown", result.getUserAgent());
@@ -176,7 +176,7 @@ class RequestInfoProviderTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("apiuser");
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertEquals("127.0.0.1", result.getClientIp());
         assertNull(result.getUserAgent()); // Returns null when header is null but request is not
@@ -194,7 +194,7 @@ class RequestInfoProviderTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("service-account");
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertNull(result.getClientIp()); // Returns null when remote address is null but request is not
         assertEquals("Postman/7.0", result.getUserAgent());
@@ -206,7 +206,7 @@ class RequestInfoProviderTest {
     void testGet_AllNullValues() {
         when(RequestContextHolder.getRequestAttributes()).thenReturn(null);
         when(SecurityContextHolder.getContext()).thenReturn(null);
-        RequestInfo result = requestInfoProvider.get();
+        var result = requestInfoProvider.get();
         assertNotNull(result);
         assertEquals("unknown", result.getClientIp());
         assertEquals("unknown", result.getUserAgent());

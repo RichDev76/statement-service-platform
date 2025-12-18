@@ -44,7 +44,7 @@ class ValidationUtilTest {
 
     @BeforeEach
     void setUp() {
-        byte[] pdfContent = new byte[] {0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34}; // %PDF-1.4
+        var pdfContent = new byte[] {0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34}; // %PDF-1.4
         validPdfFile = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfContent);
         validAccountNumber = "123456789";
         validDate = "2024-01-15";
@@ -129,8 +129,8 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validateMessageDigest - should be case insensitive for hex comparison")
     void validateMessageDigest_CaseInsensitive() {
-        String upperCaseDigest = "ABCDEF0123456789".repeat(4);
-        String lowerCaseDigest = "abcdef0123456789".repeat(4);
+        var upperCaseDigest = "ABCDEF0123456789".repeat(4);
+        var lowerCaseDigest = "abcdef0123456789".repeat(4);
         when(encryptionService.computeSha256Hex(validPdfFile)).thenReturn(lowerCaseDigest);
         assertThatCode(() -> validationUtil.validateMessageDigest(validPdfFile, upperCaseDigest))
                 .doesNotThrowAnyException();
@@ -154,7 +154,7 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validateFileNotEmpty - should throw exception for empty file")
     void validateFileNotEmpty_Empty() {
-        MultipartFile emptyFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
+        var emptyFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
         assertThatThrownBy(() -> validationUtil.validateFileNotEmpty(emptyFile))
                 .isInstanceOf(MissingFileException.class)
                 .hasMessageContaining("file is required");
@@ -170,7 +170,7 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validateCorrectContentType - should throw exception for wrong content type")
     void validateCorrectContentType_Wrong() {
-        MultipartFile wrongTypeFile = new MockMultipartFile("file", "test.txt", "text/plain", "content".getBytes());
+        var wrongTypeFile = new MockMultipartFile("file", "test.txt", "text/plain", "content".getBytes());
         assertThatThrownBy(() -> validationUtil.validateCorrectContentType(wrongTypeFile))
                 .isInstanceOf(UnsupportedContentTypeException.class)
                 .hasMessageContaining("Unsupported Media Type");
@@ -179,7 +179,7 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validateCorrectContentType - should throw exception for null content type")
     void validateCorrectContentType_Null() {
-        MultipartFile nullTypeFile = new MockMultipartFile("file", "test.pdf", null, "content".getBytes());
+        var nullTypeFile = new MockMultipartFile("file", "test.pdf", null, "content".getBytes());
 
         assertThatThrownBy(() -> validationUtil.validateCorrectContentType(nullTypeFile))
                 .isInstanceOf(UnsupportedContentTypeException.class)
@@ -332,7 +332,7 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validatePdfMagicNumber - should throw exception for non-PDF file")
     void validatePdfMagicNumber_NotPdf() {
-        MultipartFile nonPdfFile =
+        var nonPdfFile =
                 new MockMultipartFile("file", "test.txt", "text/plain", "This is not a PDF".getBytes());
         assertThatThrownBy(() -> validationUtil.validatePdfMagicNumber(nonPdfFile))
                 .isInstanceOf(PdfValidationException.class)
@@ -342,7 +342,7 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validatePdfMagicNumber - should throw exception for file too small")
     void validatePdfMagicNumber_TooSmall() {
-        MultipartFile smallFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {0x25, 0x50});
+        var smallFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {0x25, 0x50});
         assertThatThrownBy(() -> validationUtil.validatePdfMagicNumber(smallFile))
                 .isInstanceOf(PdfValidationException.class)
                 .hasMessageContaining("File is too small to be a valid PDF");
@@ -351,7 +351,7 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validatePdfMagicNumber - should throw exception for empty file")
     void validatePdfMagicNumber_Empty() {
-        MultipartFile emptyFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
+        var emptyFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
         assertThatThrownBy(() -> validationUtil.validatePdfMagicNumber(emptyFile))
                 .isInstanceOf(PdfValidationException.class)
                 .hasMessageContaining("File is too small to be a valid PDF");
@@ -360,7 +360,7 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validatePdfMagicNumber - should throw exception for IOException")
     void validatePdfMagicNumber_IOException() throws IOException {
-        MultipartFile mockFile = mock(MultipartFile.class);
+        var mockFile = mock(MultipartFile.class);
         when(mockFile.getInputStream()).thenThrow(new IOException("IO error"));
         assertThatThrownBy(() -> validationUtil.validatePdfMagicNumber(mockFile))
                 .isInstanceOf(PdfValidationException.class)
@@ -370,8 +370,8 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validatePdfMagicNumber - should throw exception for wrong first byte")
     void validatePdfMagicNumber_WrongFirstByte() {
-        byte[] wrongMagic = new byte[] {0x00, 0x50, 0x44, 0x46};
-        MultipartFile wrongFile = new MockMultipartFile("file", "test.pdf", "application/pdf", wrongMagic);
+        var wrongMagic = new byte[] {0x00, 0x50, 0x44, 0x46};
+        var wrongFile = new MockMultipartFile("file", "test.pdf", "application/pdf", wrongMagic);
         assertThatThrownBy(() -> validationUtil.validatePdfMagicNumber(wrongFile))
                 .isInstanceOf(PdfValidationException.class)
                 .hasMessageContaining("File is not a valid PDF");
@@ -380,8 +380,8 @@ class ValidationUtilTest {
     @Test
     @DisplayName("validatePdfMagicNumber - should throw exception for wrong last byte")
     void validatePdfMagicNumber_WrongLastByte() {
-        byte[] wrongMagic = new byte[] {0x25, 0x50, 0x44, 0x00};
-        MultipartFile wrongFile = new MockMultipartFile("file", "test.pdf", "application/pdf", wrongMagic);
+        var wrongMagic = new byte[] {0x25, 0x50, 0x44, 0x00};
+        var wrongFile = new MockMultipartFile("file", "test.pdf", "application/pdf", wrongMagic);
         assertThatThrownBy(() -> validationUtil.validatePdfMagicNumber(wrongFile))
                 .isInstanceOf(PdfValidationException.class)
                 .hasMessageContaining("File is not a valid PDF");

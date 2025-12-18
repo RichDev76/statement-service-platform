@@ -39,7 +39,7 @@ class DownloadResponseFactoryTest {
     @DisplayName("Should build OK response with proper headers and body")
     void testBuild_OkOutcome() {
         byte[] testData = "PDF content".getBytes();
-        InputStream inputStream = new ByteArrayInputStream(testData);
+        var inputStream = new ByteArrayInputStream(testData);
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(inputStream));
         ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);
@@ -47,7 +47,7 @@ class DownloadResponseFactoryTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody() instanceof InputStreamResource);
-        HttpHeaders headers = response.getHeaders();
+        var headers = response.getHeaders();
         assertEquals(MediaType.APPLICATION_OCTET_STREAM, headers.getContentType());
         assertNotNull(headers.getContentDisposition());
         assertTrue(headers.getContentDisposition().toString().contains(fileName));
@@ -107,8 +107,8 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should handle OK outcome with different file names")
     void testBuild_OkOutcome_DifferentFileNames() {
-        String customFileName = "annual-report-2024.pdf";
-        InputStream inputStream = new ByteArrayInputStream("test".getBytes());
+        var customFileName = "annual-report-2024.pdf";
+        var inputStream = new ByteArrayInputStream("test".getBytes());
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(inputStream));
         ResponseEntity<Resource> response = downloadResponseFactory.build(customFileName, result);
@@ -121,8 +121,8 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should handle OK outcome with file name containing special characters")
     void testBuild_OkOutcome_SpecialCharactersInFileName() {
-        String specialFileName = "statement-2023-01 (copy).pdf";
-        InputStream inputStream = new ByteArrayInputStream("data".getBytes());
+        var specialFileName = "statement-2023-01 (copy).pdf";
+        var inputStream = new ByteArrayInputStream("data".getBytes());
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(inputStream));
         ResponseEntity<Resource> response = downloadResponseFactory.build(specialFileName, result);
@@ -135,15 +135,15 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should verify all required security headers are set for OK outcome")
     void testBuild_OkOutcome_SecurityHeaders() {
-        InputStream inputStream = new ByteArrayInputStream("secure content".getBytes());
+        var inputStream = new ByteArrayInputStream("secure content".getBytes());
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(inputStream));
         ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);
         assertNotNull(response);
-        HttpHeaders headers = response.getHeaders();
+        var headers = response.getHeaders();
         assertEquals("no-store, no-cache, must-revalidate", headers.getCacheControl());
         assertEquals("no-cache", headers.getFirst("Pragma"));
-        String contentDisposition = headers.getContentDisposition().toString();
+        var contentDisposition = headers.getContentDisposition().toString();
         assertTrue(contentDisposition.contains("attachment"));
         assertTrue(contentDisposition.contains(fileName));
     }
@@ -151,7 +151,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should handle empty input stream for OK outcome")
     void testBuild_OkOutcome_EmptyInputStream() {
-        InputStream emptyInputStream = new ByteArrayInputStream(new byte[0]);
+        var emptyInputStream = new ByteArrayInputStream(new byte[0]);
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(emptyInputStream));
         ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);
@@ -164,7 +164,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should set correct content type for OK outcome")
     void testBuild_OkOutcome_ContentType() {
-        InputStream inputStream = new ByteArrayInputStream("content".getBytes());
+        var inputStream = new ByteArrayInputStream("content".getBytes());
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(inputStream));
         ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);

@@ -25,7 +25,7 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("example.com");
         when(request.getServerPort()).thenReturn(80);
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, null);
+        var result = CommonUtil.buildProblemDetailTypeURI(request, null);
         assertNotNull(result);
         assertEquals("http://example.com", result.toString());
     }
@@ -36,7 +36,7 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("https");
         when(request.getServerName()).thenReturn("example.com");
         when(request.getServerPort()).thenReturn(443);
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, null);
+        var result = CommonUtil.buildProblemDetailTypeURI(request, null);
         assertNotNull(result);
         assertEquals("https://example.com", result.toString());
     }
@@ -47,7 +47,7 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("example.com");
         when(request.getServerPort()).thenReturn(8080);
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, null);
+        var result = CommonUtil.buildProblemDetailTypeURI(request, null);
         assertNotNull(result);
         assertEquals("http://example.com:8080", result.toString());
     }
@@ -58,7 +58,7 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("https");
         when(request.getServerName()).thenReturn("example.com");
         when(request.getServerPort()).thenReturn(8443);
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, null);
+        var result = CommonUtil.buildProblemDetailTypeURI(request, null);
         assertNotNull(result);
         assertEquals("https://example.com:8443", result.toString());
     }
@@ -69,8 +69,8 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("example.com");
         when(request.getServerPort()).thenReturn(80);
-        String contextPath = "/api/v1";
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, contextPath);
+        var contextPath = "/api/v1";
+        var result = CommonUtil.buildProblemDetailTypeURI(request, contextPath);
         assertNotNull(result);
         assertEquals("http://example.com/api/v1", result.toString());
     }
@@ -81,8 +81,8 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("https");
         when(request.getServerName()).thenReturn("api.example.com");
         when(request.getServerPort()).thenReturn(9443);
-        String contextPath = "/statement-service";
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, contextPath);
+        var contextPath = "/statement-service";
+        var result = CommonUtil.buildProblemDetailTypeURI(request, contextPath);
         assertNotNull(result);
         assertEquals("https://api.example.com:9443/statement-service", result.toString());
     }
@@ -93,8 +93,8 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(8080);
-        String contextPath = "";
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, contextPath);
+        var contextPath = "";
+        var result = CommonUtil.buildProblemDetailTypeURI(request, contextPath);
         assertNotNull(result);
         assertEquals("http://localhost:8080", result.toString());
     }
@@ -105,7 +105,7 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("localhost");
         when(request.getServerPort()).thenReturn(80);
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, null);
+        var result = CommonUtil.buildProblemDetailTypeURI(request, null);
         assertNotNull(result);
         assertEquals("http://localhost", result.toString());
     }
@@ -116,7 +116,7 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("http");
         when(request.getServerName()).thenReturn("192.168.1.100");
         when(request.getServerPort()).thenReturn(8080);
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, null);
+        var result = CommonUtil.buildProblemDetailTypeURI(request, null);
         assertNotNull(result);
         assertEquals("http://192.168.1.100:8080", result.toString());
     }
@@ -127,7 +127,7 @@ class CommonUtilTest {
         when(request.getScheme()).thenReturn("https");
         when(request.getServerName()).thenReturn("api.dev.example.com");
         when(request.getServerPort()).thenReturn(443);
-        URI result = CommonUtil.buildProblemDetailTypeURI(request, "/errors");
+        var result = CommonUtil.buildProblemDetailTypeURI(request, "/errors");
         assertNotNull(result);
         assertEquals("https://api.dev.example.com/errors", result.toString());
     }
