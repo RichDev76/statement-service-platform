@@ -29,4 +29,8 @@ public class LinkValidationResult {
     public static LinkValidationResult valid(SignedLink link) {
         return new LinkValidationResult(link, true, null);
     }
+
+    public static LinkValidationResult invalidSignature(SignedLink link) {
+        return new LinkValidationResult(link, false, ValidationFailureReason.INVALID_SIGNATURE);
+    }
 }

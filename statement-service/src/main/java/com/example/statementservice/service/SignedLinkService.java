@@ -8,12 +8,14 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SignedLinkService {
@@ -65,7 +67,7 @@ public class SignedLinkService {
     }
 
     @Transactional
-    public LinkValidationResult validateAndConsume(String token) {
+    public LinkValidationResult validateAndConsume(String token, Long expiresFromUrl) {
         var optionalSignedLink = signedLinkRepository.findByToken(token);
 
         if (optionalSignedLink.isEmpty()) {
@@ -74,17 +76,22 @@ public class SignedLinkService {
 
         var link = optionalSignedLink.get();
 
+        if (expiresFromUrl == null || link.getExpiresAt().toEpochSecond() != expiresFromUrl) {
+            log.warn("Expires mismatch - URL: {}, stored: {}", expiresFromUrl, link.getExpiresAt().toEpochSecond());
+            return LinkValidationResult.invalidSignature(link);
+        }
+
         if (link.isUsed()) {
             return LinkValidationResult.used(link);
         }
 
         if (link.getExpiresAt().isBefore(OffsetDateTime.now())) {
+            log.info("Link expired at: {}", link.getExpiresAt());
             return LinkValidationResult.expired(link);
         }
 
         if (link.isSingleUse()) {
             int updated = signedLinkRepository.consumeSingleUse(token);
-
             if (updated == 0) {
                 return LinkValidationResult.used(link);
             }

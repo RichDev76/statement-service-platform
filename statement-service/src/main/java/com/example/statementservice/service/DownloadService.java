@@ -35,11 +35,11 @@ public class DownloadService {
     private final AuditService auditService;
 
     public DownloadStreamResult validateAndStreamDetailed(
-            String token, String clientIp, String userAgent, String performedBy) {
+            String token, Long expires, String clientIp, String userAgent, String performedBy) {
         log.debug("Download request (detailed) - token: {}, ip: {}, user: {}", maskToken(token), clientIp, performedBy);
 
         // Step 1: Validate link
-        var result = signedLinkService.validateAndConsume(token);
+        var result = signedLinkService.validateAndConsume(token, expires);
         if (!result.isValid()) {
             handleInvalidLink(result, token, clientIp, userAgent, performedBy);
             var outcome = getDownloadOutcome(result);

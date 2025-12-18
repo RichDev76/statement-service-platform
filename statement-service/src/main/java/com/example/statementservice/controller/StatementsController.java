@@ -36,7 +36,7 @@ public class StatementsController implements StatementsApi {
         log.info("downloadStatementByFileName - fileName: {}", fileName);
         var requestInfo = requestInfoProvider.get();
         var result = downloadService.validateAndStreamDetailed(
-                signature, requestInfo.getClientIp(), requestInfo.getUserAgent(), requestInfo.getPerformedBy());
+                signature, expires, requestInfo.getClientIp(), requestInfo.getUserAgent(), requestInfo.getPerformedBy());
         return downloadResponseFactory.build(fileName, result);
     }
 

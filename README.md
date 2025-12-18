@@ -60,6 +60,14 @@ KEYCLOAK_ADMIN_CLIENT_SECRET=<your-admin-client-secret>
 KEYCLOAK_CONSUMER_CLIENT=statement-service-consumer-client
 KEYCLOAK_CONSUMER_CLIENT_SECRET=<your-consumer-client-secret>
 
+KEYCLOAK_REDIRECT_URI=http://localhost:8081/*
+KEYCLOAK_WEB_ORIGIN=http://localhost:8081
+KEYCLOAK_SSL_REQUIRED=none
+KEYCLOAK_ACCESS_TOKEN_LIFESPAN=3600
+KEYCLOAK_SSO_SESSION_IDLE_TIMEOUT=4200
+KEYCLOAK_SSO_SESSION_MAX_LIFESPAN=4200
+KEYCLOAK_CLIENT_TOKEN_LIFESPAN=3600
+
 # PostgreSQL Superuser
 POSTGRES_DB=postgres
 POSTGRES_USER=postgres
@@ -78,6 +86,7 @@ STATEMENT_SIGNATURE_SECRET=<your-signature-secret>
 ```aiignore
 Sample command to use if you want to generate master key and/or signature secret : 
 openssl rand -base64 32
+openssl rand -hex 32
 
 ```
 #### Step 2: Initial Bootstrap (First Time Only)
@@ -176,6 +185,17 @@ export APP_DB_PASSWORD=<your-app-db-password>
 export STATEMENT_STORAGE_DIR=/tmp/statement-files
 export STATEMENT_MASTER_KEY=<32-byte-hex-key>
 export STATEMENT_SIGNATURE_SECRET=<your-signature-secret>
+export KEYCLOAK_ADMIN_CLIENT=statement-service-admin-client
+export KEYCLOAK_ADMIN_CLIENT_SECRET=<your-admin-client-secret>
+export KEYCLOAK_CONSUMER_CLIENT=statement-service-consumer-client
+export KEYCLOAK_CONSUMER_CLIENT_SECRET=<your-consumer-client-secret>
+export KEYCLOAK_REDIRECT_URI=http://localhost:8081/*
+export KEYCLOAK_WEB_ORIGIN=http://localhost:8081
+export KEYCLOAK_SSL_REQUIRED=none
+export KEYCLOAK_ACCESS_TOKEN_LIFESPAN=3600
+export KEYCLOAK_SSO_SESSION_IDLE_TIMEOUT=4200
+export KEYCLOAK_SSO_SESSION_MAX_LIFESPAN=4200
+export KEYCLOAK_CLIENT_TOKEN_LIFESPAN=3600
 ```
 
 Create the storage directory:

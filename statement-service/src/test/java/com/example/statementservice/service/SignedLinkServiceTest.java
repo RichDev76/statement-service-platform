@@ -9,6 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.statementservice.model.ValidationFailureReason;
 import com.example.statementservice.model.entity.SignedLink;
 import com.example.statementservice.repository.SignedLinkRepository;
 import com.example.statementservice.util.SignatureUtil;
@@ -119,7 +120,7 @@ class SignedLinkServiceTest {
         var link = createTestLink(true, false, OffsetDateTime.now().plusMinutes(10));
         when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(link));
         when(signedLinkRepository.consumeSingleUse(testToken)).thenAnswer(invocation -> 1);
-        var result = signedLinkService.validateAndConsume(testToken);
+        var result = signedLinkService.validateAndConsume(testToken, link.getExpiresAt().toEpochSecond());
         assertThat(result.isValid()).isTrue();
         assertThat(result.getLink()).isEqualTo(link);
         assertThat(result.getFailureReason()).isNull();
@@ -131,7 +132,7 @@ class SignedLinkServiceTest {
     void validateAndConsume_ValidMultiUse() {
         var link = createTestLink(false, false, OffsetDateTime.now().plusMinutes(10));
         when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(link));
-        var result = signedLinkService.validateAndConsume(testToken);
+        var result = signedLinkService.validateAndConsume(testToken, link.getExpiresAt().toEpochSecond());
         assertThat(result.isValid()).isTrue();
         assertThat(result.getLink()).isEqualTo(link);
         verify(signedLinkRepository, never()).save(any());
@@ -141,7 +142,7 @@ class SignedLinkServiceTest {
     @DisplayName("validateAndConsume - should return not found for non-existent token")
     void validateAndConsume_NotFound() {
         when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.empty());
-        var result = signedLinkService.validateAndConsume(testToken);
+        var result = signedLinkService.validateAndConsume(testToken, 1234567890L);
         assertThat(result.isValid()).isFalse();
         assertThat(result.getLink()).isNull();
         assertThat(result.getFailureReason()).isNotNull();
@@ -153,7 +154,7 @@ class SignedLinkServiceTest {
     void validateAndConsume_AlreadyUsed() {
         var link = createTestLink(true, true, OffsetDateTime.now().plusMinutes(10));
         when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(link));
-        var result = signedLinkService.validateAndConsume(testToken);
+        var result = signedLinkService.validateAndConsume(testToken, link.getExpiresAt().toEpochSecond());
         assertThat(result.isValid()).isFalse();
         assertThat(result.getLink()).isEqualTo(link);
         assertThat(result.getFailureReason()).isNotNull();
@@ -165,7 +166,7 @@ class SignedLinkServiceTest {
     void validateAndConsume_Expired() {
         var link = createTestLink(true, false, OffsetDateTime.now().minusMinutes(10));
         when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(link));
-        var result = signedLinkService.validateAndConsume(testToken);
+        var result = signedLinkService.validateAndConsume(testToken, link.getExpiresAt().toEpochSecond());
         assertThat(result.isValid()).isFalse();
         assertThat(result.getLink()).isEqualTo(link);
         assertThat(result.getFailureReason()).isNotNull();
@@ -177,7 +178,7 @@ class SignedLinkServiceTest {
     void validateAndConsume_ExpiringNow() {
         var link = createTestLink(true, false, OffsetDateTime.now().minusSeconds(1));
         when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(link));
-        var result = signedLinkService.validateAndConsume(testToken);
+        var result = signedLinkService.validateAndConsume(testToken, link.getExpiresAt().toEpochSecond());
         assertThat(result.isValid()).isFalse();
         verify(signedLinkRepository, never()).save(any());
     }
@@ -187,7 +188,7 @@ class SignedLinkServiceTest {
     void validateAndConsume_OnlySingleUseMarked() {
         var multiUseLink = createTestLink(false, false, OffsetDateTime.now().plusMinutes(10));
         when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(multiUseLink));
-        var result = signedLinkService.validateAndConsume(testToken);
+        var result = signedLinkService.validateAndConsume(testToken, multiUseLink.getExpiresAt().toEpochSecond());
         assertThat(result.isValid()).isTrue();
         verify(signedLinkRepository, never()).save(any());
     }
@@ -197,7 +198,7 @@ class SignedLinkServiceTest {
     void validateAndConsume_ExpiredNotMarkedUsed() {
         var link = createTestLink(true, false, OffsetDateTime.now().minusHours(1));
         when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(link));
-        var result = signedLinkService.validateAndConsume(testToken);
+        var result = signedLinkService.validateAndConsume(testToken, link.getExpiresAt().toEpochSecond());
         assertThat(result.isValid()).isFalse();
         verify(signedLinkRepository, never()).save(any());
     }
@@ -207,8 +208,31 @@ class SignedLinkServiceTest {
     void validateAndConsume_UsesPessimisticLocking() {
         var link = createTestLink(true, false, OffsetDateTime.now().plusMinutes(10));
         when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(link));
-        signedLinkService.validateAndConsume(testToken);
+        when(signedLinkRepository.consumeSingleUse(testToken)).thenReturn(1);
+        signedLinkService.validateAndConsume(testToken, link.getExpiresAt().toEpochSecond());
         verify(signedLinkRepository).findByToken(testToken);
+    }
+
+    @Test
+    @DisplayName("validateAndConsume - should return invalid signature when expires mismatch")
+    void validateAndConsume_ExpiresMismatch() {
+        var link = createTestLink(true, false, OffsetDateTime.now().plusMinutes(10));
+        when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(link));
+        // Pass a different expires value than what's stored
+        var result = signedLinkService.validateAndConsume(testToken, link.getExpiresAt().toEpochSecond() + 3600);
+        assertThat(result.isValid()).isFalse();
+        assertThat(result.getFailureReason()).isEqualTo(ValidationFailureReason.INVALID_SIGNATURE);
+        verify(signedLinkRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("validateAndConsume - should return invalid signature when expires is null")
+    void validateAndConsume_ExpiresNull() {
+        var link = createTestLink(true, false, OffsetDateTime.now().plusMinutes(10));
+        when(signedLinkRepository.findByToken(testToken)).thenReturn(Optional.of(link));
+        var result = signedLinkService.validateAndConsume(testToken, null);
+        assertThat(result.isValid()).isFalse();
+        assertThat(result.getFailureReason()).isEqualTo(ValidationFailureReason.INVALID_SIGNATURE);
     }
 
     private SignedLink createTestLink(boolean singleUse, boolean used, OffsetDateTime expiresAt) {

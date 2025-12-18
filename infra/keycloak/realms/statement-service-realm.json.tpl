@@ -1,54 +1,34 @@
 {
   "realm": "statement-service",
   "enabled": true,
-  "sslRequired": "none",
-  "accessTokenLifespan": 3600,
-  "accessTokenLifespanForImplicitFlow": 3600,
-  "ssoSessionIdleTimeout": 4200,
-  "ssoSessionMaxLifespan": 4200,
+  "sslRequired": "${KEYCLOAK_SSL_REQUIRED:-none}",
+  "accessTokenLifespan": ${KEYCLOAK_ACCESS_TOKEN_LIFESPAN:-3600},
+  "accessTokenLifespanForImplicitFlow": ${KEYCLOAK_ACCESS_TOKEN_LIFESPAN:-3600},
+  "ssoSessionIdleTimeout": ${KEYCLOAK_SSO_SESSION_IDLE_TIMEOUT:-4200},
+  "ssoSessionMaxLifespan": ${KEYCLOAK_SSO_SESSION_MAX_LIFESPAN:-4200},
   "roles": {
     "realm": [
-      {
-        "name": "Search",
-        "description": "Role allowing search of statements"
-      },
-      {
-        "name": "Upload",
-        "description": "Role allowing uploads of statements"
-      },
-      {
-        "name": "GenerateSignedLink",
-        "description": "Role allowing creation of signed download links"
-      },
-      {
-        "name": "AuditLogsSearch",
-        "description": "Role allowing audit log searching"
-      }
+      { "name": "Search", "description": "Role allowing search of statements" },
+      { "name": "Upload", "description": "Role allowing uploads of statements" },
+      { "name": "GenerateSignedLink", "description": "Role allowing creation of signed download links" },
+      { "name": "AuditLogsSearch", "description": "Role allowing audit log searching" }
     ]
   },
   "groups": [
     {
       "name": "Admin",
       "path": "/Admin",
-      "realmRoles": [
-        "Search",
-        "Upload",
-        "GenerateSignedLink",
-        "AuditLogsSearch"
-      ]
+      "realmRoles": ["Search", "Upload", "GenerateSignedLink", "AuditLogsSearch"]
     },
     {
       "name": "StatementConsumer",
       "path": "/StatementConsumer",
-      "realmRoles": [
-        "Search",
-        "GenerateSignedLink"
-      ]
+      "realmRoles": ["Search", "GenerateSignedLink"]
     }
   ],
   "clients": [
     {
-      "clientId": "statement-service-admin-client",
+      "clientId": "${KEYCLOAK_ADMIN_CLIENT}",
       "name": "Statement Service Admin Client",
       "description": "Machine-to-machine administrative client using only client_credentials",
       "enabled": true,
@@ -60,9 +40,9 @@
       "implicitFlowEnabled": false,
       "bearerOnly": false,
       "authorizationServicesEnabled": false,
-      "secret": "*",
-      "redirectUris": ["http://localhost:8081/*"],
-      "webOrigins": ["http://localhost:8081"],
+      "secret": "${KEYCLOAK_ADMIN_CLIENT_SECRET}",
+      "redirectUris": ["${KEYCLOAK_REDIRECT_URI:-http://localhost:8081/*}"],
+      "webOrigins": ["${KEYCLOAK_WEB_ORIGIN:-http://localhost:8081}"],
       "protocolMappers": [
         {
           "name": "realm-role-mapper",
@@ -81,11 +61,11 @@
       ],
       "attributes": {
         "client_credentials.use_refresh_token": "true",
-        "access.token.lifespan": "3600"
+        "access.token.lifespan": "${KEYCLOAK_CLIENT_TOKEN_LIFESPAN:-3600}"
       }
     },
     {
-      "clientId": "statement-service-consumer-client",
+      "clientId": "${KEYCLOAK_CONSUMER_CLIENT}",
       "name": "Statement Service Consumer Client",
       "description": "Machine-to-machine client using only client_credentials (StatementConsumer role set)",
       "enabled": true,
@@ -97,7 +77,7 @@
       "implicitFlowEnabled": false,
       "bearerOnly": false,
       "authorizationServicesEnabled": false,
-      "secret": "*",
+      "secret": "${KEYCLOAK_CONSUMER_CLIENT_SECRET}",
       "protocolMappers": [
         {
           "name": "realm-role-mapper",
@@ -116,26 +96,22 @@
       ],
       "attributes": {
         "client_credentials.use_refresh_token": "true",
-        "access.token.lifespan": "3600"
+        "access.token.lifespan": "${KEYCLOAK_CLIENT_TOKEN_LIFESPAN:-3600}"
       }
     }
   ],
   "users": [
     {
-      "username": "service-account-statement-service-admin-client",
+      "username": "service-account-${KEYCLOAK_ADMIN_CLIENT}",
       "enabled": true,
-      "serviceAccountClientId": "statement-service-admin-client",
-      "groups": [
-        "/Admin"
-      ]
+      "serviceAccountClientId": "${KEYCLOAK_ADMIN_CLIENT}",
+      "groups": ["/Admin"]
     },
     {
-      "username": "service-account-statement-service-consumer-client",
+      "username": "service-account-${KEYCLOAK_CONSUMER_CLIENT}",
       "enabled": true,
-      "serviceAccountClientId": "statement-service-consumer-client",
-      "groups": [
-        "/StatementConsumer"
-      ]
+      "serviceAccountClientId": "${KEYCLOAK_CONSUMER_CLIENT}",
+      "groups": ["/StatementConsumer"]
     }
   ]
 }

@@ -63,10 +63,18 @@
         KC_HEALTH_ENABLED: "true"
         KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
         KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+        # Template variables
+        KEYCLOAK_ADMIN_CLIENT: ${KEYCLOAK_ADMIN_CLIENT}
+        KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+        KEYCLOAK_CONSUMER_CLIENT: ${KEYCLOAK_CONSUMER_CLIENT}
+        KEYCLOAK_CONSUMER_CLIENT_SECRET: ${KEYCLOAK_CONSUMER_CLIENT_SECRET}
+        KEYCLOAK_REDIRECT_URI: ${KEYCLOAK_REDIRECT_URI:-http://localhost:8081/*}
+        KEYCLOAK_WEB_ORIGIN: ${KEYCLOAK_WEB_ORIGIN:-http://localhost:8081}
+        KEYCLOAK_SSL_REQUIRED: ${KEYCLOAK_SSL_REQUIRED:-none}
+        KEYCLOAK_ACCESS_TOKEN_LIFESPAN: ${KEYCLOAK_ACCESS_TOKEN_LIFESPAN:-3600}
       command: ["start-dev", "--import-realm"]
       volumes:
         - keycloak-data:/opt/keycloak/data
-        - ./keycloak/realms:/opt/keycloak/data/import:ro
       ports:
         - "8081:8080"
       healthcheck:

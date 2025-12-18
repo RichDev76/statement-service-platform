@@ -88,7 +88,7 @@ class StatementsControllerTest {
         ResponseEntity<Resource> expectedResponse = ResponseEntity.ok(resource);
 
         when(requestInfoProvider.get()).thenReturn(testRequestInfo);
-        when(downloadService.validateAndStreamDetailed(signature, "192.168.1.1", "Mozilla/5.0", "testUser"))
+        when(downloadService.validateAndStreamDetailed(signature, expires, "192.168.1.1", "Mozilla/5.0", "testUser"))
                 .thenReturn(successResult);
         when(downloadResponseFactory.build(fileName, successResult)).thenReturn(expectedResponse);
 
@@ -100,7 +100,7 @@ class StatementsControllerTest {
         assertThat(response.getBody()).isNotNull();
 
         verify(requestInfoProvider).get();
-        verify(downloadService).validateAndStreamDetailed(signature, "192.168.1.1", "Mozilla/5.0", "testUser");
+        verify(downloadService).validateAndStreamDetailed(signature, expires, "192.168.1.1", "Mozilla/5.0", "testUser");
         verify(downloadResponseFactory).build(fileName, successResult);
     }
 
@@ -117,7 +117,7 @@ class StatementsControllerTest {
                 ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 
         when(requestInfoProvider.get()).thenReturn(testRequestInfo);
-        when(downloadService.validateAndStreamDetailed(anyString(), anyString(), anyString(), anyString()))
+        when(downloadService.validateAndStreamDetailed(anyString(), anyLong(), anyString(), anyString(), anyString()))
                 .thenReturn(failureResult);
         when(downloadResponseFactory.build(fileName, failureResult)).thenReturn(forbiddenResponse);
 
@@ -142,7 +142,7 @@ class StatementsControllerTest {
                 ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
         when(requestInfoProvider.get()).thenReturn(testRequestInfo);
-        when(downloadService.validateAndStreamDetailed(anyString(), anyString(), anyString(), anyString()))
+        when(downloadService.validateAndStreamDetailed(anyString(), anyLong(), anyString(), anyString(), anyString()))
                 .thenReturn(expiredResult);
         when(downloadResponseFactory.build(fileName, expiredResult)).thenReturn(notFoundResponse);
 
@@ -166,14 +166,14 @@ class StatementsControllerTest {
                 DownloadOutcome.OK, Optional.of(new ByteArrayInputStream(new byte[0])));
 
         when(requestInfoProvider.get()).thenReturn(customRequestInfo);
-        when(downloadService.validateAndStreamDetailed(anyString(), anyString(), anyString(), anyString()))
+        when(downloadService.validateAndStreamDetailed(anyString(), anyLong(), anyString(), anyString(), anyString()))
                 .thenReturn(result);
         when(downloadResponseFactory.build(anyString(), any()))
                 .thenReturn(ResponseEntity.ok().build());
 
         statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
-        verify(downloadService).validateAndStreamDetailed(signature, "10.0.0.1", "Custom-Agent", "customUser");
+        verify(downloadService).validateAndStreamDetailed(signature, expires, "10.0.0.1", "Custom-Agent", "customUser");
     }
 
     @Test
@@ -188,14 +188,14 @@ class StatementsControllerTest {
                 DownloadOutcome.OK, Optional.of(new ByteArrayInputStream(new byte[0])));
 
         when(requestInfoProvider.get()).thenReturn(testRequestInfo);
-        when(downloadService.validateAndStreamDetailed(eq(signature), anyString(), anyString(), anyString()))
+        when(downloadService.validateAndStreamDetailed(eq(signature), anyLong(), anyString(), anyString(), anyString()))
                 .thenReturn(result);
         when(downloadResponseFactory.build(anyString(), any()))
                 .thenReturn(ResponseEntity.ok().build());
 
         statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
-        verify(downloadService).validateAndStreamDetailed(eq(signature), anyString(), anyString(), anyString());
+        verify(downloadService).validateAndStreamDetailed(eq(signature), anyLong(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -212,7 +212,7 @@ class StatementsControllerTest {
                 ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
         when(requestInfoProvider.get()).thenReturn(testRequestInfo);
-        when(downloadService.validateAndStreamDetailed(anyString(), anyString(), anyString(), anyString()))
+        when(downloadService.validateAndStreamDetailed(anyString(), anyLong(), anyString(), anyString(), anyString()))
                 .thenReturn(notFoundResult);
         when(downloadResponseFactory.build(fileName, notFoundResult)).thenReturn(notFoundResponse);
 
