@@ -15,7 +15,7 @@ The **Statement Service Platform** implements a robust, production‑grade archi
 ---
 
 ### High-Level Architecture Diagram
-![High-Level Architecture Diagram](docs/HighLevelArchitectureDiagram.svg)
+![High-Level Architecture Diagram](HighLevelArchitectureDiagram.svg)
 
 ---
 
