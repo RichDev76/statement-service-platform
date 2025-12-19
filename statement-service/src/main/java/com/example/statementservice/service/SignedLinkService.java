@@ -77,7 +77,10 @@ public class SignedLinkService {
         var link = optionalSignedLink.get();
 
         if (expiresFromUrl == null || link.getExpiresAt().toEpochSecond() != expiresFromUrl) {
-            log.warn("Expires mismatch - URL: {}, stored: {}", expiresFromUrl, link.getExpiresAt().toEpochSecond());
+            log.warn(
+                    "Expires mismatch - URL: {}, stored: {}",
+                    expiresFromUrl,
+                    link.getExpiresAt().toEpochSecond());
             return LinkValidationResult.invalidSignature(link);
         }
 

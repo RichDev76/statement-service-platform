@@ -48,7 +48,7 @@ class AuditServiceTest {
 
         testStatementId = UUID.randomUUID();
         testSignedLinkId = UUID.randomUUID();
-        testAccountNumber = "ACC123456";
+        testAccountNumber = "123456789";
         testAction = "DOWNLOAD_SUCCESS";
         testPerformedBy = "testUser";
         testDetails = new HashMap<>();

@@ -21,4 +21,18 @@ public interface StatementRepository extends JpaRepository<Statement, UUID> {
 
     @Query("SELECT s FROM Statement s WHERE s.accountNumber = :accountNumber ORDER BY s.statementDate DESC")
     Optional<List<Statement>> findAllByAccountNumber(@Param("accountNumber") String accountNumber);
+
+    @Query("SELECT s FROM Statement s WHERE s.accountNumber = :accountNumber "
+            + "AND (:startDate IS NULL OR s.statementDate >= :startDate) "
+            + "AND (:endDate IS NULL OR s.statementDate <= :endDate)")
+    Page<Statement> findByAccountNumberAndDateRange(
+            @Param("accountNumber") String accountNumber,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable);
+
+    @Query("SELECT s FROM Statement s WHERE " + "(:startDate IS NULL OR s.statementDate >= :startDate) "
+            + "AND (:endDate IS NULL OR s.statementDate <= :endDate)")
+    Page<Statement> findByDateRange(
+            @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, Pageable pageable);
 }

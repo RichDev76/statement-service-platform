@@ -1,9 +1,13 @@
 package com.example.statementservice.mapper;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.example.statementservice.model.api.StatementSummary;
 import com.example.statementservice.model.dto.StatementDto;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -13,11 +17,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-import org.springframework.test.util.ReflectionTestUtils;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("StatementApiMapper Tests")
 class StatementApiMapperTest {
@@ -38,7 +39,7 @@ class StatementApiMapperTest {
         var downloadLink = URI.create("https://example.com/download/statement.pdf");
         var dto = new StatementDto();
         dto.setStatementId(statementId);
-        dto.setAccountNumber("ACC123456");
+        dto.setAccountNumber("123456789");
         dto.setStatementDate(statementDate);
         dto.setUploadedAt(uploadedAt);
         dto.setFileSize(2048L);
@@ -47,7 +48,7 @@ class StatementApiMapperTest {
         var result = statementApiMapper.toApi(dto);
         assertThat(result).isNotNull();
         assertThat(result.getStatementId()).isEqualTo(statementId);
-        assertThat(result.getAccountNumber()).isEqualTo("ACC123456");
+        assertThat(result.getAccountNumber()).isEqualTo("123456789");
         assertThat(result.getDate()).isEqualTo("2024-01-15");
         assertThat(result.getUploadedAt())
                 .isEqualTo(uploadedAt
@@ -316,7 +317,7 @@ class StatementApiMapperTest {
     private StatementDto createStatementDto(LocalDate statementDate) {
         var dto = new StatementDto();
         dto.setStatementId(UUID.randomUUID());
-        dto.setAccountNumber("ACC123456");
+        dto.setAccountNumber("123456789");
         dto.setStatementDate(statementDate);
         dto.setUploadedAt(OffsetDateTime.now());
         dto.setFileSize(1024L);

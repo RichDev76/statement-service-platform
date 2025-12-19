@@ -24,8 +24,6 @@ For detailed information about the system architecture, components, and design d
     - Data protection and cryptography
     - Deployment and runtime architecture
 
-- **[High-Level Architecture Diagram](docs/HighLevelArchitectureDiagram.drawio)** - Visual representation of the system architecture (open with draw.io or diagrams.net)
-
 ---
 ### Prerequisites
 

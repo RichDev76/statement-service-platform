@@ -30,7 +30,7 @@ class StatementEntityMapperTest {
         var uploadedAt = OffsetDateTime.now();
         var entity = new Statement();
         entity.setId(id);
-        entity.setAccountNumber("ACC123456");
+        entity.setAccountNumber("123456789");
         entity.setStatementDate(statementDate);
         entity.setUploadFileName("statement.pdf");
         entity.setSizeBytes(2048L);
@@ -38,7 +38,7 @@ class StatementEntityMapperTest {
         var result = statementEntityMapper.toDto(entity);
         assertThat(result).isNotNull();
         assertThat(result.getStatementId()).isEqualTo(id);
-        assertThat(result.getAccountNumber()).isEqualTo("ACC123456");
+        assertThat(result.getAccountNumber()).isEqualTo("123456789");
         assertThat(result.getStatementDate()).isEqualTo(statementDate);
         assertThat(result.getFileName()).isEqualTo("statement.pdf");
         assertThat(result.getFileSize()).isEqualTo(2048L);

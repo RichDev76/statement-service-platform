@@ -6,7 +6,6 @@ import com.example.statementservice.exception.DecryptionFailedException;
 import com.example.statementservice.model.DownloadOutcome;
 import com.example.statementservice.service.DownloadService;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,7 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,11 +36,12 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should build OK response with proper headers and body")
     void testBuild_OkOutcome() {
-        byte[] testData = "PDF content".getBytes();
+
+        var testData = "PDF content".getBytes();
         var inputStream = new ByteArrayInputStream(testData);
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(inputStream));
-        ResponseEntity<Resource> response = downloadResponseFactory.build(fileName, result);
+        var response = downloadResponseFactory.build(fileName, result);
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -59,6 +58,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should throw DownloadInvalidSignatureException for INVALID_SIGNATURE outcome")
     void testBuild_InvalidSignatureOutcome() {
+
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.INVALID_SIGNATURE, Optional.empty());
         assertThrows(
@@ -69,6 +69,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should throw DownloadLinkExpiredException for LINK_EXPIRED_OR_USED outcome")
     void testBuild_LinkExpiredOrUsedOutcome() {
+
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.LINK_EXPIRED_OR_USED, Optional.empty());
         assertThrows(
@@ -79,6 +80,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should throw StatementNotFoundException for STATEMENT_NOT_FOUND outcome")
     void testBuild_StatementNotFoundOutcome() {
+
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.STATEMENT_NOT_FOUND, Optional.empty());
         assertThrows(
@@ -89,6 +91,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should throw DownloadFileMissingException for FILE_MISSING outcome")
     void testBuild_FileMissingOutcome() {
+
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.FILE_MISSING, Optional.empty());
         assertThrows(
@@ -99,6 +102,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should throw DecryptionFailedException for DECRYPTION_FAILED outcome")
     void testBuild_DecryptionFailedOutcome() {
+
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.DECRYPTION_FAILED, Optional.empty());
         assertThrows(DecryptionFailedException.class, () -> downloadResponseFactory.build(fileName, result));
@@ -107,6 +111,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should handle OK outcome with different file names")
     void testBuild_OkOutcome_DifferentFileNames() {
+
         var customFileName = "annual-report-2024.pdf";
         var inputStream = new ByteArrayInputStream("test".getBytes());
         DownloadService.DownloadStreamResult result =
@@ -121,6 +126,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should handle OK outcome with file name containing special characters")
     void testBuild_OkOutcome_SpecialCharactersInFileName() {
+
         var specialFileName = "statement-2023-01 (copy).pdf";
         var inputStream = new ByteArrayInputStream("data".getBytes());
         DownloadService.DownloadStreamResult result =
@@ -135,6 +141,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should verify all required security headers are set for OK outcome")
     void testBuild_OkOutcome_SecurityHeaders() {
+
         var inputStream = new ByteArrayInputStream("secure content".getBytes());
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(inputStream));
@@ -151,6 +158,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should handle empty input stream for OK outcome")
     void testBuild_OkOutcome_EmptyInputStream() {
+
         var emptyInputStream = new ByteArrayInputStream(new byte[0]);
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(emptyInputStream));
@@ -164,6 +172,7 @@ class DownloadResponseFactoryTest {
     @Test
     @DisplayName("Should set correct content type for OK outcome")
     void testBuild_OkOutcome_ContentType() {
+
         var inputStream = new ByteArrayInputStream("content".getBytes());
         DownloadService.DownloadStreamResult result =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(inputStream));

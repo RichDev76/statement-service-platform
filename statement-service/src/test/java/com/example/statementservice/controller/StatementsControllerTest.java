@@ -2,8 +2,14 @@ package com.example.statementservice.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.example.statementservice.exception.InvalidInputException;
 import com.example.statementservice.exception.StatementNotFoundException;
@@ -76,15 +82,16 @@ class StatementsControllerTest {
     @Test
     @DisplayName("downloadStatementByFileName - should return OK response with file content")
     void downloadStatementByFileName_Success() {
-        String fileName = "statement-2024-01.pdf";
-        Long expires = 1234567890L;
-        String signature = "test-signature";
 
-        InputStream testStream = new ByteArrayInputStream("test content".getBytes());
+        var fileName = "statement-2024-01.pdf";
+        var expires = 1234567890L;
+        var signature = "test-signature";
+
+        var testStream = new ByteArrayInputStream("test content".getBytes());
         DownloadService.DownloadStreamResult successResult =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.OK, Optional.of(testStream));
 
-        Resource resource = new InputStreamResource(testStream);
+        var resource = new InputStreamResource(testStream);
         ResponseEntity<Resource> expectedResponse = ResponseEntity.ok(resource);
 
         when(requestInfoProvider.get()).thenReturn(testRequestInfo);
@@ -92,7 +99,7 @@ class StatementsControllerTest {
                 .thenReturn(successResult);
         when(downloadResponseFactory.build(fileName, successResult)).thenReturn(expectedResponse);
 
-        ResponseEntity<Resource> response =
+        var response =
                 statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         assertThat(response).isNotNull();
@@ -107,9 +114,10 @@ class StatementsControllerTest {
     @Test
     @DisplayName("downloadStatementByFileName - should return FORBIDDEN for invalid signature")
     void downloadStatementByFileName_InvalidSignature() {
-        String fileName = "statement.pdf";
-        Long expires = 1234567890L;
-        String signature = "invalid-signature";
+
+        var fileName = "statement.pdf";
+        var expires = 1234567890L;
+        var signature = "invalid-signature";
 
         DownloadService.DownloadStreamResult failureResult =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.INVALID_SIGNATURE, Optional.empty());
@@ -121,7 +129,7 @@ class StatementsControllerTest {
                 .thenReturn(failureResult);
         when(downloadResponseFactory.build(fileName, failureResult)).thenReturn(forbiddenResponse);
 
-        ResponseEntity<Resource> response =
+        var response =
                 statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         assertThat(response).isNotNull();
@@ -132,9 +140,10 @@ class StatementsControllerTest {
     @Test
     @DisplayName("downloadStatementByFileName - should return NOT_FOUND for expired link")
     void downloadStatementByFileName_ExpiredLink() {
-        String fileName = "statement.pdf";
-        Long expires = 1234567890L;
-        String signature = "expired-signature";
+
+        var fileName = "statement.pdf";
+        var expires = 1234567890L;
+        var signature = "expired-signature";
 
         DownloadService.DownloadStreamResult expiredResult =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.LINK_EXPIRED_OR_USED, Optional.empty());
@@ -146,7 +155,7 @@ class StatementsControllerTest {
                 .thenReturn(expiredResult);
         when(downloadResponseFactory.build(fileName, expiredResult)).thenReturn(notFoundResponse);
 
-        ResponseEntity<Resource> response =
+        var response =
                 statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         assertThat(response).isNotNull();
@@ -157,11 +166,11 @@ class StatementsControllerTest {
     @DisplayName("downloadStatementByFileName - should use request info from provider")
     void downloadStatementByFileName_UsesRequestInfo() {
 
-        String fileName = "statement.pdf";
-        Long expires = 1234567890L;
-        String signature = "signature";
+        var fileName = "statement.pdf";
+        var expires = 1234567890L;
+        var signature = "signature";
 
-        RequestInfo customRequestInfo = new RequestInfo("10.0.0.1", "Custom-Agent", "customUser");
+        var customRequestInfo = new RequestInfo("10.0.0.1", "Custom-Agent", "customUser");
         DownloadService.DownloadStreamResult result = new DownloadService.DownloadStreamResult(
                 DownloadOutcome.OK, Optional.of(new ByteArrayInputStream(new byte[0])));
 
@@ -180,9 +189,9 @@ class StatementsControllerTest {
     @DisplayName("downloadStatementByFileName - should pass signature to download service")
     void downloadStatementByFileName_PassesSignature() {
 
-        String fileName = "statement.pdf";
-        Long expires = 1234567890L;
-        String signature = "specific-signature-value";
+        var fileName = "statement.pdf";
+        var expires = 1234567890L;
+        var signature = "specific-signature-value";
 
         DownloadService.DownloadStreamResult result = new DownloadService.DownloadStreamResult(
                 DownloadOutcome.OK, Optional.of(new ByteArrayInputStream(new byte[0])));
@@ -195,16 +204,17 @@ class StatementsControllerTest {
 
         statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
-        verify(downloadService).validateAndStreamDetailed(eq(signature), anyLong(), anyString(), anyString(), anyString());
+        verify(downloadService)
+                .validateAndStreamDetailed(eq(signature), anyLong(), anyString(), anyString(), anyString());
     }
 
     @Test
     @DisplayName("downloadStatementByFileName - should handle statement not found")
     void downloadStatementByFileName_StatementNotFound() {
 
-        String fileName = "statement.pdf";
-        Long expires = 1234567890L;
-        String signature = "signature";
+        var fileName = "statement.pdf";
+        var expires = 1234567890L;
+        var signature = "signature";
 
         DownloadService.DownloadStreamResult notFoundResult =
                 new DownloadService.DownloadStreamResult(DownloadOutcome.STATEMENT_NOT_FOUND, Optional.empty());
@@ -216,7 +226,7 @@ class StatementsControllerTest {
                 .thenReturn(notFoundResult);
         when(downloadResponseFactory.build(fileName, notFoundResult)).thenReturn(notFoundResponse);
 
-        ResponseEntity<Resource> response =
+        var response =
                 statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         assertThat(response).isNotNull();
@@ -260,14 +270,14 @@ class StatementsControllerTest {
     @DisplayName("getDownloadSignedLinkById - should pass correct statement ID to service")
     void getDownloadSignedLinkById_PassesCorrectId() {
 
-        UUID specificId = UUID.randomUUID();
-        StatementSummary summary = new StatementSummary();
+        var specificId = UUID.randomUUID();
+        var summary = new StatementSummary();
         summary.setStatementId(specificId);
 
         when(statementQueryService.getStatementSummaryWithSignedDownloadLinkById(specificId))
                 .thenReturn(Optional.of(summary));
 
-        ResponseEntity<StatementSummary> response = statementsController.getDownloadSignedLinkById(specificId, null);
+        var response = statementsController.getDownloadSignedLinkById(specificId, null);
 
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getStatementId()).isEqualTo(specificId);
@@ -292,98 +302,112 @@ class StatementsControllerTest {
     @DisplayName("searchStatements - should return OK with results when account number provided")
     void searchStatements_WithAccountNumber() {
 
-        String accountNumber = "123456789";
-        when(statementQueryService.searchPaged(accountNumber, null, null, null, null))
+        var accountNumber = "123456789";
+        when(statementQueryService.searchPaged(accountNumber, null, null, null, null, null))
                 .thenReturn(testStatementSummaryPage);
 
-        ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(null, accountNumber, null, null, null, null);
+        var response =
+                statementsController.searchStatements(null, accountNumber, null, null, null, null, null);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody()).isEqualTo(testStatementSummaryPage);
-
-        verify(statementQueryService).searchPaged(accountNumber, null, null, null, null);
+        verify(statementQueryService).searchPaged(accountNumber, null, null, null, null, null);
     }
 
     @Test
-    @DisplayName("searchStatements - should return OK with results when date provided")
-    void searchStatements_WithDate() {
+    @DisplayName("searchStatements - should return OK with results when startDate provided")
+    void searchStatements_WithStartDate() {
 
-        String date = "2024-01-15";
-        when(statementQueryService.searchPaged(null, date, null, null, null)).thenReturn(testStatementSummaryPage);
-
-        ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(null, null, date, null, null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(statementQueryService).searchPaged(null, date, null, null, null);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should return OK when both account number and date provided")
-    void searchStatements_WithBothAccountAndDate() {
-
-        String accountNumber = "123456789";
-        String date = "2024-01-15";
-        when(statementQueryService.searchPaged(accountNumber, date, null, null, null))
+        var startDate = "2024-01-15";
+        when(statementQueryService.searchPaged(null, startDate, null, null, null, null))
                 .thenReturn(testStatementSummaryPage);
 
-        ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(null, accountNumber, date, null, null, null);
+        var response =
+                statementsController.searchStatements(null, null, startDate, null, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(statementQueryService).searchPaged(accountNumber, date, null, null, null);
+        verify(statementQueryService).searchPaged(null, startDate, null, null, null, null);
     }
 
     @Test
-    @DisplayName("searchStatements - should throw InvalidInputException when neither account nor date provided")
-    void searchStatements_NeitherAccountNorDate() {
-        assertThatThrownBy(() -> statementsController.searchStatements(null, null, null, null, null, null))
+    @DisplayName("searchStatements - should return OK with results when endDate provided")
+    void searchStatements_WithEndDate() {
+
+        var endDate = "2024-01-31";
+        when(statementQueryService.searchPaged(null, null, endDate, null, null, null))
+                .thenReturn(testStatementSummaryPage);
+
+        var response =
+                statementsController.searchStatements(null, null, null, endDate, null, null, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(statementQueryService).searchPaged(null, null, endDate, null, null, null);
+    }
+
+    @Test
+    @DisplayName("searchStatements - should return OK when account number and date range provided")
+    void searchStatements_WithAccountAndDateRange() {
+
+        var accountNumber = "123456789";
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
+        when(statementQueryService.searchPaged(accountNumber, startDate, endDate, null, null, null))
+                .thenReturn(testStatementSummaryPage);
+
+        var response =
+                statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(statementQueryService).searchPaged(accountNumber, startDate, endDate, null, null, null);
+    }
+
+    @Test
+    @DisplayName("searchStatements - should throw InvalidInputException when no search criteria provided")
+    void searchStatements_NoCriteria() {
+
+        assertThatThrownBy(() -> statementsController.searchStatements(null, null, null, null, null, null, null))
                 .isInstanceOf(InvalidInputException.class)
-                .hasMessageContaining("At least one of accountNumber or date must be provided");
+                .hasMessageContaining("At least one of accountNumber, startDate, or endDate must be provided");
 
         verifyNoInteractions(statementQueryService);
     }
 
     @Test
-    @DisplayName("searchStatements - should throw InvalidInputException when both are blank strings")
-    void searchStatements_BothBlankStrings() {
-        assertThatThrownBy(() -> statementsController.searchStatements(null, "", "   ", null, null, null))
+    @DisplayName("searchStatements - should throw InvalidInputException when all are blank strings")
+    void searchStatements_AllBlankStrings() {
+
+        assertThatThrownBy(() -> statementsController.searchStatements(null, "", "   ", "  ", null, null, null))
                 .isInstanceOf(InvalidInputException.class)
-                .hasMessageContaining("At least one of accountNumber or date must be provided");
+                .hasMessageContaining("At least one of accountNumber, startDate, or endDate must be provided");
 
         verifyNoInteractions(statementQueryService);
     }
 
     @Test
-    @DisplayName("searchStatements - should accept blank account number if date is provided")
-    void searchStatements_BlankAccountWithDate() {
+    @DisplayName("searchStatements - should accept blank account number if startDate is provided")
+    void searchStatements_BlankAccountWithStartDate() {
 
-        String date = "2024-01-15";
-        when(statementQueryService.searchPaged(anyString(), eq(date), any(), any(), any()))
+        var startDate = "2024-01-15";
+        when(statementQueryService.searchPaged(anyString(), eq(startDate), any(), any(), any(), any()))
                 .thenReturn(testStatementSummaryPage);
 
-        ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(null, "", date, null, null, null);
+        var response = statementsController.searchStatements(null, "", startDate, null, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
-    @DisplayName("searchStatements - should accept blank date if account number is provided")
-    void searchStatements_BlankDateWithAccount() {
+    @DisplayName("searchStatements - should accept blank dates if account number is provided")
+    void searchStatements_BlankDatesWithAccount() {
 
-        String accountNumber = "123456789";
-        when(statementQueryService.searchPaged(eq(accountNumber), anyString(), any(), any(), any()))
+        var accountNumber = "123456789";
+        when(statementQueryService.searchPaged(eq(accountNumber), anyString(), anyString(), any(), any(), any()))
                 .thenReturn(testStatementSummaryPage);
 
-        ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(null, accountNumber, "   ", null, null, null);
+        var response =
+                statementsController.searchStatements(null, accountNumber, "   ", "  ", null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -393,78 +417,81 @@ class StatementsControllerTest {
     @DisplayName("searchStatements - should pass pagination parameters to service")
     void searchStatements_WithPagination() {
 
-        String accountNumber = "123456789";
-        Integer page = 1;
-        Integer size = 25;
-        when(statementQueryService.searchPaged(accountNumber, null, page, size, null))
+        var accountNumber = "123456789";
+        var page = 1;
+        var size = 25;
+        when(statementQueryService.searchPaged(accountNumber, null, null, page, size, null))
                 .thenReturn(testStatementSummaryPage);
 
-        statementsController.searchStatements(null, accountNumber, null, page, size, null);
+        statementsController.searchStatements(null, accountNumber, null, null, page, size, null);
 
-        verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), eq(page), eq(size), isNull());
+        verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), isNull(), eq(page), eq(size), isNull());
     }
 
     @Test
     @DisplayName("searchStatements - should pass sort parameter to service")
     void searchStatements_WithSort() {
 
-        String accountNumber = "123456789";
-        String sort = "uploadedAt:desc";
-        when(statementQueryService.searchPaged(accountNumber, null, null, null, sort))
+        var accountNumber = "123456789";
+        var sort = "uploadedAt:desc";
+        when(statementQueryService.searchPaged(accountNumber, null, null, null, null, sort))
                 .thenReturn(testStatementSummaryPage);
 
-        statementsController.searchStatements(null, accountNumber, null, null, null, sort);
+        statementsController.searchStatements(null, accountNumber, null, null, null, null, sort);
 
-        verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), isNull(), isNull(), eq(sort));
+        verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), isNull(), isNull(), isNull(), eq(sort));
     }
 
     @Test
     @DisplayName("searchStatements - should pass all parameters to service")
     void searchStatements_AllParameters() {
 
-        String accountNumber = "123456789";
-        String date = "2024-01-15";
-        Integer page = 2;
-        Integer size = 50;
-        String sort = "statementDate:asc";
+        var accountNumber = "123456789";
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
+        var page = 2;
+        var size = 50;
+        var sort = "statementDate:asc";
 
-        when(statementQueryService.searchPaged(accountNumber, date, page, size, sort))
+        when(statementQueryService.searchPaged(accountNumber, startDate, endDate, page, size, sort))
                 .thenReturn(testStatementSummaryPage);
 
-        statementsController.searchStatements(null, accountNumber, date, page, size, sort);
+        statementsController.searchStatements(null, accountNumber, startDate, endDate, page, size, sort);
 
-        verify(statementQueryService).searchPaged(eq(accountNumber), eq(date), eq(page), eq(size), eq(sort));
+        verify(statementQueryService)
+                .searchPaged(eq(accountNumber), eq(startDate), eq(endDate), eq(page), eq(size), eq(sort));
     }
 
     @Test
     @DisplayName("searchStatements - should propagate service exceptions")
     void searchStatements_ServiceException() {
 
-        String accountNumber = "123456789";
-        when(statementQueryService.searchPaged(anyString(), any(), any(), any(), any()))
+        var accountNumber = "123456789";
+        when(statementQueryService.searchPaged(anyString(), any(), any(), any(), any(), any()))
                 .thenThrow(new RuntimeException("Service error"));
 
-        assertThatThrownBy(() -> statementsController.searchStatements(null, accountNumber, null, null, null, null))
+        assertThatThrownBy(
+                        () -> statementsController.searchStatements(null, accountNumber, null, null, null, null, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
 
-        verify(statementQueryService).searchPaged(accountNumber, null, null, null, null);
+        verify(statementQueryService).searchPaged(accountNumber, null, null, null, null, null);
     }
 
     @Test
     @DisplayName("searchStatements - should handle empty result page")
     void searchStatements_EmptyResults() {
 
-        String accountNumber = "123456789";
-        StatementSummaryPage emptyPage = new StatementSummaryPage();
+        var accountNumber = "123456789";
+        var emptyPage = new StatementSummaryPage();
         emptyPage.setContent(new ArrayList<>());
         emptyPage.setTotalElements(0L);
 
-        when(statementQueryService.searchPaged(accountNumber, null, null, null, null))
+        when(statementQueryService.searchPaged(accountNumber, null, null, null, null, null))
                 .thenReturn(emptyPage);
 
-        ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(null, accountNumber, null, null, null, null);
+        var response =
+                statementsController.searchStatements(null, accountNumber, null, null, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -477,21 +504,70 @@ class StatementsControllerTest {
     @DisplayName("searchStatements - should handle large result sets")
     void searchStatements_LargeResults() {
 
-        String accountNumber = "123456789";
-        StatementSummaryPage largePage = new StatementSummaryPage();
+        var accountNumber = "123456789";
+        var largePage = new StatementSummaryPage();
         largePage.setContent(new ArrayList<>());
         largePage.setTotalElements(1000L);
         largePage.setTotalPages(20);
 
-        when(statementQueryService.searchPaged(accountNumber, null, null, null, null))
+        when(statementQueryService.searchPaged(accountNumber, null, null, null, null, null))
                 .thenReturn(largePage);
 
-        ResponseEntity<StatementSummaryPage> response =
-                statementsController.searchStatements(null, accountNumber, null, null, null, null);
+        var response =
+                statementsController.searchStatements(null, accountNumber, null, null, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getTotalElements()).isEqualTo(1000L);
         assertThat(response.getBody().getTotalPages()).isEqualTo(20);
+    }
+
+    @Test
+    @DisplayName("searchStatements - should return OK with date range only")
+    void searchStatements_WithDateRangeOnly() {
+
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
+        when(statementQueryService.searchPaged(null, startDate, endDate, null, null, null))
+                .thenReturn(testStatementSummaryPage);
+
+        var response =
+                statementsController.searchStatements(null, null, startDate, endDate, null, null, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(statementQueryService).searchPaged(null, startDate, endDate, null, null, null);
+    }
+
+    @Test
+    @DisplayName("searchStatements - should accept only startDate without endDate")
+    void searchStatements_WithStartDateOnly() {
+
+        var startDate = "2024-01-01";
+        when(statementQueryService.searchPaged(null, startDate, null, null, null, null))
+                .thenReturn(testStatementSummaryPage);
+
+        var response =
+                statementsController.searchStatements(null, null, startDate, null, null, null, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(statementQueryService).searchPaged(null, startDate, null, null, null, null);
+    }
+
+    @Test
+    @DisplayName("searchStatements - should accept only endDate without startDate")
+    void searchStatements_WithEndDateOnly() {
+
+        var endDate = "2024-01-31";
+        when(statementQueryService.searchPaged(null, null, endDate, null, null, null))
+                .thenReturn(testStatementSummaryPage);
+
+        var response =
+                statementsController.searchStatements(null, null, null, endDate, null, null, null);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        verify(statementQueryService).searchPaged(null, null, endDate, null, null, null);
     }
 }

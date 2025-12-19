@@ -3,7 +3,6 @@ package com.example.statementservice.mapper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.statementservice.model.api.AuditLogEntry;
-import com.example.statementservice.model.api.AuditLogPage;
 import com.example.statementservice.model.dto.AuditLogDto;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -36,7 +35,7 @@ class AuditApiMapperTest {
 
         var dto = new AuditLogDto();
         dto.setId(id);
-        dto.setAccountNumber("ACC123456");
+        dto.setAccountNumber("123456789");
         dto.setStatementId(statementId);
         dto.setAction("DOWNLOAD_SUCCESS");
         dto.setPerformedAt(performedAt);
@@ -48,7 +47,7 @@ class AuditApiMapperTest {
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(id);
-        assertThat(result.getAccountNumber()).isEqualTo("ACC123456");
+        assertThat(result.getAccountNumber()).isEqualTo("123456789");
         assertThat(result.getStatementId()).isEqualTo(statementId);
         assertThat(result.getAction()).isEqualTo("DOWNLOAD_SUCCESS");
         assertThat(result.getTimestamp())

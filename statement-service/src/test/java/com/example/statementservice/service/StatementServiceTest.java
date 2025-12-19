@@ -69,7 +69,7 @@ class StatementServiceTest {
     @BeforeEach
     void setUp() {
         testId = UUID.randomUUID();
-        testAccountNumber = "ACC123456";
+        testAccountNumber = "123456789";
         testStatementDate = LocalDate.of(2024, 1, 1);
         testStatement = new Statement();
         testStatement.setId(testId);

@@ -1,5 +1,6 @@
 package com.example.statementservice.service;
 
+import com.example.statementservice.exception.InvalidInputException;
 import com.example.statementservice.exception.StatementNotFoundException;
 import com.example.statementservice.mapper.StatementApiMapper;
 import com.example.statementservice.model.api.StatementSummary;
@@ -104,7 +105,7 @@ public class StatementQueryService {
     }
 
     public StatementSummaryPage searchPaged(
-            String accountNumber, String date, Integer page, Integer size, String sort) {
+            String accountNumber, String startDate, String endDate, Integer page, Integer size, String sort) {
 
         int effectivePage = (page != null) ? page : DEFAULT_PAGE;
         int effectiveSize = (size != null) ? size : DEFAULT_SIZE;
@@ -115,16 +116,25 @@ public class StatementQueryService {
 
         var sortOrder = parseSort(sort);
 
-        if (accountNumber != null && date != null) {
-            var parsedDate = LocalDate.parse(date);
-            Optional<StatementDto> opt =
-                    this.statementService.getStatementDtoByAccountNumberAndStatementDate(accountNumber, parsedDate);
-            var content = opt.map(dto -> List.of(statementApiMapper.toBase(dto))).orElseGet(List::of);
-            long total = content.size();
-            int totalPages = (int) Math.ceil(total / (double) effectiveSize);
+        LocalDate parsedStartDate = (startDate != null && !startDate.isBlank()) ? LocalDate.parse(startDate) : null;
+        LocalDate parsedEndDate = (endDate != null && !endDate.isBlank()) ? LocalDate.parse(endDate) : null;
+
+        if (parsedStartDate != null && parsedEndDate != null && parsedStartDate.isAfter(parsedEndDate)) {
+            throw new InvalidInputException("startDate cannot be after endDate");
+        }
+
+        if (accountNumber != null && !accountNumber.isBlank()) {
+            var statements = this.statementService.getStatementsByAccountNumberAndDateRange(
+                    accountNumber,
+                    parsedStartDate,
+                    parsedEndDate,
+                    PageRequest.of(effectivePage, effectiveSize, sortOrder));
+            var content = statements
+                    .map(stmt -> statementApiMapper.toBase(statementService.toDto(stmt)))
+                    .getContent();
             result.setContent(content);
-            result.totalElements(total);
-            result.totalPages(totalPages);
+            result.totalElements(statements.getTotalElements());
+            result.totalPages(statements.getTotalPages());
             return result;
         }
 
@@ -132,8 +142,9 @@ public class StatementQueryService {
         if (accountNumber != null) {
             var statements = this.statementService.getStatementsByAccountNumber(
                     accountNumber, PageRequest.of(effectivePage, effectiveSize, sortOrder));
-            var content =
-                    statements.map(stmt -> statementApiMapper.toBase(statementService.toDto(stmt))).getContent();
+            var content = statements
+                    .map(stmt -> statementApiMapper.toBase(statementService.toDto(stmt)))
+                    .getContent();
             result.setContent(content);
             result.totalElements(statements.getTotalElements());
             result.totalPages(statements.getTotalPages());

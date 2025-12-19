@@ -100,6 +100,15 @@ public class StatementService {
                 .map(this::toDto);
     }
 
+    public Page<Statement> getStatementsByAccountNumberAndDateRange(
+            String accountNumber, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        return statementRepository.findByAccountNumberAndDateRange(accountNumber, startDate, endDate, pageable);
+    }
+
+    public Page<Statement> getStatementsByDateRange(LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        return statementRepository.findByDateRange(startDate, endDate, pageable);
+    }
+
     private Statement buildStatement(
             String accountNumber,
             LocalDate statementDate,

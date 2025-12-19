@@ -15,8 +15,10 @@ params:path {
 }
 
 headers {
+  x-correlation-id: {{$guid}}
   Accept: application/json
 }
+
 
 auth:bearer {
   token: {{ADMIN_ACCESS_TOKEN}}

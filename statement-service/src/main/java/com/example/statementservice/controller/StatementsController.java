@@ -36,7 +36,11 @@ public class StatementsController implements StatementsApi {
         log.info("downloadStatementByFileName - fileName: {}", fileName);
         var requestInfo = requestInfoProvider.get();
         var result = downloadService.validateAndStreamDetailed(
-                signature, expires, requestInfo.getClientIp(), requestInfo.getUserAgent(), requestInfo.getPerformedBy());
+                signature,
+                expires,
+                requestInfo.getClientIp(),
+                requestInfo.getUserAgent(),
+                requestInfo.getPerformedBy());
         return downloadResponseFactory.build(fileName, result);
     }
 
@@ -51,13 +55,22 @@ public class StatementsController implements StatementsApi {
 
     @Override
     public ResponseEntity<StatementSummaryPage> searchStatements(
-            String xCorrelationId, String accountNumber, String date, Integer page, Integer size, String sort) {
+            String xCorrelationId,
+            String accountNumber,
+            String startDate,
+            String endDate,
+            Integer page,
+            Integer size,
+            String sort) {
         var hasAccount = accountNumber != null && !accountNumber.isBlank();
-        var hasDate = date != null && !date.isBlank();
-        if (!hasAccount && !hasDate) {
-            throw new InvalidInputException("At least one of accountNumber or date must be provided");
+        var hasStartDate = startDate != null && !startDate.isBlank();
+        var hasEndDate = endDate != null && !endDate.isBlank();
+
+        if (!hasAccount && !hasStartDate && !hasEndDate) {
+            throw new InvalidInputException("At least one of accountNumber, startDate, or endDate must be provided");
         }
-        var pageResult = statementQueryService.searchPaged(accountNumber, date, page, size, sort);
+
+        var pageResult = statementQueryService.searchPaged(accountNumber, startDate, endDate, page, size, sort);
         return ResponseEntity.ok(pageResult);
     }
 }

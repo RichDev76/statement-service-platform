@@ -57,21 +57,21 @@ class AuditQueryServiceTest {
     void setUp() {
         testAuditLog = new AuditLog();
         testAuditLog.setId(UUID.randomUUID());
-        testAuditLog.setAccountNumber("ACC123456");
+        testAuditLog.setAccountNumber("123456789");
         testAuditLog.setAction("DOWNLOAD");
         testAuditLog.setPerformedAt(OffsetDateTime.now());
         testAuditLog.setPerformedBy("testUser");
 
         testAuditLogDto = new AuditLogDto();
         testAuditLogDto.setId(UUID.randomUUID());
-        testAuditLogDto.setAccountNumber("ACC123456");
+        testAuditLogDto.setAccountNumber("123456789");
         testAuditLogDto.setAction("DOWNLOAD");
     }
 
     @Test
     @DisplayName("getFilteredAuditLogs - should return paginated results with all filters")
     void getFilteredAuditLogs_AllFilters() {
-        String accountNumber = "ACC123456";
+        String accountNumber = "123456789";
         String startDate = "2024-01-01";
         String endDate = "2024-01-31";
         Integer page = 0;

@@ -50,6 +50,7 @@ CREATE TABLE shedlock
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_statements_account_date ON statements (account_number, statement_date);
+CREATE INDEX IF NOT EXISTS idx_statements_account_date_uploaded ON statements (account_number, statement_date, uploaded_at DESC);
 CREATE INDEX IF NOT EXISTS idx_signed_links_token ON signed_links (token);
 CREATE INDEX IF NOT EXISTS idx_signed_links_statement_id ON signed_links (statement_id);
 CREATE INDEX IF NOT EXISTS idx_signed_links_expires_at ON signed_links (expires_at);

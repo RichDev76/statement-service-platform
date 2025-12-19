@@ -12,11 +12,13 @@ get {
 
 params:query {
   accountNumber: 123456789
-  limit: 50
-  offset: 0
+  page: 0
+  size: 50
+  sort: uploadedAt,desc
 }
 
 headers {
+  x-correlation-id: {{$guid}}
   Accept: application/json
 }
 

@@ -2,8 +2,6 @@
 
 This document describes the architecture of the **Statement Service Platform**, focusing on the `statement-service` component that implements secure file statement delivery with time‑limited, signed download links and full auditing.
 
-The platform is designed as a **production‑grade**, cloud‑ready system with strong security, encryption at rest, auditability, and observability.
-
 ### Summary
 
 The **Statement Service Platform** implements a robust, production‑grade architecture for secure file statement delivery:
@@ -13,6 +11,11 @@ The **Statement Service Platform** implements a robust, production‑grade archi
 - **Comprehensive audit logging** of uploads, downloads, and link usage, enriched with client and user context.
 - **Strong security model** using Keycloak, JWT, role‑based authorisation, and careful file‑handling practices.
 - **Operational maturity** with distributed locking, logging aspects, correlation IDs, actuator endpoints, and a ready‑to‑run Docker image.
+
+---
+
+### High-Level Architecture Diagram
+![High-Level Architecture Diagram](docs/HighLevelArchitectureDiagram.svg)
 
 ---
 
@@ -56,7 +59,7 @@ The **Statement Service Platform** implements a robust, production‑grade archi
 
 - **Customer Portal / Downstream System**
     - Calls APIs to request **signed download links** for statements
-    - Uses JWT with appropriate role(s), typically `GenerateSignedLink` or `Download`
+    - Uses JWT with appropriate role(s), typically `GenerateSignedLink` or `Search`
 
 - **Operations & Security Teams**
     - Query **audit logs** for investigations and compliance
@@ -79,7 +82,7 @@ The **Statement Service Platform** implements a robust, production‑grade archi
     - Computes its own SHA‑256 digest and verifies it matches `X-Message-Digest`
     - Hashes the **account number** (for privacy) using SHA‑256
     - Encrypts the PDF using **AES‑GCM** via `EncryptionService`
-    - Stores encrypted bytes on disk or object store and saves metadata in Postgres
+    - Stores encrypted bytes on disk and saves metadata in Postgres
 4. `AuditService` records an `UPLOAD_SUCCESS` event with:
     - `statementId`, hashed `accountNumber`, `performedBy`, client IP, user agent, and extra details
 5. Response includes statement details (e.g. `statementId`, upload time, file metadata).
@@ -101,7 +104,7 @@ The **Statement Service Platform** implements a robust, production‑grade archi
     - Constructs a **download URL** like:
         - `/api/v1/statements/download/{fileName}?expires=<epochSeconds>&signature=<token>`
 4. The generated link is returned to the caller, which may send it to the customer.
-5. `AuditService` records link creation as part of the overall audit trail (depending on design).
+5. `AuditService` records link creation as part of the overall audit trail.
 
 #### 3. Download Statement via Signed Link
 
@@ -110,11 +113,11 @@ The **Statement Service Platform** implements a robust, production‑grade archi
     - This endpoint is whitelisted and does not require authentication (configured via `security.endpoints.whitelist`).
 2. `StatementsController` delegates to `DownloadService`, which invokes `SignedLinkService.validateAndConsume`:
     - Looks up `SignedLink` by token/signature
-    - Validates not **expired** (`expiresAt`) and not already `used` if `singleUse` is enabled
-    - Optionally marks link as `used` (for single-use)
+    - Validates not **expired** (`expiresAt`) and not already `used`
+    - Marks link as `used` (for single-use)
 3. If valid, `DownloadService`:
     - Retrieves associated statement metadata from Postgres
-    - Streams the **encrypted file** from disk/storage
+    - Streams the **encrypted file** from the storage location
     - Uses `EncryptionService` to decrypt on the fly (AES‑GCM, streaming)
     - Writes decrypted bytes to the HTTP response as `application/pdf`
 4. `AuditService` records:
@@ -134,7 +137,7 @@ The **Statement Service Platform** implements a robust, production‑grade archi
 1. `SignedLinkCleanupService` runs on a **cron schedule** defined in configuration.
 2. The job:
     - Generates a new **correlation ID** and puts it in MDC
-    - Uses `SignedLinkRepository` to delete expired or used links in **batches**
+    - Uses `SignedLinkRepository` to delete expired links in **batches**
     - Runs under a **ShedLock** distributed lock so only a single node processes cleanup in a cluster
 3. Logs the number of deleted rows at INFO level and clears MDC at the end.
 
@@ -196,8 +199,8 @@ The `statement-service` module follows a traditional **layered architecture**:
 - `POST /api/v1/statements/upload` → `ROLE_Upload`
 - `GET /api/v1/statements/audit/logs` → `ROLE_AuditLogsSearch`
 - `GET /api/v1/statements/search` → `ROLE_Search`
-- `GET /api/v1/statements/*/link` → `ROLE_GenerateSignedLink`
-- `GET /api/v1/statements/download/**` → Whitelisted (no authentication required)
+- `GET /api/v1/statements/link` → `ROLE_GenerateSignedLink`
+- `GET /api/v1/statements/download` → Whitelisted (no authentication required)
 
 Additional whitelisted endpoints (configured via `security.endpoints.whitelist`):
 - `/api/v1/statements/actuator/health/**` – health check endpoints
@@ -223,7 +226,7 @@ Unauthorized and forbidden errors are returned as **RFC 7807 ProblemDetail** JSO
 
 - Accepts **only PDFs**:
     - Checks `Content-Type` for `application/pdf`
-    - Optionally inspects file signature (magic bytes: `%PDF-`) to guard against spoofed MIME types
+    - Inspects file signature (magic bytes: `%PDF-`) to guard against spoofed MIME types
 - Enforces **maximum file size** using configuration properties and explicit checks.
 - **Filename sanitisation**:
     - Strips directory components and path separators
@@ -244,7 +247,7 @@ Unauthorized and forbidden errors are returned as **RFC 7807 ProblemDetail** JSO
     - Random **12‑byte IV** generated per file
     - IV stored as prefix in the encrypted file
     - 128‑bit authentication tag ensures integrity and authenticity
-- **Master key** is provided by `MasterKeyProvider`, typically backed by Vault.
+- **Master key** is provided by `MasterKeyProvider`, backed by Vault.
 - On download, `EncryptionService`:
     - Reads IV prefix
     - Initialises decryption cipher
@@ -265,7 +268,7 @@ Unauthorized and forbidden errors are returned as **RFC 7807 ProblemDetail** JSO
 
 #### Digests and Verification
 
-- `EncryptionService` (or related helper) computes `SHA-256` digests of uploaded files.
+- `EncryptionService` computes `SHA-256` digests of uploaded files.
 - The computed digest is compared with the client‑provided `X-Message-Digest` header to ensure integrity.
 
 ---
@@ -279,7 +282,7 @@ A `SignedLink` entity typically contains:
 - `id` – primary key (UUID)
 - `statementId` – foreign key to `Statement`
 - `token` – HMAC‑SHA256 signature computed from `{method}|{path}|{expires}` using a shared secret
-- `expiresAt` – expiration timestamp (UTC), default 900 seconds (15 minutes) from creation
+- `expiresAt` – expiration timestamp (UTC+2), default 900 seconds (15 minutes) from creation
 - `singleUse` – whether the link can be used only once (default: true)
 - `used` – whether the link has already been consumed
 - `createdAt` – creation timestamp
@@ -368,8 +371,8 @@ A `SignedLink` entity typically contains:
 
 - The service is packaged as a single **Spring Boot fat JAR**.
 - Docker uses a **multi‑stage build**:
-    - Stage 1 (build): `maven:3.9-eclipse-temurin-21` builds the `statement-service` module.
-    - Stage 2 (runtime): `eclipse-temurin:21-jre` runs the resulting JAR.
+    - Stage 1 (build): `maven:3.9-eclipse-temurin-25` builds the `statement-service` module.
+    - Stage 2 (runtime): `eclipse-temurin:25-jre` runs the resulting JAR.
 - Entrypoint scripts (`wait-for-config.sh`, `entrypoint.sh`) ensure the Config Server is available before starting the app.
 - The container exposes port **8080** and is configured via environment variables (profiles, Config Server URL, etc.).
 

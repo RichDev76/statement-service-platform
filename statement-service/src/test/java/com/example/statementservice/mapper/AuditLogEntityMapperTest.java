@@ -34,7 +34,7 @@ class AuditLogEntityMapperTest {
         details.put("extraKey", "extraValue");
         var entity = new AuditLog();
         entity.setId(id);
-        entity.setAccountNumber("ACC123456");
+        entity.setAccountNumber("123456789");
         entity.setStatementId(statementId);
         entity.setSignedLinkId(signedLinkId);
         entity.setAction("DOWNLOAD_FAILED");
@@ -44,7 +44,7 @@ class AuditLogEntityMapperTest {
         var result = auditLogEntityMapper.toDto(entity);
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(id);
-        assertThat(result.getAccountNumber()).isEqualTo("ACC123456");
+        assertThat(result.getAccountNumber()).isEqualTo("123456789");
         assertThat(result.getStatementId()).isEqualTo(statementId);
         assertThat(result.getAction()).isEqualTo("DOWNLOAD_FAILED");
         assertThat(result.getPerformedAt()).isEqualTo(performedAt);

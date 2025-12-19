@@ -9,8 +9,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 
-@Mapper(componentModel = "spring",
-    uses = {DateMapper.class})
+@Mapper(
+        componentModel = "spring",
+        uses = {DateMapper.class})
 public interface AuditApiMapper {
 
     @Mappings({
@@ -28,7 +29,7 @@ public interface AuditApiMapper {
     default AuditLogPage toPage(List<AuditLogDto> dtos) {
         var page = new AuditLogPage();
         page.setContent(
-            dtos == null ? List.of() : dtos.stream().map(this::toApi).collect(Collectors.toList()));
+                dtos == null ? List.of() : dtos.stream().map(this::toApi).collect(Collectors.toList()));
         return page;
     }
 }

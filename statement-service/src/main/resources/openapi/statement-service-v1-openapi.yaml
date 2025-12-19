@@ -41,7 +41,19 @@ paths:
         - name: X-Message-Digest
           in: header
           required: true
-          description: Hex-encoded message digest of the uploaded PDF file (SHA-256).
+          description: |
+            Hex-encoded SHA-256 message digest of the uploaded PDF file.
+            
+            **How to Generate:**
+            
+            **Command Line:**
+            ```bash
+            # Linux/macOS
+            sha256sum statement.pdf | awk '{print $1}'
+            
+            # Windows PowerShell
+            (Get-FileHash -Algorithm SHA256 statement.pdf).Hash.ToLower()
+            ```
           schema:
             type: string
             pattern: "^[A-Fa-f0-9]{64}$"
@@ -153,17 +165,18 @@ paths:
     get:
       tags:
         - Statements
-      summary: Search statements (paged) by account number and/or date
+      summary: Search statements (paged) by account number and/or date range
       description: >
         Return a paged list of statements filtered by optional criteria.
-        At least one of `accountNumber` or `date` should be provided.
+        At least one of `accountNumber`, `startDate`, or `endDate` should be provided.
         Results are ordered by `uploadedAt` descending by default.
         The list does not include download links.
       operationId: searchStatements
       parameters:
         - $ref: '#/components/parameters/correlationIdHeader'
         - $ref: '#/components/parameters/accountNumberSearchParam'
-        - $ref: '#/components/parameters/dateSearchParam'
+        - $ref: '#/components/parameters/startDateSearchParam'
+        - $ref: '#/components/parameters/endDateSearchParam'
         - $ref: '#/components/parameters/pageParam'
         - $ref: '#/components/parameters/sizeParam'
         - $ref: '#/components/parameters/sortParam'
@@ -390,17 +403,30 @@ components:
         pattern: "^\\d{4}-\\d{2}-\\d{2}$"
         example: "2025-11-01"
 
-    dateSearchParam:
-      name: date
+    startDateSearchParam:
+      name: startDate
       in: query
       required: false
       description: >
-        Statement date in YYYY-MM-DD format. Optional for search; can be
-        combined with `accountNumber`.
+        Start date for date range search in YYYY-MM-DD format. Optional for search;
+        can be combined with `accountNumber` and/or `endDate`.
       schema:
         type: string
         pattern: "^\\d{4}-\\d{2}-\\d{2}$"
         example: "2025-11-01"
+
+    endDateSearchParam:
+      name: endDate
+      in: query
+      required: false
+      description: >
+        End date for date range search in YYYY-MM-DD format. Optional for search;
+        can be combined with `accountNumber` and/or `startDate`.
+      schema:
+        type: string
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        example: "2025-11-30"
+
 
     pageParam:
       name: page
