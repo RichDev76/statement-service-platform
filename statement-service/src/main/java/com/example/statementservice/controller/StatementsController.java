@@ -54,10 +54,10 @@ public class StatementsController implements StatementsApi {
 
     @Override
     public ResponseEntity<StatementSummaryPage> searchStatements(
-            String xCorrelationId,
             String accountNumber,
             String startDate,
             String endDate,
+            String xCorrelationId,
             Integer page,
             Integer size,
             String sort) {

@@ -20,7 +20,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8081/realms/statement-service
+          jwk-set-uri: http://localhost:8081/realms/statement-service/protocol/openid-connect/certs
   datasource:
     url: jdbc:postgresql://localhost:5432/statementdb
     username: ${APP_DB_USER}
@@ -50,7 +50,7 @@ statement:
 logging:
   level:
     root: INFO
-    com.example.statementservice: DEBUG
+    com.example.statementservice: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{correlationId}] %logger{36} - %msg%n"
 

@@ -5,14 +5,14 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/download/:fileName?expires=1765286974&signature=z_6UW9iB1Per19FCX1rdAHKxlweBhifgWzolqG7cIMo
+  url: {{baseUrl}}/download/:fileName?expires=1766332525&signature=Ckje3PnDndpErqsIy5FeO6laUomo_-a0n_-0z640DZM
   body: none
-  auth: bearer
+  auth: none
 }
 
 params:query {
-  expires: 1765286974
-  signature: z_6UW9iB1Per19FCX1rdAHKxlweBhifgWzolqG7cIMo
+  expires: 1766332525
+  signature: Ckje3PnDndpErqsIy5FeO6laUomo_-a0n_-0z640DZM
 }
 
 params:path {
@@ -21,10 +21,6 @@ params:path {
 
 headers {
   Accept: application/octet-stream
-}
-
-auth:bearer {
-  token: {{CONSUMER_ACCESS_TOKEN}}
 }
 
 settings {
