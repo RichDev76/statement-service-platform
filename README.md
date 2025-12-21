@@ -266,8 +266,7 @@ curl -X POST "http://localhost:8080/api/v1/statements/upload" \
 #### Get a Signed Download Link
 
 ```bash
-curl -X GET "http://localhost:8080/api/v1/statements/link/$STATEMENT_ID" \
-  -H "Authorization: Bearer $TOKEN"
+curl -H "Authorization: Bearer $TOKEN" -X GET "http://localhost:8080/api/v1/statements/link/$STATEMENT_ID"
 ```
 
 #### Search Statements
@@ -275,8 +274,7 @@ curl -X GET "http://localhost:8080/api/v1/statements/link/$STATEMENT_ID" \
 Search for statements by account number and date range. All three parameters (`accountNumber`, `startDate`, `endDate`) are required.
 
 ```bash
-curl -X GET "http://localhost:8080/api/v1/statements/search?accountNumber=123456789&startDate=2025-01-01&endDate=2025-01-31" \
-  -H "Authorization: Bearer $TOKEN"
+curl -H "Authorization: Bearer $TOKEN" -X GET "http://localhost:8080/api/v1/statements/search?accountNumber=123456789&startDate=2025-01-01&endDate=2025-01-31"
 ```
 
 Optional pagination and sorting parameters:
@@ -287,8 +285,7 @@ Optional pagination and sorting parameters:
 #### Query Audit Logs
 
 ```bash
-curl -X GET "http://localhost:8080/api/v1/statements/audit/logs?page=0&size=20" \
-  -H "Authorization: Bearer $TOKEN"
+curl -H "Authorization: Bearer $TOKEN" -X GET "http://localhost:8080/api/v1/statements/audit/logs?accountNumber=123456789&startDate=2025-12-01&endDate=2025-12-30&page=0&size=20"
 ```
 
 ---
