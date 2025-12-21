@@ -8,10 +8,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.example.statementservice.exception.InvalidInputException;
 import com.example.statementservice.exception.StatementNotFoundException;
 import com.example.statementservice.model.DownloadOutcome;
 import com.example.statementservice.model.api.StatementSummary;
@@ -22,7 +20,6 @@ import com.example.statementservice.util.DownloadResponseFactory;
 import com.example.statementservice.util.RequestInfo;
 import com.example.statementservice.util.RequestInfoProvider;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
@@ -99,8 +96,7 @@ class StatementsControllerTest {
                 .thenReturn(successResult);
         when(downloadResponseFactory.build(fileName, successResult)).thenReturn(expectedResponse);
 
-        var response =
-                statementsController.downloadStatementByFileName(fileName, expires, signature, null);
+        var response = statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -129,8 +125,7 @@ class StatementsControllerTest {
                 .thenReturn(failureResult);
         when(downloadResponseFactory.build(fileName, failureResult)).thenReturn(forbiddenResponse);
 
-        var response =
-                statementsController.downloadStatementByFileName(fileName, expires, signature, null);
+        var response = statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -155,8 +150,7 @@ class StatementsControllerTest {
                 .thenReturn(expiredResult);
         when(downloadResponseFactory.build(fileName, expiredResult)).thenReturn(notFoundResponse);
 
-        var response =
-                statementsController.downloadStatementByFileName(fileName, expires, signature, null);
+        var response = statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -226,8 +220,7 @@ class StatementsControllerTest {
                 .thenReturn(notFoundResult);
         when(downloadResponseFactory.build(fileName, notFoundResult)).thenReturn(notFoundResponse);
 
-        var response =
-                statementsController.downloadStatementByFileName(fileName, expires, signature, null);
+        var response = statementsController.downloadStatementByFileName(fileName, expires, signature, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -299,54 +292,8 @@ class StatementsControllerTest {
     }
 
     @Test
-    @DisplayName("searchStatements - should return OK with results when account number provided")
-    void searchStatements_WithAccountNumber() {
-
-        var accountNumber = "123456789";
-        when(statementQueryService.searchPaged(accountNumber, null, null, null, null, null))
-                .thenReturn(testStatementSummaryPage);
-
-        var response =
-                statementsController.searchStatements(null, accountNumber, null, null, null, null, null);
-
-        verify(statementQueryService).searchPaged(accountNumber, null, null, null, null, null);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should return OK with results when startDate provided")
-    void searchStatements_WithStartDate() {
-
-        var startDate = "2024-01-15";
-        when(statementQueryService.searchPaged(null, startDate, null, null, null, null))
-                .thenReturn(testStatementSummaryPage);
-
-        var response =
-                statementsController.searchStatements(null, null, startDate, null, null, null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(statementQueryService).searchPaged(null, startDate, null, null, null, null);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should return OK with results when endDate provided")
-    void searchStatements_WithEndDate() {
-
-        var endDate = "2024-01-31";
-        when(statementQueryService.searchPaged(null, null, endDate, null, null, null))
-                .thenReturn(testStatementSummaryPage);
-
-        var response =
-                statementsController.searchStatements(null, null, null, endDate, null, null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(statementQueryService).searchPaged(null, null, endDate, null, null, null);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should return OK when account number and date range provided")
-    void searchStatements_WithAccountAndDateRange() {
+    @DisplayName("searchStatements - should return OK with results when all mandatory parameters provided")
+    void searchStatements_WithAllMandatoryParameters() {
 
         var accountNumber = "123456789";
         var startDate = "2024-01-01";
@@ -354,8 +301,7 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, startDate, endDate, null, null, null))
                 .thenReturn(testStatementSummaryPage);
 
-        var response =
-                statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, null);
+        var response = statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -363,69 +309,21 @@ class StatementsControllerTest {
     }
 
     @Test
-    @DisplayName("searchStatements - should throw InvalidInputException when no search criteria provided")
-    void searchStatements_NoCriteria() {
-
-        assertThatThrownBy(() -> statementsController.searchStatements(null, null, null, null, null, null, null))
-                .isInstanceOf(InvalidInputException.class)
-                .hasMessageContaining("At least one of accountNumber, startDate, or endDate must be provided");
-
-        verifyNoInteractions(statementQueryService);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should throw InvalidInputException when all are blank strings")
-    void searchStatements_AllBlankStrings() {
-
-        assertThatThrownBy(() -> statementsController.searchStatements(null, "", "   ", "  ", null, null, null))
-                .isInstanceOf(InvalidInputException.class)
-                .hasMessageContaining("At least one of accountNumber, startDate, or endDate must be provided");
-
-        verifyNoInteractions(statementQueryService);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should accept blank account number if startDate is provided")
-    void searchStatements_BlankAccountWithStartDate() {
-
-        var startDate = "2024-01-15";
-        when(statementQueryService.searchPaged(anyString(), eq(startDate), any(), any(), any(), any()))
-                .thenReturn(testStatementSummaryPage);
-
-        var response = statementsController.searchStatements(null, "", startDate, null, null, null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should accept blank dates if account number is provided")
-    void searchStatements_BlankDatesWithAccount() {
-
-        var accountNumber = "123456789";
-        when(statementQueryService.searchPaged(eq(accountNumber), anyString(), anyString(), any(), any(), any()))
-                .thenReturn(testStatementSummaryPage);
-
-        var response =
-                statementsController.searchStatements(null, accountNumber, "   ", "  ", null, null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    }
-
-    @Test
     @DisplayName("searchStatements - should pass pagination parameters to service")
     void searchStatements_WithPagination() {
 
         var accountNumber = "123456789";
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
         var page = 1;
         var size = 25;
-        when(statementQueryService.searchPaged(accountNumber, null, null, page, size, null))
+        when(statementQueryService.searchPaged(accountNumber, startDate, endDate, page, size, null))
                 .thenReturn(testStatementSummaryPage);
 
-        statementsController.searchStatements(null, accountNumber, null, null, page, size, null);
+        statementsController.searchStatements(null, accountNumber, startDate, endDate, page, size, null);
 
-        verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), isNull(), eq(page), eq(size), isNull());
+        verify(statementQueryService)
+                .searchPaged(eq(accountNumber), eq(startDate), eq(endDate), eq(page), eq(size), isNull());
     }
 
     @Test
@@ -433,13 +331,16 @@ class StatementsControllerTest {
     void searchStatements_WithSort() {
 
         var accountNumber = "123456789";
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
         var sort = "uploadedAt:desc";
-        when(statementQueryService.searchPaged(accountNumber, null, null, null, null, sort))
+        when(statementQueryService.searchPaged(accountNumber, startDate, endDate, null, null, sort))
                 .thenReturn(testStatementSummaryPage);
 
-        statementsController.searchStatements(null, accountNumber, null, null, null, null, sort);
+        statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, sort);
 
-        verify(statementQueryService).searchPaged(eq(accountNumber), isNull(), isNull(), isNull(), isNull(), eq(sort));
+        verify(statementQueryService)
+                .searchPaged(eq(accountNumber), eq(startDate), eq(endDate), isNull(), isNull(), eq(sort));
     }
 
     @Test
@@ -447,7 +348,7 @@ class StatementsControllerTest {
     void searchStatements_AllParameters() {
 
         var accountNumber = "123456789";
-        var startDate = "2024-01-01";
+        var startDate = "2024-01-15";
         var endDate = "2024-01-31";
         var page = 2;
         var size = 50;
@@ -467,15 +368,17 @@ class StatementsControllerTest {
     void searchStatements_ServiceException() {
 
         var accountNumber = "123456789";
-        when(statementQueryService.searchPaged(anyString(), any(), any(), any(), any(), any()))
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
+        when(statementQueryService.searchPaged(anyString(), anyString(), anyString(), any(), any(), any()))
                 .thenThrow(new RuntimeException("Service error"));
 
-        assertThatThrownBy(
-                        () -> statementsController.searchStatements(null, accountNumber, null, null, null, null, null))
+        assertThatThrownBy(() -> statementsController.searchStatements(
+                        null, accountNumber, startDate, endDate, null, null, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
 
-        verify(statementQueryService).searchPaged(accountNumber, null, null, null, null, null);
+        verify(statementQueryService).searchPaged(accountNumber, startDate, endDate, null, null, null);
     }
 
     @Test
@@ -483,15 +386,16 @@ class StatementsControllerTest {
     void searchStatements_EmptyResults() {
 
         var accountNumber = "123456789";
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
         var emptyPage = new StatementSummaryPage();
         emptyPage.setContent(new ArrayList<>());
         emptyPage.setTotalElements(0L);
 
-        when(statementQueryService.searchPaged(accountNumber, null, null, null, null, null))
+        when(statementQueryService.searchPaged(accountNumber, startDate, endDate, null, null, null))
                 .thenReturn(emptyPage);
 
-        var response =
-                statementsController.searchStatements(null, accountNumber, null, null, null, null, null);
+        var response = statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -505,69 +409,21 @@ class StatementsControllerTest {
     void searchStatements_LargeResults() {
 
         var accountNumber = "123456789";
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
         var largePage = new StatementSummaryPage();
         largePage.setContent(new ArrayList<>());
         largePage.setTotalElements(1000L);
         largePage.setTotalPages(20);
 
-        when(statementQueryService.searchPaged(accountNumber, null, null, null, null, null))
+        when(statementQueryService.searchPaged(accountNumber, startDate, endDate, null, null, null))
                 .thenReturn(largePage);
 
-        var response =
-                statementsController.searchStatements(null, accountNumber, null, null, null, null, null);
+        var response = statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getTotalElements()).isEqualTo(1000L);
         assertThat(response.getBody().getTotalPages()).isEqualTo(20);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should return OK with date range only")
-    void searchStatements_WithDateRangeOnly() {
-
-        var startDate = "2024-01-01";
-        var endDate = "2024-01-31";
-        when(statementQueryService.searchPaged(null, startDate, endDate, null, null, null))
-                .thenReturn(testStatementSummaryPage);
-
-        var response =
-                statementsController.searchStatements(null, null, startDate, endDate, null, null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(statementQueryService).searchPaged(null, startDate, endDate, null, null, null);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should accept only startDate without endDate")
-    void searchStatements_WithStartDateOnly() {
-
-        var startDate = "2024-01-01";
-        when(statementQueryService.searchPaged(null, startDate, null, null, null, null))
-                .thenReturn(testStatementSummaryPage);
-
-        var response =
-                statementsController.searchStatements(null, null, startDate, null, null, null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(statementQueryService).searchPaged(null, startDate, null, null, null, null);
-    }
-
-    @Test
-    @DisplayName("searchStatements - should accept only endDate without startDate")
-    void searchStatements_WithEndDateOnly() {
-
-        var endDate = "2024-01-31";
-        when(statementQueryService.searchPaged(null, null, endDate, null, null, null))
-                .thenReturn(testStatementSummaryPage);
-
-        var response =
-                statementsController.searchStatements(null, null, null, endDate, null, null, null);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(statementQueryService).searchPaged(null, null, endDate, null, null, null);
     }
 }

@@ -165,10 +165,10 @@ paths:
     get:
       tags:
         - Statements
-      summary: Search statements (paged) by account number and/or date range
+      summary: Search statements (paged) by account number and date range
       description: >
-        Return a paged list of statements filtered by optional criteria.
-        At least one of `accountNumber`, `startDate`, or `endDate` should be provided.
+        Return a paged list of statements filtered by mandatory criteria.
+        All of `accountNumber`, `startDate`, and `endDate` must be provided.
         Results are ordered by `uploadedAt` descending by default.
         The list does not include download links.
       operationId: searchStatements
@@ -384,32 +384,22 @@ components:
     accountNumberSearchParam:
       name: accountNumber
       in: query
-      required: false
+      required: true
       description: >
-        Customer account number (numeric, 9–15 digits). Optional for search;
-        can be combined with `date`.
+        Customer account number (numeric, 9–15 digits). Required for search;
+        must be combined with `startDate` and `endDate`.
       schema:
         type: string
         pattern: "^[0-9]{9,15}$"
         example: "123456789"
 
-    dateParam:
-      name: date
-      in: query
-      required: true
-      description: "Statement date in YYYY-MM-DD format."
-      schema:
-        type: string
-        pattern: "^\\d{4}-\\d{2}-\\d{2}$"
-        example: "2025-11-01"
-
     startDateSearchParam:
       name: startDate
       in: query
-      required: false
+      required: true
       description: >
-        Start date for date range search in YYYY-MM-DD format. Optional for search;
-        can be combined with `accountNumber` and/or `endDate`.
+        Start date for date range search in YYYY-MM-DD format. Required for search;
+        must be combined with `accountNumber` and `endDate`.
       schema:
         type: string
         pattern: "^\\d{4}-\\d{2}-\\d{2}$"
@@ -418,10 +408,10 @@ components:
     endDateSearchParam:
       name: endDate
       in: query
-      required: false
+      required: true
       description: >
-        End date for date range search in YYYY-MM-DD format. Optional for search;
-        can be combined with `accountNumber` and/or `startDate`.
+        End date for date range search in YYYY-MM-DD format. Required for search;
+        must be combined with `accountNumber` and `startDate`.
       schema:
         type: string
         pattern: "^\\d{4}-\\d{2}-\\d{2}$"

@@ -105,10 +105,6 @@ public class StatementService {
         return statementRepository.findByAccountNumberAndDateRange(accountNumber, startDate, endDate, pageable);
     }
 
-    public Page<Statement> getStatementsByDateRange(LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        return statementRepository.findByDateRange(startDate, endDate, pageable);
-    }
-
     private Statement buildStatement(
             String accountNumber,
             LocalDate statementDate,

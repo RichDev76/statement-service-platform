@@ -1,7 +1,6 @@
 package com.example.statementservice.controller;
 
 import com.example.statementservice.api.StatementsApi;
-import com.example.statementservice.exception.InvalidInputException;
 import com.example.statementservice.exception.StatementNotFoundException;
 import com.example.statementservice.model.api.StatementSummary;
 import com.example.statementservice.model.api.StatementSummaryPage;
@@ -62,13 +61,6 @@ public class StatementsController implements StatementsApi {
             Integer page,
             Integer size,
             String sort) {
-        var hasAccount = accountNumber != null && !accountNumber.isBlank();
-        var hasStartDate = startDate != null && !startDate.isBlank();
-        var hasEndDate = endDate != null && !endDate.isBlank();
-
-        if (!hasAccount && !hasStartDate && !hasEndDate) {
-            throw new InvalidInputException("At least one of accountNumber, startDate, or endDate must be provided");
-        }
 
         var pageResult = statementQueryService.searchPaged(accountNumber, startDate, endDate, page, size, sort);
         return ResponseEntity.ok(pageResult);

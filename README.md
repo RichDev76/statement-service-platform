@@ -78,13 +78,12 @@ APP_DB_PASSWORD=<your-app-db-password>
 
 # Statement Service
 STATEMENT_STORAGE_DIR=/app/data/files
-STATEMENT_MASTER_KEY=<32-byte-hex-key>
+STATEMENT_MASTER_KEY=<32-byte-key>
 STATEMENT_SIGNATURE_SECRET=<your-signature-secret>
 ```
 ```aiignore
 Sample command to use if you want to generate master key and/or signature secret : 
 openssl rand -base64 32
-openssl rand -hex 32
 
 ```
 #### Step 2: Initial Bootstrap (First Time Only)
@@ -181,19 +180,8 @@ Export the required environment variables for the Statement Service:
 export APP_DB_USER=statementuser
 export APP_DB_PASSWORD=<your-app-db-password>
 export STATEMENT_STORAGE_DIR=/tmp/statement-files
-export STATEMENT_MASTER_KEY=<32-byte-hex-key>
+export STATEMENT_MASTER_KEY=<32-byte-key>
 export STATEMENT_SIGNATURE_SECRET=<your-signature-secret>
-export KEYCLOAK_ADMIN_CLIENT=statement-service-admin-client
-export KEYCLOAK_ADMIN_CLIENT_SECRET=<your-admin-client-secret>
-export KEYCLOAK_CONSUMER_CLIENT=statement-service-consumer-client
-export KEYCLOAK_CONSUMER_CLIENT_SECRET=<your-consumer-client-secret>
-export KEYCLOAK_REDIRECT_URI=http://localhost:8081/*
-export KEYCLOAK_WEB_ORIGIN=http://localhost:8081
-export KEYCLOAK_SSL_REQUIRED=none
-export KEYCLOAK_ACCESS_TOKEN_LIFESPAN=3600
-export KEYCLOAK_SSO_SESSION_IDLE_TIMEOUT=4200
-export KEYCLOAK_SSO_SESSION_MAX_LIFESPAN=4200
-export KEYCLOAK_CLIENT_TOKEN_LIFESPAN=3600
 ```
 
 Create the storage directory:
@@ -284,10 +272,17 @@ curl -X GET "http://localhost:8080/api/v1/statements/link/$STATEMENT_ID" \
 
 #### Search Statements
 
+Search for statements by account number and date range. All three parameters (`accountNumber`, `startDate`, `endDate`) are required.
+
 ```bash
-curl -X GET "http://localhost:8080/api/v1/statements/search?accountNumber=123456789" \
+curl -X GET "http://localhost:8080/api/v1/statements/search?accountNumber=123456789&startDate=2025-01-01&endDate=2025-01-31" \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+Optional pagination and sorting parameters:
+- `page` - Page number (0-based, default: 0)
+- `size` - Page size (1-100, default: 50)
+- `sort` - Sort criteria (e.g., `uploadedAt,desc`)
 
 #### Query Audit Logs
 

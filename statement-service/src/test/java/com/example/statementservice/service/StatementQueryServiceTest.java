@@ -1,6 +1,15 @@
 package com.example.statementservice.service;
 
-import com.example.statementservice.exception.InvalidInputException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.example.statementservice.exception.StatementNotFoundException;
 import com.example.statementservice.mapper.StatementApiMapper;
 import com.example.statementservice.model.api.BaseStatement;
@@ -11,6 +20,15 @@ import com.example.statementservice.model.entity.Statement;
 import com.example.statementservice.util.AuditHelper;
 import com.example.statementservice.util.RequestInfo;
 import com.example.statementservice.util.RequestInfoProvider;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,27 +39,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.anyList;
-import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("StatementQueryService Unit Tests (Refactored)")
@@ -267,17 +264,19 @@ class StatementQueryServiceTest {
     }
 
     @Test
-    @DisplayName("searchPaged - should return paged results for account number only")
-    void searchPaged_AccountOnly() {
+    @DisplayName("searchPaged - should return paged results with all mandatory parameters")
+    void searchPaged_WithAllMandatoryParams() {
 
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumberAndDateRange(
-                        eq(testAccountNumber), isNull(), isNull(), any(Pageable.class)))
+                        eq(testAccountNumber), any(LocalDate.class), any(LocalDate.class), any(Pageable.class)))
                 .thenReturn(page);
         when(statementService.toDto(any())).thenReturn(testStatementDto);
         when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
 
-        var result = statementQueryService.searchPaged(testAccountNumber, null, null, 0, 50, null);
+        var result = statementQueryService.searchPaged(testAccountNumber, startDate, endDate, 0, 50, null);
 
         assertThat(result).isNotNull();
         assertThat(result.getPage()).isEqualTo(0);
@@ -291,15 +290,16 @@ class StatementQueryServiceTest {
     @DisplayName("searchPaged - should use defaults when pagination parameters are null")
     void searchPaged_DefaultPagination() {
 
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumberAndDateRange(
-                        eq(testAccountNumber), isNull(), isNull(), any(Pageable.class)))
+                        eq(testAccountNumber), any(LocalDate.class), any(LocalDate.class), any(Pageable.class)))
                 .thenReturn(page);
         when(statementService.toDto(any())).thenReturn(testStatementDto);
         when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
 
-        var result =
-                statementQueryService.searchPaged(testAccountNumber, null, null, null, null, null);
+        var result = statementQueryService.searchPaged(testAccountNumber, startDate, endDate, null, null, null);
 
         assertThat(result.getPage()).isEqualTo(0);
         assertThat(result.getSize()).isEqualTo(50);
@@ -307,7 +307,7 @@ class StatementQueryServiceTest {
 
     @Test
     @DisplayName("searchPaged - should return result for account and date range")
-    void searchPaged_AccountAndDateRange() {
+    void searchPaged_AccountAndDate() {
 
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumberAndDateRange(
@@ -316,8 +316,7 @@ class StatementQueryServiceTest {
         when(statementService.toDto(any())).thenReturn(testStatementDto);
         when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
 
-        var result =
-                statementQueryService.searchPaged(testAccountNumber, "2024-01-01", "2024-01-31", 0, 50, null);
+        var result = statementQueryService.searchPaged(testAccountNumber, "2024-01-15", "2024-01-31", 0, 50, null);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
@@ -328,14 +327,16 @@ class StatementQueryServiceTest {
     @DisplayName("searchPaged - should handle valid pagination parameters")
     void searchPaged_ValidPagination() {
 
+        var startDate = "2024-01-01";
+        var endDate = "2024-01-31";
         Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
         when(statementService.getStatementsByAccountNumberAndDateRange(
-                        eq(testAccountNumber), isNull(), isNull(), any(Pageable.class)))
+                        eq(testAccountNumber), any(LocalDate.class), any(LocalDate.class), any(Pageable.class)))
                 .thenReturn(page);
         when(statementService.toDto(any())).thenReturn(testStatementDto);
         when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
 
-        var result = statementQueryService.searchPaged(testAccountNumber, null, null, 2, 25, null);
+        var result = statementQueryService.searchPaged(testAccountNumber, startDate, endDate, 2, 25, null);
 
         assertThat(result.getPage()).isEqualTo(2);
         assertThat(result.getSize()).isEqualTo(25);
@@ -345,8 +346,8 @@ class StatementQueryServiceTest {
     @DisplayName("searchPaged - invalid startDate format should throw exception")
     void searchPaged_InvalidStartDateFormat() {
 
-        assertThatThrownBy(
-                        () -> statementQueryService.searchPaged(testAccountNumber, "invalid-date", null, 0, 50, null))
+        assertThatThrownBy(() ->
+                        statementQueryService.searchPaged(testAccountNumber, "invalid-date", "2024-01-31", 0, 50, null))
                 .isInstanceOf(DateTimeParseException.class);
     }
 
@@ -354,73 +355,9 @@ class StatementQueryServiceTest {
     @DisplayName("searchPaged - invalid endDate format should throw exception")
     void searchPaged_InvalidEndDateFormat() {
 
-        assertThatThrownBy(
-                        () -> statementQueryService.searchPaged(testAccountNumber, null, "invalid-date", 0, 50, null))
-                .isInstanceOf(DateTimeParseException.class);
-    }
-
-    @Test
-    @DisplayName("searchPaged - should throw InvalidInputException when startDate is after endDate")
-    void searchPaged_StartDateAfterEndDate() {
-
         assertThatThrownBy(() ->
-                        statementQueryService.searchPaged(testAccountNumber, "2024-01-31", "2024-01-01", 0, 50, null))
-                .isInstanceOf(InvalidInputException.class)
-                .hasMessageContaining("startDate cannot be after endDate");
-    }
-
-    @Test
-    @DisplayName("searchPaged - should accept only startDate")
-    void searchPaged_OnlyStartDate() {
-
-        Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
-        when(statementService.getStatementsByAccountNumberAndDateRange(
-                        eq(testAccountNumber), any(LocalDate.class), isNull(), any(Pageable.class)))
-                .thenReturn(page);
-        when(statementService.toDto(any())).thenReturn(testStatementDto);
-        when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
-
-        var result =
-                statementQueryService.searchPaged(testAccountNumber, "2024-01-01", null, 0, 50, null);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(1);
-    }
-
-    @Test
-    @DisplayName("searchPaged - should accept only endDate")
-    void searchPaged_OnlyEndDate() {
-
-        Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
-        when(statementService.getStatementsByAccountNumberAndDateRange(
-                        eq(testAccountNumber), isNull(), any(LocalDate.class), any(Pageable.class)))
-                .thenReturn(page);
-        when(statementService.toDto(any())).thenReturn(testStatementDto);
-        when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
-
-        var result =
-                statementQueryService.searchPaged(testAccountNumber, null, "2024-01-31", 0, 50, null);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(1);
-    }
-
-    @Test
-    @DisplayName("searchPaged - should handle same startDate and endDate")
-    void searchPaged_SameStartAndEndDate() {
-
-        Page<Statement> page = new PageImpl<>(Arrays.asList(testStatement));
-        when(statementService.getStatementsByAccountNumberAndDateRange(
-                        eq(testAccountNumber), any(LocalDate.class), any(LocalDate.class), any(Pageable.class)))
-                .thenReturn(page);
-        when(statementService.toDto(any())).thenReturn(testStatementDto);
-        when(statementApiMapper.toBase(any(StatementDto.class))).thenReturn(testBaseStatement);
-
-        var result =
-                statementQueryService.searchPaged(testAccountNumber, "2024-01-15", "2024-01-15", 0, 50, null);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(1);
+                        statementQueryService.searchPaged(testAccountNumber, "2024-01-01", "invalid-date", 0, 50, null))
+                .isInstanceOf(DateTimeParseException.class);
     }
 
     private List<StatementDto> createMultipleDtos(int count) {

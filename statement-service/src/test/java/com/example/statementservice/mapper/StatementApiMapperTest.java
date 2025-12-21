@@ -1,13 +1,9 @@
 package com.example.statementservice.mapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.example.statementservice.model.api.StatementSummary;
 import com.example.statementservice.model.dto.StatementDto;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -17,8 +13,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("StatementApiMapper Tests")
 class StatementApiMapperTest {

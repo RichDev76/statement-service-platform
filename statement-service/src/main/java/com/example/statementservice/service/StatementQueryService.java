@@ -116,45 +116,21 @@ public class StatementQueryService {
 
         var sortOrder = parseSort(sort);
 
-        LocalDate parsedStartDate = (startDate != null && !startDate.isBlank()) ? LocalDate.parse(startDate) : null;
-        LocalDate parsedEndDate = (endDate != null && !endDate.isBlank()) ? LocalDate.parse(endDate) : null;
+        var parsedStartDate = LocalDate.parse(startDate);
+        var parsedEndDate = LocalDate.parse(endDate);
 
-        if (parsedStartDate != null && parsedEndDate != null && parsedStartDate.isAfter(parsedEndDate)) {
+        if (parsedStartDate.isAfter(parsedEndDate)) {
             throw new InvalidInputException("startDate cannot be after endDate");
         }
 
-        if (accountNumber != null && !accountNumber.isBlank()) {
-            var statements = this.statementService.getStatementsByAccountNumberAndDateRange(
-                    accountNumber,
-                    parsedStartDate,
-                    parsedEndDate,
-                    PageRequest.of(effectivePage, effectiveSize, sortOrder));
-            var content = statements
-                    .map(stmt -> statementApiMapper.toBase(statementService.toDto(stmt)))
-                    .getContent();
-            result.setContent(content);
-            result.totalElements(statements.getTotalElements());
-            result.totalPages(statements.getTotalPages());
-            return result;
-        }
-
-        // Account only
-        if (accountNumber != null) {
-            var statements = this.statementService.getStatementsByAccountNumber(
-                    accountNumber, PageRequest.of(effectivePage, effectiveSize, sortOrder));
-            var content = statements
-                    .map(stmt -> statementApiMapper.toBase(statementService.toDto(stmt)))
-                    .getContent();
-            result.setContent(content);
-            result.totalElements(statements.getTotalElements());
-            result.totalPages(statements.getTotalPages());
-            return result;
-        }
-
-        // Date only (not currently supported by business logic)
-        result.setContent(new ArrayList<>());
-        result.totalElements(0L);
-        result.totalPages(0);
+        var statements = this.statementService.getStatementsByAccountNumberAndDateRange(
+                accountNumber, parsedStartDate, parsedEndDate, PageRequest.of(effectivePage, effectiveSize, sortOrder));
+        var content = statements
+                .map(stmt -> statementApiMapper.toBase(statementService.toDto(stmt)))
+                .getContent();
+        result.setContent(content);
+        result.totalElements(statements.getTotalElements());
+        result.totalPages(statements.getTotalPages());
         return result;
     }
 
