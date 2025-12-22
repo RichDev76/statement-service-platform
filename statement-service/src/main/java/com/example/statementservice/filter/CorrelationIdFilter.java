@@ -12,16 +12,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/**
- * Servlet filter that ensures every HTTP request/response has an {@code x-correlation-id} header.
- *
- * <p>If an incoming request already contains the header, that value is reused. Otherwise a new
- * UUID value is generated. The correlation id is:
- * <ul>
- *   <li>Added to the response as {@value #CORRELATION_ID_HEADER}</li>
- *   <li>Stored in SLF4J MDC under {@value #CORRELATION_ID_MDC_KEY} for log correlation</li>
- * </ul>
- */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorrelationIdFilter extends OncePerRequestFilter {

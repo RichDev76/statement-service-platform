@@ -22,7 +22,7 @@ public interface AuditLogEntityMapper {
 
     default String extractDetail(AuditLog log, String key) {
         if (log.getDetails() == null) return null;
-        Object val = log.getDetails().get(key);
+        var val = log.getDetails().get(key);
         return val == null ? null : String.valueOf(val);
     }
 
@@ -30,7 +30,7 @@ public interface AuditLogEntityMapper {
         if (log == null || log.getDetails() == null) {
             return Collections.emptyMap();
         }
-        Object reason = log.getDetails().get("reason");
+        var reason = log.getDetails().get("reason");
         return reason == null ? Collections.emptyMap() : Collections.singletonMap("reason", reason);
     }
 }
