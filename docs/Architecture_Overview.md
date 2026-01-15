@@ -208,7 +208,7 @@ Additional whitelisted endpoints (configured via `security.endpoints.whitelist`)
 - `/api/v1/statements/v3/api-docs/**` – OpenAPI documentation
 - `/api/v1/statements/swagger-ui/**` – Swagger UI
 
-Unauthorized and forbidden errors are returned as **RFC 7807 ProblemDetail** JSON.
+Unauthorized and forbidden errors are returned as **RFC 9457 ProblemDetail** JSON.
 
 #### Correlation and Request Context
 

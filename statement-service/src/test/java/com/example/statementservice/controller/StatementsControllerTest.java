@@ -301,7 +301,7 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, startDate, endDate, null, null, null))
                 .thenReturn(testStatementSummaryPage);
 
-        var response = statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, null);
+        var response = statementsController.searchStatements(accountNumber, startDate, endDate, null, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -320,7 +320,7 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, startDate, endDate, page, size, null))
                 .thenReturn(testStatementSummaryPage);
 
-        statementsController.searchStatements(null, accountNumber, startDate, endDate, page, size, null);
+        statementsController.searchStatements(accountNumber, startDate, endDate, null, page, size, null);
 
         verify(statementQueryService)
                 .searchPaged(eq(accountNumber), eq(startDate), eq(endDate), eq(page), eq(size), isNull());
@@ -337,7 +337,7 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, startDate, endDate, null, null, sort))
                 .thenReturn(testStatementSummaryPage);
 
-        statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, sort);
+        statementsController.searchStatements(accountNumber, startDate, endDate, null, null, null, sort);
 
         verify(statementQueryService)
                 .searchPaged(eq(accountNumber), eq(startDate), eq(endDate), isNull(), isNull(), eq(sort));
@@ -357,7 +357,7 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, startDate, endDate, page, size, sort))
                 .thenReturn(testStatementSummaryPage);
 
-        statementsController.searchStatements(null, accountNumber, startDate, endDate, page, size, sort);
+        statementsController.searchStatements(accountNumber, startDate, endDate, null, page, size, sort);
 
         verify(statementQueryService)
                 .searchPaged(eq(accountNumber), eq(startDate), eq(endDate), eq(page), eq(size), eq(sort));
@@ -374,7 +374,7 @@ class StatementsControllerTest {
                 .thenThrow(new RuntimeException("Service error"));
 
         assertThatThrownBy(() -> statementsController.searchStatements(
-                        null, accountNumber, startDate, endDate, null, null, null))
+                        accountNumber, startDate, endDate, null, null, null, null))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Service error");
 
@@ -395,7 +395,7 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, startDate, endDate, null, null, null))
                 .thenReturn(emptyPage);
 
-        var response = statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, null);
+        var response = statementsController.searchStatements(accountNumber, startDate, endDate, null, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -419,7 +419,7 @@ class StatementsControllerTest {
         when(statementQueryService.searchPaged(accountNumber, startDate, endDate, null, null, null))
                 .thenReturn(largePage);
 
-        var response = statementsController.searchStatements(null, accountNumber, startDate, endDate, null, null, null);
+        var response = statementsController.searchStatements(accountNumber, startDate, endDate, null, null, null, null);
 
         assertThat(response).isNotNull();
         assertThat(response.getBody()).isNotNull();
