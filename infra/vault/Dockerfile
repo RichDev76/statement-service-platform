@@ -3,6 +3,16 @@ FROM hashicorp/vault:1.21.1
 
 USER root
 
+RUN sed -i 's/https/http/g' /etc/apk/repositories
+
+# 2. Run apk update and install packages (The --no-cache goes here)
+RUN apk update && \
+    apk add --no-cache ca-certificates gettext curl && \
+    update-ca-certificates
+
+# 3. (Optional) Switch back to HTTPS now that certificates are trusted
+RUN sed -i 's/http/https/g' /etc/apk/repositories
+
 # Ensure envsubst (gettext) and curl are available for template rendering + healthchecks
 RUN apk add --no-cache gettext curl
 
