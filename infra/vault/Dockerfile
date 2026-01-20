@@ -5,7 +5,7 @@ USER root
 
 RUN sed -i 's/https/http/g' /etc/apk/repositories
 
-# 2. Run apk update and install packages (The --no-cache goes here)
+# 2. Run apk update and install packages
 RUN apk update && \
     apk add --no-cache ca-certificates gettext curl && \
     update-ca-certificates
