@@ -72,7 +72,7 @@
         KEYCLOAK_WEB_ORIGIN: ${KEYCLOAK_WEB_ORIGIN:-http://localhost:8081}
         KEYCLOAK_SSL_REQUIRED: ${KEYCLOAK_SSL_REQUIRED:-none}
         KEYCLOAK_ACCESS_TOKEN_LIFESPAN: ${KEYCLOAK_ACCESS_TOKEN_LIFESPAN:-3600}
-      command: ["start-dev", "--import-realm"]
+      command: ["start-dev", "--features=import-realm", "--import-realm"]
       volumes:
         - keycloak-data:/opt/keycloak/data
       ports:

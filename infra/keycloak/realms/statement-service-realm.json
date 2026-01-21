@@ -2,10 +2,10 @@
   "realm": "statement-service",
   "enabled": true,
   "sslRequired": "${KEYCLOAK_SSL_REQUIRED:-none}",
-  "accessTokenLifespan": ${KEYCLOAK_ACCESS_TOKEN_LIFESPAN:-3600},
-  "accessTokenLifespanForImplicitFlow": ${KEYCLOAK_ACCESS_TOKEN_LIFESPAN:-3600},
-  "ssoSessionIdleTimeout": ${KEYCLOAK_SSO_SESSION_IDLE_TIMEOUT:-4200},
-  "ssoSessionMaxLifespan": ${KEYCLOAK_SSO_SESSION_MAX_LIFESPAN:-4200},
+  "accessTokenLifespan": "${KEYCLOAK_ACCESS_TOKEN_LIFESPAN:-3600}",
+  "accessTokenLifespanForImplicitFlow": "${KEYCLOAK_ACCESS_TOKEN_LIFESPAN:-3600}",
+  "ssoSessionIdleTimeout": "${KEYCLOAK_SSO_SESSION_IDLE_TIMEOUT:-4200}",
+  "ssoSessionMaxLifespan": "${KEYCLOAK_SSO_SESSION_MAX_LIFESPAN:-4200}",
   "roles": {
     "realm": [
       { "name": "Search", "description": "Role allowing search of statements" },
