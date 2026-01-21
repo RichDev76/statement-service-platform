@@ -75,13 +75,17 @@
       entrypoint: ["/bin/bash", "-c"]
       command:
         - |
-          # Install envsubst if not available
-          microdnf install -y gettext 2>/dev/null || true
+          set -e
+          # Install envsubst (gettext package)
+          microdnf install -y gettext
           # Process the realm template
           mkdir -p /opt/keycloak/data/import
           envsubst < /opt/keycloak/data/import-templates/statement-service-realm.json > /opt/keycloak/data/import/statement-service-realm.json
-          # Start Keycloak
-          exec /opt/keycloak/bin/kc.sh start-dev --import-realm
+          # Debug: show the processed file
+          echo "Processed realm file:"
+          cat /opt/keycloak/data/import/statement-service-realm.json
+          # Start Keycloak as the keycloak user
+          exec runuser -u keycloak -- /opt/keycloak/bin/kc.sh start-dev --import-realm
       volumes:
         - keycloak-data:/opt/keycloak/data
         - ./keycloak/realms:/opt/keycloak/data/import-templates:ro
